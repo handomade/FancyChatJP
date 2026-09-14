@@ -1,4 +1,4 @@
--- lib/combat.lua — combat / spell line transformers.  CombatText and
+-- lib/combat.lua  combat / spell line transformers.  CombatText and
 -- CombatSpellText reformat raw FFXI messages with FancyChat icons
 -- and update par.actor* / par.DamageDone/Got so parseThis can
 -- colorise the line afterwards.  Both exposed as globals.
@@ -110,6 +110,69 @@ function M.CombatText(msg, chn)
 	local T   = ''
 	local Ext = ''
 
+	-- JP client system combat (name particles //, not "You hits").
+	do
+		local Ajp, Bjp, DMGjp, Sjp
+		Ajp, Bjp, DMGjp = msg:match('^(.-)\227\129\175(.-)\227\129\171(%d+)\227\129\174\227\131\128\227\131\161\227\131\188\227\130\184\227\130\146\228\184\142\227\129\136\227\129\159\227\128\130$')
+		if not Ajp then Ajp, Bjp, DMGjp = msg:match('^(.-)\227\129\175(.-)\227\129\171(%d+)\227\129\174\227\131\128\227\131\161\227\131\188\227\130\184\227\130\146\228\184\142\227\129\136\227\129\159%.$') end
+		if not Ajp then Ajp, Bjp, DMGjp = msg:match('^(.-)\227\129\175(.-)\227\129\171(%d+)\227\131\157\227\130\164\227\131\179\227\131\136\227\129\174\227\131\128\227\131\161\227\131\188\227\130\184\227\130\146\228\184\142\227\129\136\227\129\159\227\128\130$') end
+		if Ajp and Bjp and DMGjp then
+			Ajp = classifyA(Ajp)
+			Bjp = classifyB(Bjp)
+			if Ajp == fcw[1].PlayerName then par.DamageDone = true end
+			if Bjp == fcw[1].PlayerName then par.DamageGot  = true end
+			msg = Ajp..' '..combatCP.ATK..' '..Bjp..' '..combatCP.SPLIT..' '..DMGjp..' DMG'
+			par.isDamage     = true
+			par.CombatCutIdx = utils_FindLastOfMB(msg, combatCP.SPLIT) + LEN_SPLIT - 1
+			return msg
+		end
+		Ajp, DMGjp = msg:match('^(.-)\227\129\175(%d+)\227\129\174\227\131\128\227\131\161\227\131\188\227\130\184\227\130\146\229\143\151\227\129\145\227\129\159\227\128\130$')
+		if Ajp and DMGjp then
+			Ajp = classifyA(Ajp)
+			msg = combatCP.SUB..Ajp..' '..combatCP.LEFT..' '..DMGjp..' DMG'
+			par.isDamage = true
+			if Ajp == fcw[1].PlayerName then par.DamageGot = true end
+			par.CombatCutIdx = utils_FindLastOfMB(msg, combatCP.LEFT) + LEN_LEFT - 1
+			return msg
+		end
+		Ajp, Bjp = msg:match('^(.-)\227\129\175(.-)\227\130\146\229\128\146\227\129\151\227\129\159\227\128\130$')
+		if Ajp and Bjp then
+			Ajp = classifyA(Ajp)
+			Bjp = classifyB(Bjp)
+			local defeat = 'defeats'..combatCP.KILL
+			msg = Ajp..' '..defeat..' '..Bjp
+			par.CombatCutIdx = msg:find(defeat, 1, true) - 1
+			return msg
+		end
+		Ajp, Bjp = msg:match('^(.-)\227\129\174\230\148\187\230\146\131\227\129\175(.-)\227\130\146\229\164\150\227\129\151\227\129\159\227\128\130$')
+		if Ajp and Bjp then
+			Ajp = classifyA(Ajp)
+			Bjp = classifyB(Bjp)
+			msg = Ajp..' '..combatCP.ATK..' '..Bjp..' '..combatCP.SPLIT..' miss'
+			par.CombatCutIdx = utils_FindLastOfMB(msg, combatCP.SPLIT) + LEN_SPLIT - 1
+			return msg
+		end
+		Ajp, Bjp, Sjp = msg:match('^(.-)\227\129\175(.-)\227\129\171(.-)\227\130\146\228\189\191\227\129\163\227\129\159\227\128\130$')
+		if Ajp and Bjp and Sjp then
+			Ajp = classifyA(Ajp)
+			Bjp = classifyB(Bjp)
+			Sjp = wrap_action(Sjp)
+			par.action1 = Sjp
+			msg = Ajp..' '..combatCP.RIGHT..' '..Bjp..' '..combatCP.SPLIT..' '..Sjp..' '
+			par.CombatCutIdx = utils_FindLastOfMB(msg, combatCP.SPLIT) + LEN_SPLIT - 1
+			return msg
+		end
+		Ajp, Sjp = msg:match('^(.-)\227\129\175(.-)\227\130\146\228\189\191\227\129\163\227\129\159\227\128\130$')
+		if Ajp and Sjp then
+			Ajp = classifyA(Ajp)
+			Sjp = wrap_action(Sjp)
+			par.action1 = Sjp
+			msg = Ajp..' '..combatCP.RIGHT..' '..Sjp
+			par.CombatCutIdx = utils_FindFirstOfMB(msg, combatCP.RIGHT) + LEN_RIGHT - 1
+			return msg
+		end
+	end
+
 	if msg:find('hit') then
 		A, B, DMG = msg:match('^(.*) hits? (.*) for (%d*) points? of damage%.$')
 
@@ -179,7 +242,6 @@ function M.CombatText(msg, chn)
 
 	if msg:find('ranged attack') then
 		A, Ext = msg:match('^(.*)(%\'s.*)$')
-		if not A or not Ext then return msg end
 		if Ext:find('miss') then
 			if A == fcw[1].PlayerName then par.DamageGot = true end
 			A = classifyA(A)
@@ -189,7 +251,6 @@ function M.CombatText(msg, chn)
 			return msg
 		elseif Ext:find('pummeling') then
 			B, DMG = Ext:match('^.*pummeling (.*) for (.*) points of damage!$')
-			if not B or not DMG then return msg end
 			A = classifyA(A)
 
 			B = classifyB(B)
@@ -439,9 +500,7 @@ function M.CombatText(msg, chn)
 
 	if c > 0 then
 		if not msg:find('^[Tt]he') then
-			local sp = msg:find(' ')
-			if not sp then return msg end
-			msg = '['..msg:sub(1, sp - 1)..']'..msg:sub(sp, #msg)
+			msg = '['..msg:sub(1, msg:find(' ') - 1)..']'..msg:sub(msg:find(' '), #msg)
 		else
 			msg = msg:gsub('^[Tt]he ', '')
 		end
@@ -467,6 +526,52 @@ function M.CombatSpellText(msg, chn)
 	local S   = ''
 	local T   = ''
 	local Ext = ''
+
+	do
+		local Ajp, Bjp, Sjp, DMGjp
+		Ajp, Sjp = msg:match('^(.-)\227\129\175(.-)\227\129\174\232\169\160\229\148\177\227\130\146\229\167\139\227\130\129\227\129\159\227\128\130$')
+		if not Ajp then Ajp, Sjp = msg:match('^(.-)\227\129\175(.-)\227\129\174\232\169\160\229\148\177\227\130\146\233\150\139\229\167\139\227\129\151\227\129\159\227\128\130$') end
+		if Ajp and Sjp then
+			Ajp = classifyA(Ajp)
+			Sjp = wrap_action(Sjp)
+			par.action1 = Sjp
+			msg = Ajp..' '..combatCP.SPLIT..' casting...'..Sjp..' '
+			par.CombatCutIdx = utils_FindLastOfMB(msg, combatCP.SPLIT) + LEN_SPLIT - 1
+			return msg
+		end
+		Ajp, Bjp, Sjp, DMGjp = msg:match('^(.-)\227\129\175(.-)\227\129\171(.-)\227\130\146\229\148\177\227\129\136\227\128\129(%d+)\227\129\174\227\131\128\227\131\161\227\131\188\227\130\184\227\130\146\228\184\142\227\129\136\227\129\159\227\128\130$')
+		if Ajp and Bjp and Sjp and DMGjp then
+			if Ajp == fcw[1].PlayerName then par.DamageDone = true end
+			if Bjp == fcw[1].PlayerName then par.DamageGot  = true end
+			Ajp = classifyA(Ajp)
+			Bjp = classifyB(Bjp)
+			Sjp = wrap_action(Sjp)..combatCP.COL
+			par.action1 = Sjp
+			msg = Ajp..' '..combatCP.SPELL..' '..Bjp..' '..combatCP.SPLIT..' '..Sjp..' '..DMGjp..' DMG'
+			par.isDamage     = true
+			par.CombatCutIdx = utils_FindLastOfMB(msg, combatCP.SPLIT) + LEN_SPLIT - 1
+			return msg
+		end
+		Ajp, Bjp, Sjp = msg:match('^(.-)\227\129\175(.-)\227\129\171(.-)\227\130\146\229\148\177\227\129\136\227\129\159\227\128\130$')
+		if Ajp and Bjp and Sjp then
+			Ajp = classifyA(Ajp)
+			Bjp = classifyB(Bjp)
+			Sjp = wrap_action(Sjp)
+			par.action1 = Sjp
+			msg = Ajp..' '..combatCP.CAST..' '..Bjp..' '..combatCP.SPLIT..' '..Sjp..' '
+			par.CombatCutIdx = utils_FindLastOfMB(msg, combatCP.SPLIT) + LEN_SPLIT - 1
+			return msg
+		end
+		Ajp, Sjp = msg:match('^(.-)\227\129\175(.-)\227\130\146\229\148\177\227\129\136\227\129\159\227\128\130$')
+		if Ajp and Sjp then
+			Ajp = classifyA(Ajp)
+			Sjp = wrap_action(Sjp)
+			par.action1 = Sjp
+			msg = Ajp..' '..combatCP.CAST..' '..Sjp
+			par.CombatCutIdx = utils_FindFirstOfMB(msg, combatCP.CAST) + LEN_CAST - 1
+			return msg
+		end
+	end
 
 	if msg:find('start') then
 		A, S = msg:match('^(.*) starts? casting (.*)%.$')
@@ -555,7 +660,6 @@ function M.CombatSpellText(msg, chn)
 		-- "X casts Y on Z."
 		if msg:find(' casts? ') and msg:find(' on ') then
 			A, S, B = msg:match('^(.*) casts? ([^%.]*) on (.*)%.%s?$')
-			if not A or not S or not B then return msg end
 			A = classifyA(A)
 
 			B = classifyB(B)
@@ -687,9 +791,7 @@ function M.CombatSpellText(msg, chn)
 
 	if c > 0 then
 		if not msg:find('^[Tt]he') then
-			local sp = msg:find(' ')
-			if not sp then return msg end
-			msg = '['..msg:sub(1, sp - 1)..']'..msg:sub(sp, #msg)
+			msg = '['..msg:sub(1, msg:find(' ') - 1)..']'..msg:sub(msg:find(' '), #msg)
 		else
 			msg = msg:gsub('^[Tt]he ', '')
 		end

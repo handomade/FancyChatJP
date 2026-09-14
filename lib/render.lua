@@ -1,4 +1,4 @@
--- lib/render.lua — d3d_present + d3d_endscene callbacks.  Per-frame
+-- lib/render.lua  d3d_present + d3d_endscene callbacks.  Per-frame
 -- UI plumbing; reads state.* tables and calls helper modules via the
 -- _G.* globals each registers.  Exports M.register() and the global
 -- ResetAutoHideTimer() (used by every module on user activity).
@@ -10,6 +10,8 @@ local gdi         = require('gdifonts.include')
 local utils       = require('utils')
 local settings    = require('settings')
 local help        = require('help')
+local i18n        = require('lib.i18n')
+local imgui_font     = require('lib.imgui_font')
 local state          = require('lib.state')
 local ui_panels      = require('lib.ui_panels')
 local ui_settings    = require('lib.ui_settings')
@@ -151,6 +153,7 @@ _G.ResetAutoHideTimer = M.ResetAutoHideTimer
 
 function M.register()
 	ashita.events.register('d3d_present', 'present_cb', function ()
+		local _jpPushed = imgui_font.push()
 		-- Refresh the combat-filter snapshot here, on the render
 		-- thread, so combat_packets.dispatch() in the packet_in
 		-- callback can classify actors without making any native
@@ -200,7 +203,10 @@ function M.register()
 				par.LoginTime = os.time()
 			end
 			local player = GetPlayerEntity();
-			if not player or not settings then return end
+			if not player or not settings then
+				if _jpPushed then imgui_font.pop() end
+				return
+			end
 			fcw1.LoggedIn = true
 			
 			if fcw1.PlayerName == '' and settings.name ~= '' then
@@ -210,6 +216,7 @@ function M.register()
 				allSettings.PlayerName = settings.name
 			end
 		elseif fcw1.LoginStatus == 1 then
+			if _jpPushed then imgui_font.pop() end
 			return
 		else		
 			fcw1.LoggedIn = false
@@ -217,6 +224,7 @@ function M.register()
 			fcw1.LoggedLobby = 1
 			fcw1.WaitingServMes = 0
 			par.LoginTime = 0
+			if _jpPushed then imgui_font.pop() end
 			return
 		end
 		
@@ -258,30 +266,13 @@ function M.register()
 				par.timePrinted = true
 			end
 		
-			if allSettings.R0warning[1] and uiw.NetStatObj[1] > 0 then
-				local netstat_now = ashita.memory.read_uint32(uiw.NetStatObj[1])
-				-- Connected -> R0 transition: latch the timestamp so the
-				-- warning below can check how long the drop has lasted.
-				if netstat_now == 0 and uiw.NetStatObj[2] > 0 then
-					par.R0ZeroSince = os.clock()
-					par.R0WarnFired = false
-				-- Connection restored: clear state so a future drop starts
-				-- a fresh timer and can fire the warning again.
-				elseif netstat_now > 0 then
-					par.R0ZeroSince = nil
-					par.R0WarnFired = false
-				end
-				-- Fire the warning ONCE per R0 event, only when the drop
-				-- has persisted for more than 5 seconds.  Short single-
-				-- frame netstat dips resolve without spamming the chat.
-				if par.R0ZeroSince and not par.R0WarnFired
-					and (os.clock() - par.R0ZeroSince) > 5 then
-					AshitaCore:GetChatManager():AddChatMessage(123, false, '[Warning] R0 detected.')
-					AshitaCore:GetChatManager():AddChatMessage(123, false, 'Use /fchat savelogs to save chat logs.')
-					par.R0WarnFired = true
-				end
+			if allSettings.R0warning[1] and uiw.NetStatObj[1] > 0 and ashita.memory.read_uint32(uiw.NetStatObj[1]) == 0 and uiw.NetStatObj[2] > 0 then	
+				AshitaCore:GetChatManager():AddChatMessage(123, false, '[Warning] R0 detected.')
+				AshitaCore:GetChatManager():AddChatMessage(123, false, 'Use /fchat savelogs to save chat logs.')
+				--CEXI extra message
+				AshitaCore:GetChatManager():AddChatMessage(123, false, 'If this is a server crash and you used a pop item, take a FULL screenshot as proof.')
 			end
-
+		
 			uiw.NetStatObj[2] = ashita.memory.read_uint32(uiw.NetStatObj[1])
 	
 			fcw1.PlayerName = settings.name;
@@ -535,11 +526,11 @@ function M.register()
 				fcw1.BufferBusy = true;
 				if #fo.Chat[3] > 0 then ResetScrolling(3, fcw3.ChatLines) end
 				ChangeTab(1, tab.NextTab);
-				b.ChatBufferN[1] = SetBufferN(allSettings.SelectedTab);
+				ApplyWindowTabBuffer(1);
 				ResetScrolling(1);
 			
 			else
-				b.ChatBufferN[1] = SetBufferN(allSettings.SelectedTab);
+				ApplyWindowTabBuffer(1);
 			end
 		
 		
@@ -653,7 +644,7 @@ function M.register()
 					ro.Scroll[2]:set_visible(false)
 				end
 				if #fo.Chat[3]>0 and not fcw3.BigModePrev then ResetScrolling(3, fcw3.ChatLines);  end
-				if not fcw3.BigModePrev then b.ChatBufferIdx[3] = b.ChatBufferIdx[1] end
+				if not fcw3.BigModePrev then b.ChatBufferIdx[3] = b.ChatBufferIdx[bigmode_source()] end
 				DrawBigMode()
 				fcw3.BigModePrev = true
 			elseif fcw3.BigModePrev then
@@ -921,11 +912,11 @@ function M.register()
 									print('Message saved in the Notepad ['..#allSettings.Notes..'/10]')
 									SaveSettings();
 								else
-									print('Notepad notes full [10/10]')
+									print('\227\131\161\227\131\162\229\184\179\227\129\140\227\129\132\227\129\163\227\129\177\227\129\132\227\129\167\227\129\153 [10/10]')
 								end
 							else
 								utils.SetClipboardText(utils.RevertShiftJIS(copyBufferText))
-								AshitaCore:GetChatManager():QueueCommand(1, "/echo Text successfully copied to clipboard!");
+								AshitaCore:GetChatManager():QueueCommand(1, "/echo \227\130\175\227\131\170\227\131\131\227\131\151\227\131\156\227\131\188\227\131\137\227\129\171\227\130\179\227\131\148\227\131\188\227\129\151\227\129\190\227\129\151\227\129\159");
 							end
 						end
 					end
@@ -1007,7 +998,7 @@ function M.register()
 				--
 				-- IsItemHovered() is called with FLAG_HoveredRectOnly
 				-- because the chat BG window (NoBringToFrontOnFocus)
-				-- occludes us in ImGui's z-order — the rect-only flag
+				-- occludes us in ImGui's z-order  the rect-only flag
 				-- bypasses occlusion-based hover suppression.
 				--
 				-- Gated by allSettings.HelpButton[1] (Settings -> Chat
@@ -1066,7 +1057,7 @@ function M.register()
 				-- Rendered OUTSIDE the BG window so its own size /
 				-- position aren't constrained by the parent.  Pivot
 				-- {0, 1} anchors the tooltip's bottom-left corner at
-				-- the button's top-left → the tooltip grows up + right.
+				-- the button's top-left  the tooltip grows up + right.
 				--
 				-- NoBringToFrontOnFocus is deliberately absent and
 				-- SetNextWindowFocus is called each frame the tooltip
@@ -1090,20 +1081,20 @@ function M.register()
 						ImGuiWindowFlags_NoResize,
 						ImGuiWindowFlags_AlwaysAutoResize)
 					if imgui.Begin('##fc1_help_tooltip', true, _helpFlags) then
-						imgui.Text('FancyChat - quick reference')
+						imgui.Text('FancyChat - \230\147\141\228\189\156\228\184\128\232\166\167')
 						imgui.Separator()
-						imgui.BulletText('L-Click on a chat line          Copy text to clipboard')
-						imgui.BulletText('Ctrl + L-Click on a zone name   Open zone search & map popup')
-						imgui.BulletText('Shift + L-Click on a chat line  Save line to Notepad (max 10)')
-						imgui.BulletText('L-Click on a [link] tag         Open URL in browser')
-						imgui.BulletText('R-Click anywhere on the chat    Jump to the latest message')
-						imgui.BulletText('L-Click + Drag on chat window   Reposition the chat window')
-						imgui.BulletText('Mouse Wheel over the chat       Scroll history')
-						imgui.BulletText('Shift + Mouse Wheel             Fast scroll (5 lines / tick)')
-						imgui.BulletText('Shift hover compact-tab button  Swap it for the Settings icon')
+						imgui.BulletText('\227\131\129\227\131\163\227\131\131\227\131\136\232\161\140\227\130\146\229\183\166\227\130\175\227\131\170\227\131\131\227\130\175          \227\130\175\227\131\170\227\131\131\227\131\151\227\131\156\227\131\188\227\131\137\227\129\171\227\130\179\227\131\148\227\131\188')
+						imgui.BulletText('\227\130\168\227\131\170\227\130\162\229\144\141\227\130\146 Ctrl+\229\183\166\227\130\175\227\131\170\227\131\131\227\130\175      \229\156\176\229\155\179 / \230\164\156\231\180\162\227\131\157\227\131\131\227\131\151\227\130\162\227\131\131\227\131\151')
+						imgui.BulletText('\227\131\129\227\131\163\227\131\131\227\131\136\232\161\140\227\130\146 Shift+\229\183\166\227\130\175\227\131\170\227\131\131\227\130\175   \227\131\161\227\131\162\229\184\179\227\129\171\228\191\157\229\173\152\239\188\136\230\156\128\229\164\16710\228\187\182\239\188\137')
+						imgui.BulletText('[link] \227\130\191\227\130\176\227\130\146\229\183\166\227\130\175\227\131\170\227\131\131\227\130\175         \227\131\150\227\131\169\227\130\166\227\130\182\227\129\167URL\227\130\146\233\150\139\227\129\143')
+						imgui.BulletText('\227\131\129\227\131\163\227\131\131\227\131\136\228\184\138\227\129\167\229\143\179\227\130\175\227\131\170\227\131\131\227\130\175          \230\156\128\230\150\176\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\184\227\130\184\227\131\163\227\131\179\227\131\151')
+						imgui.BulletText('\227\131\129\227\131\163\227\131\131\227\131\136\230\157\191\227\130\146\227\131\137\227\131\169\227\131\131\227\130\176            \227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\228\189\141\231\189\174\227\130\146\231\167\187\229\139\149')
+						imgui.BulletText('\227\131\158\227\130\166\227\130\185\227\131\155\227\130\164\227\131\188\227\131\171                  \229\177\165\230\173\180\227\130\146\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171')
+						imgui.BulletText('Shift + \227\131\158\227\130\166\227\130\185\227\131\155\227\130\164\227\131\188\227\131\171          \233\171\152\233\128\159\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171\239\188\1365\232\161\140\239\188\137')
+						imgui.BulletText('\227\130\179\227\131\179\227\131\145\227\130\175\227\131\136\227\130\191\227\131\150\227\129\171 Shift+\227\131\155\227\131\144\227\131\188   \232\168\173\229\174\154\227\130\162\227\130\164\227\130\179\227\131\179\227\129\171\229\136\135\227\130\138\230\155\191\227\129\136')
 						imgui.Separator()
-						imgui.TextDisabled('Type /fancychat settings for more options')
-						imgui.TextDisabled('This (?) button can be disabled under Settings -> Chat Window')
+						imgui.TextDisabled('/fancychat settings \227\129\167\232\169\179\231\180\176\232\168\173\229\174\154')
+						imgui.TextDisabled('\227\129\147\227\129\174 (?) \227\131\156\227\130\191\227\131\179\227\129\175 \232\168\173\229\174\154 \226\134\146 \227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166 \227\129\167\233\157\158\232\161\168\231\164\186\227\129\171\227\129\167\227\129\141\227\129\190\227\129\153')
 					end
 					imgui.End()
 				end
@@ -1192,10 +1183,10 @@ function M.register()
 							imgui.PushStyleColor(ImGuiCol_Button,        {0.8, 0.8, 0.8, _ba})
 							imgui.PushStyleColor(ImGuiCol_ButtonActive,  {1,   1,   1,   _ba})
 							imgui.PushStyleColor(ImGuiCol_ButtonHovered, {0.7, 0.7, 0.7, _ba})
-							imgui.Button(tn:gsub('Alt','##Alt'),{w,tabsH-2});
+							imgui.Button(i18n.tab_button(tn),{w,tabsH-2});
 							imgui.PopStyleColor(4)
 						else
-							if (imgui.Button(tn:gsub('Alt','##Alt'),{w,tabsH-2})) then
+							if (imgui.Button(i18n.tab_button(tn),{w,tabsH-2})) then
 								tab.NextTab = tn;
 							end
 						end
@@ -1216,7 +1207,7 @@ function M.register()
 							if fcw1.GuideMeOpened[1] then	fcw1.NotepadOpened[1]  = false end
 						end
 						if (imgui.IsItemHovered(0)) then
-							imgui.SetTooltip('Open GuideMe')
+							ShowTooltip('GuideMe \227\130\146\233\150\139\227\129\143')
 						end
 					end
 					imgui.SetCursorPos({imgui.GetCursorPosX()+reserved+4+(tabsH-8),imgui.GetCursorPosY()-(tabsH+1.6)});
@@ -1227,7 +1218,7 @@ function M.register()
 							if fcw1.NotepadOpened[1] then	fcw1.GuideMeOpened[1] = false end
 						end
 						if (imgui.IsItemHovered(0)) then
-							imgui.SetTooltip('Open Notepad')
+							ShowTooltip('\227\131\161\227\131\162\229\184\179\227\130\146\233\150\139\227\129\143')
 						end
 					end
 
@@ -1237,7 +1228,7 @@ function M.register()
 							allSettings.settingsOpened[1] = not allSettings.settingsOpened[1];
 						end
 						if (imgui.IsItemHovered(0)) then
-							imgui.SetTooltip('Open Settings')
+							ShowTooltip('\232\168\173\229\174\154\227\130\146\233\150\139\227\129\143')
 						end
 					end
 
@@ -1260,7 +1251,7 @@ function M.register()
 							SaveSettings();
 						end
 						if (imgui.IsItemHovered(0)) then
-							imgui.SetTooltip('Compact TabBar Mode')
+							ShowTooltip('\227\130\191\227\131\150\227\130\146\227\130\179\227\131\179\227\131\145\227\130\175\227\131\136\232\161\168\231\164\186')
 						end
 					end
 					imgui.PopStyleColor(3)  -- pop the 3 base overrides
@@ -1284,7 +1275,7 @@ function M.register()
 							else
 								imgui.SetCursorPos({button_length[2],0});
 							end
-							if imgui.Button(tab.Tabs[T_i]:gsub('Alt','##Alt'),{button_length[1],tabsH-6}) then
+							if imgui.Button(i18n.tab_button(tab.Tabs[T_i]),{button_length[1],tabsH-6}) then
 								if T_i+1 <= #tab.Tabs then tab.NextTab = tab.Tabs[T_i+1]; else  tab.NextTab = tab.Tabs[1] end
 							end
 						end
@@ -1488,14 +1479,11 @@ function M.register()
 				if (tab.NextTab2 ~= allSettings.SelectedTab2 ) then
 					fcw1.BufferBusy = true;
 					ChangeTab(2, tab.NextTab2);
-					b.ChatBufferN[2] = SetBufferN(allSettings.SelectedTab2);
+					ApplyWindowTabBuffer(2);
 					ResetScrolling(2);
 				else
-					b.ChatBufferN[2] = SetBufferN(allSettings.SelectedTab2);
+					ApplyWindowTabBuffer(2);
 				end
-			
-			
-				if allSettings.SelectedTab2 == 'All' and allSettings.HideCombatFromAll[1] then b.ChatBufferN[2]=b.ChatBufferN_AllAlt;  end
 			
 				if ((not uiw.LegacyChatOpen or allSettings.ShowWithLegacy[1]) and not fcw1.HideChat and not fcw1.Closing and fcw1.autoHideFade < 1 and not fcw3.BigMode) then
 				
@@ -1689,11 +1677,11 @@ function M.register()
 										print('Message saved in the Notepad ['..#allSettings.Notes..'/10]')
 										SaveSettings();
 									else
-										print('Notepad notes full [10/10]')
+										print('\227\131\161\227\131\162\229\184\179\227\129\140\227\129\132\227\129\163\227\129\177\227\129\132\227\129\167\227\129\153 [10/10]')
 									end
 								else
 									utils.SetClipboardText(utils.RevertShiftJIS(copyBufferText))
-									AshitaCore:GetChatManager():QueueCommand(1, "/echo Text successfully copied to clipboard!");
+									AshitaCore:GetChatManager():QueueCommand(1, "/echo \227\130\175\227\131\170\227\131\131\227\131\151\227\131\156\227\131\188\227\131\137\227\129\171\227\130\179\227\131\148\227\131\188\227\129\151\227\129\190\227\129\151\227\129\159");
 								end
 							end
 						end
@@ -1820,10 +1808,10 @@ function M.register()
 								imgui.PushStyleColor(ImGuiCol_Button,        {0.8, 0.8, 0.8, _ba})
 								imgui.PushStyleColor(ImGuiCol_ButtonActive,  {1,   1,   1,   _ba})
 								imgui.PushStyleColor(ImGuiCol_ButtonHovered, {0.7, 0.7, 0.7, _ba})
-								imgui.Button(tn:gsub('Alt','##Alt'),{w,tabsH-2});
+								imgui.Button(i18n.tab_button(tn),{w,tabsH-2});
 								imgui.PopStyleColor(4)
 							else
-								if (imgui.Button(tn:gsub('Alt','##Alt'),{w,tabsH-2})) then
+								if (imgui.Button(i18n.tab_button(tn),{w,tabsH-2})) then
 									tab.NextTab2 = tn;
 								end
 							end
@@ -1845,7 +1833,7 @@ function M.register()
 								else
 									imgui.SetCursorPos({button_length[2],0});
 								end
-								if imgui.Button(tab.Tabs[T_i]:gsub('Alt','##Alt'),{button_length[1],tabsH-6}) then
+								if imgui.Button(i18n.tab_button(tab.Tabs[T_i]),{button_length[1],tabsH-6}) then
 									if T_i+1 <= #tab.Tabs then tab.NextTab2 = tab.Tabs[T_i+1]; else  tab.NextTab2 = tab.Tabs[1] end
 								end
 							end
@@ -1998,9 +1986,9 @@ function M.register()
 		
 			if not allSettings.firstLoadMessage[1] then
 				AddWarning(
-				'Please Read!\n\nWelcome to FancyChat addon!\n\nThis is addon provides a highly customizable and interactive chat replacemante for Final Fantasy XI.\nPlease take your time to check all the settings by either clicking the cog wheel icon at the bottom of the chat window or by typing the command \"/fancychat settings\".\n\nYou can hover with your mouse over the (i) icons to learn more about each functionality. This addon features some advanced options that can include unwanted behaviors for certain players. Therefore, please pay extra attention to the (i) marked in red to learn about important critical information about such features.\n\nFor further help you can check the addon manual accessible from the settings menu or through the command \"/fancychat manual\".\n\nHave fun!'
+				'\227\129\138\232\170\173\227\129\191\227\129\143\227\129\160\227\129\149\227\129\132\n\nFancyChat \227\129\184\227\130\136\227\129\134\227\129\147\227\129\157\239\188\129\n\nFinal Fantasy XI \229\144\145\227\129\145\227\129\174\227\128\129\227\130\171\227\130\185\227\130\191\227\131\158\227\130\164\227\130\186\230\128\167\227\129\168\230\147\141\228\189\156\230\128\167\227\129\174\233\171\152\227\129\132\227\131\129\227\131\163\227\131\131\227\131\136\231\189\174\230\143\155\227\130\162\227\131\137\227\130\170\227\131\179\227\129\167\227\129\153\227\128\130\n\227\131\129\227\131\163\227\131\131\227\131\136\228\184\139\233\131\168\227\129\174\230\173\175\232\187\138\227\130\162\227\130\164\227\130\179\227\131\179\227\128\129\227\129\190\227\129\159\227\129\175\227\130\179\227\131\158\227\131\179\227\131\137 \"/fancychat settings\" \227\129\139\227\130\137\232\168\173\229\174\154\227\130\146\231\162\186\232\170\141\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130\n\n\229\144\132\230\169\159\232\131\189\227\129\174 (i) \227\130\162\227\130\164\227\130\179\227\131\179\227\129\171\227\131\158\227\130\166\227\130\185\227\130\146\229\144\136\227\130\143\227\129\155\227\130\139\227\129\168\232\170\172\230\152\142\227\129\140\232\161\168\231\164\186\227\129\149\227\130\140\227\129\190\227\129\153\227\128\130\228\184\128\233\131\168\227\129\174\228\184\138\231\180\154\227\130\170\227\131\151\227\130\183\227\131\167\227\131\179\227\129\175\231\146\176\229\162\131\227\129\171\227\130\136\227\129\163\227\129\166\230\132\143\229\155\179\227\129\151\227\129\170\227\129\132\229\139\149\228\189\156\227\129\171\227\129\170\227\130\139\227\129\147\227\129\168\227\129\140\227\129\130\227\130\138\227\129\190\227\129\153\227\128\130\232\181\164\227\129\132 (i) \227\129\175\231\137\185\227\129\171\233\135\141\232\166\129\227\129\170\230\179\168\230\132\143\231\130\185\227\129\167\227\129\153\227\128\130\n\n\227\129\149\227\130\137\227\129\171\232\169\179\227\129\151\227\129\143\227\129\175\227\128\129\232\168\173\229\174\154\227\131\161\227\131\139\227\131\165\227\131\188\227\129\190\227\129\159\227\129\175 \"/fancychat manual\" \227\129\139\227\130\137\227\131\158\227\131\139\227\131\165\227\130\162\227\131\171\227\130\146\233\150\139\227\129\145\227\129\190\227\129\153\227\128\130\n\n\227\129\169\227\129\134\227\129\158\227\129\138\230\165\189\227\129\151\227\129\191\227\129\143\227\129\160\227\129\149\227\129\132\239\188\129'
 				,
-				dsize.y/2, allSettings.firstLoadMessage, dsize.x/2, 'Welcome to FancyChat')
+				dsize.y/2, allSettings.firstLoadMessage, dsize.x/2, 'FancyChat \227\129\184\227\130\136\227\129\134\227\129\147\227\129\157')
 			end
 		end
 	
@@ -2028,7 +2016,7 @@ function M.register()
 			set.zoneTip.visible = false
 		end
 		if set.zoneTip.visible then
-			-- NoBringToFrontOnFocus is deliberately absent — without it,
+			-- NoBringToFrontOnFocus is deliberately absent  without it,
 			-- clicks on the popup get stolen by overlapping chat windows.
 			local wFlags = bit.bor(
 				ImGuiWindowFlags_NoDecoration,
@@ -2106,14 +2094,14 @@ function M.register()
 					-- Open the FFXIclopedia wiki page in the user's
 					-- default browser.  ashita.misc.open_url is a
 					-- one-liner; no in-game image rendering needed.
-					if imgui.Selectable('Open '..zone..' on FFXIclopedia') then
+					if imgui.Selectable(zone..' \227\130\146 FFXIclopedia \227\129\167\233\150\139\227\129\143') then
 						ashita.misc.open_url(utils.GetZoneWikiUrl(zone))
 						set.zoneTip.visible = false
 					end
 
 					-- bg-wiki page (independent of FFXIclopedia, useful
 					-- when Cloudflare blocks Fandom).
-					if imgui.Selectable('Open '..zone..' on bg-wiki') then
+					if imgui.Selectable(zone..' \227\130\146 bg-wiki \227\129\167\233\150\139\227\129\143') then
 						ashita.misc.open_url(utils.GetBgWikiZoneUrl(zone))
 						set.zoneTip.visible = false
 					end
@@ -2129,10 +2117,10 @@ function M.register()
 					end
 					local sections = set.zoneTip.localMaps[zone]
 					-- Three valid states for activeSection[zone]:
-					--   nil   → never touched on this popup-open  → default to 'Maps' open
-					--   false → user explicitly clicked the green '-' to collapse
-					--           the open section          → no section open
-					--   string → that section is open
+					--   nil    never touched on this popup-open   default to 'Maps' open
+					--   false  user explicitly clicked the green '-' to collapse
+					--           the open section           no section open
+					--   string  that section is open
 					-- We can't use `or 'Maps'` here because Lua treats `false`
 					-- as falsy too, so a collapsed state would silently
 					-- re-expand Maps the next frame.
@@ -2145,8 +2133,8 @@ function M.register()
 						-- single greyed-out "(No Map)" placeholder.
 						-- No other section headers are drawn for these
 						-- zones (none exist on disk).
-						imgui.TextDisabled('- Maps -')
-						imgui.TextDisabled('  (No Map)')
+						imgui.TextDisabled('- \229\156\176\229\155\179 -')
+						imgui.TextDisabled('  \239\188\136\229\156\176\229\155\179\227\129\170\227\129\151\239\188\137')
 					else
 						-- Each section row is "[+/- button] section name".
 						-- Button size is locked to a square scaled by the
@@ -2341,10 +2329,10 @@ function M.register()
 		end
 
 		-- Zone-map windows.  Each entry in set.zoneMapWindows was
-		-- pushed by the popup's "Show map: …" Selectable above and
+		-- pushed by the popup's "Show map: " Selectable above and
 		-- carries its own pre-decoded D3D8 texture pointer.  Draw
 		-- each in its own draggable, resizable ImGui window with the
-		-- close-X enabled — the user dismisses an individual map via
+		-- close-X enabled  the user dismisses an individual map via
 		-- that X.  When opened[1] flips to false (X clicked), drop
 		-- the entry from the list; the texture stays cached in
 		-- set.zoneMapTextures[url] for instant re-open.
@@ -2383,10 +2371,10 @@ function M.register()
 			imgui.PushStyleColor(ImGuiCol_TitleBgCollapsed, _bgVec)
 			-- ID suffix is the per-instance uid (NOT the array index)
 			-- so closing an earlier window doesn't reshuffle the IDs
-			-- of the remaining ones — without that, ImGui would map
+			-- of the remaining ones  without that, ImGui would map
 			-- each surviving window onto the previous slot's saved
 			-- size, snapping it to a different size on close.
-			if imgui.Begin('Map: '..mw.title..'##ZoneMap'..tostring(mw.uid),
+			if imgui.Begin('\229\156\176\229\155\179: '..mw.title..'##ZoneMap'..tostring(mw.uid),
 				mw.opened, ImGuiWindowFlags_NoSavedSettings) then
 				-- Scale the image to fit the content region while
 				-- preserving aspect ratio, then centre it both
@@ -2474,6 +2462,7 @@ function M.register()
 				w2_x,       w2_y,       w2_w,           w2_h,           w2_visible, w2_extra)
 		end
 
+		if _jpPushed then imgui_font.pop() end
 	end);
 
 	ashita.events.register('d3d_endscene', 'd3d_endscene_callback1', function (isRenderingBackBuffer)

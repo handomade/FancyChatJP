@@ -1,6 +1,13 @@
 # In-game data — generated at runtime, per-character, not source
 logs/
 
+# Personal palettes (keep the shipped default)
+chatcolors/colorset_*
+!chatcolors/default_colorset
+
+# Local backups of utils.lua
+_utils.lua
+
 # Backup files left by editing tools
 *.bak_*
 *.preMod_*
@@ -10,8 +17,10 @@ logs/
 *.preOpt_*
 *.temp_*
 
-# Workflow / tooling state
+# Editor / workflow
 .claude/
+.cursor/
+*.swp
 
 # Palette-extraction artefact (developer-only)
 extracted_palette.txt
@@ -19,3 +28,5 @@ extracted_palette.txt
 # Map downloader artefacts (generated each run; not source)
 maps/_summary.txt
 maps/__pycache__/
+__pycache__/
+*.pyc

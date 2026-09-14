@@ -1,4 +1,4 @@
--- lib/ui_panels.lua — draw_guideme() (wiki walkthrough viewer) and
+-- lib/ui_panels.lua  draw_guideme() (wiki walkthrough viewer) and
 -- draw_notepad() (per-character notes, max 10).
 
 require('common')
@@ -65,7 +65,7 @@ function M.draw_guideme()
 
 	PushWindowStyle()
 
-	if imgui.Begin('FancyChat - GuideMe (experimental)', fcw[1].GuideMeOpened, windowFlags) then
+	if imgui.Begin('FancyChat - GuideMe\239\188\136\229\174\159\233\168\147\231\154\132\239\188\137', fcw[1].GuideMeOpened, windowFlags) then
 		if imguiWrap.IsWindowHovered(ImGuiHoveredFlags_RectOnly) then ResetAutoHideTimer() end
 
 		imgui.PushItemWidth(imgui.GetWindowWidth() / 2 - 130)
@@ -75,10 +75,10 @@ function M.draw_guideme()
 		imgui.SameLine()
 
 		if fcw[1].GuideMeURL[1] == '' then
-			fcw[1].ErrorMsg = '> Paste in the URL text box above a ffxiclopedia or bg-wiki\n  mission/quest or object walkthrough page and click [Load]'
+			fcw[1].ErrorMsg = '> \228\184\138\227\129\174 URL \230\172\132\227\129\171 ffxiclopedia \227\129\190\227\129\159\227\129\175 bg-wiki \227\129\174\n  \227\131\159\227\131\131\227\130\183\227\131\167\227\131\179 / \227\130\175\227\130\168\227\130\185\227\131\136\232\167\163\232\170\172\227\131\154\227\131\188\227\130\184\227\130\146\232\178\188\227\129\163\227\129\166 [\232\170\173\232\190\188] \227\130\146\230\138\188\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132'
 		end
 
-		if imgui.Button('Load', {50, 0}) then
+		if imgui.Button('\232\170\173\232\190\188', {70, 0}) then
 			if fcw[1].GuideMeURL[1] ~= '' then
 				if fcw[1].GuideMeURL[1]:match('^[a-zA-Z][a-zA-Z%d+.-]*:')
 					and (string.find(fcw[1].GuideMeURL[1], 'ffxiclopedia')
@@ -87,10 +87,10 @@ function M.draw_guideme()
 					local response, status = http.request(fcw[1].GuideMeURL[1])
 
 					if not response then
-						fcw[1].ErrorMsg = '> Failed to fetch page. Status:'..tostring(status or 'unknown')
+						fcw[1].ErrorMsg = '> \227\131\154\227\131\188\227\130\184\227\129\174\229\143\150\229\190\151\227\129\171\229\164\177\230\149\151\227\129\151\227\129\190\227\129\151\227\129\159\227\128\130\231\138\182\230\133\139:'..tostring(status or '\228\184\141\230\152\142')
 						fcw[1].GuideMeWalkthrough = nil
 					elseif is_cloudflare_challenge(response) then
-						fcw[1].ErrorMsg = '> Page blocked by Cloudflare bot protection.\n  Try disabling your VPN, or use the equivalent\n  article on bg-wiki.com.'
+						fcw[1].ErrorMsg = '> Cloudflare \227\129\174\227\131\156\227\131\131\227\131\136\229\175\190\231\173\150\227\129\167\227\131\150\227\131\173\227\131\131\227\130\175\227\129\149\227\130\140\227\129\190\227\129\151\227\129\159\227\128\130\n  VPN \227\130\146\229\136\135\227\130\139\227\129\139\227\128\129bg-wiki.com \229\129\180\227\129\174\229\144\140\227\129\152\232\168\152\228\186\139\227\130\146\232\169\166\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130'
 						fcw[1].GuideMeWalkthrough = nil
 					else
 						fcw[1].GuideMeWalkthrough = response:match('(<h[1-3]>.-Walkthrough.-</h[1-3]>.-<div class="printfooter">)')
@@ -120,7 +120,7 @@ function M.draw_guideme()
 						end
 
 						if not fcw[1].GuideMeWalkthrough then
-							fcw[1].ErrorMsg = '> Walkthrough section not found! Guide me only works\n  with missions or quest walkthrough pages.'
+							fcw[1].ErrorMsg = '> Walkthrough \227\130\187\227\130\175\227\130\183\227\131\167\227\131\179\227\129\140\232\166\139\227\129\164\227\129\139\227\130\138\227\129\190\227\129\155\227\130\147\227\128\130\n  \227\131\159\227\131\131\227\130\183\227\131\167\227\131\179 / \227\130\175\227\130\168\227\130\185\227\131\136\227\129\174\232\167\163\232\170\172\227\131\154\227\131\188\227\130\184\227\129\167\227\129\174\227\129\191\229\139\149\228\189\156\227\129\151\227\129\190\227\129\153\227\128\130'
 							fcw[1].GuideMeWalkthrough = nil
 						else
 							fcw[1].GuideMeWalkthrough = utils.GetWalkthrough(fcw[1].GuideMeWalkthrough)
@@ -130,17 +130,17 @@ function M.draw_guideme()
 						end
 					end
 				else
-					fcw[1].ErrorMsg = '> Invalid URL. Make sure it is a ffxiclopedia or bg-wiki\n  page starting with https://'
+					fcw[1].ErrorMsg = '> URL \227\129\140\228\184\141\230\173\163\227\129\167\227\129\153\227\128\130https:// \227\129\167\229\167\139\227\129\190\227\130\139\n  ffxiclopedia \227\129\190\227\129\159\227\129\175 bg-wiki \227\129\174\227\131\154\227\131\188\227\130\184\227\129\171\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132'
 					fcw[1].GuideMeWalkthrough = nil
 				end
 			else
-				fcw[1].ErrorMsg = '> Paste in the URL text box above a ffxiclopedia or bg-wiki\n  mission or quest walkthrough page and click [Load]'
+				fcw[1].ErrorMsg = '> \228\184\138\227\129\174 URL \230\172\132\227\129\171 ffxiclopedia \227\129\190\227\129\159\227\129\175 bg-wiki \227\129\174\n  \227\131\159\227\131\131\227\130\183\227\131\167\227\131\179 / \227\130\175\227\130\168\227\130\185\227\131\136\232\167\163\232\170\172\227\131\154\227\131\188\227\130\184\227\130\146\232\178\188\227\129\163\227\129\166 [\232\170\173\232\190\188] \227\130\146\230\138\188\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132'
 				fcw[1].GuideMeWalkthrough = nil
 			end
 		end
 
 		imgui.SameLine() imgui.Dummy({10, 0}) imgui.SameLine()
-		imgui.Text('Text Size') imgui.SameLine()
+		imgui.Text('\230\150\135\229\173\151\227\130\181\227\130\164\227\130\186') imgui.SameLine()
 
 		if imgui.ArrowButton('#DecreaseFontScale', ImGuiDir_Down) then
 			if allSettings.GuideMeFontScale > 0.5 then
@@ -158,9 +158,9 @@ function M.draw_guideme()
 		imgui.SameLine() imgui.Dummy({10, 0}) imgui.SameLine()
 
 		if fcw[1].GuideMeDocked then
-			if imgui.Button('Undock', {70, 0}) then fcw[1].GuideMeDocked = false end
+			if imgui.Button('\232\167\163\233\153\164', {70, 0}) then fcw[1].GuideMeDocked = false end
 		else
-			if imgui.Button('Dock', {70, 0}) then fcw[1].GuideMeDocked = true end
+			if imgui.Button('\229\155\186\229\174\154', {70, 0}) then fcw[1].GuideMeDocked = true end
 		end
 
 		imguiWrap.BeginChild('GuideMe child',
@@ -209,17 +209,17 @@ function M.draw_notepad()
 
 	PushWindowStyle()
 
-	if imgui.Begin('FancyChat - Notes (experimental)', fcw[1].NotepadOpened, windowFlags) then
+	if imgui.Begin('FancyChat - \227\131\161\227\131\162\229\184\179\239\188\136\229\174\159\233\168\147\231\154\132\239\188\137', fcw[1].NotepadOpened, windowFlags) then
 		if imguiWrap.IsWindowHovered(ImGuiHoveredFlags_RectOnly) then ResetAutoHideTimer() end
 
-		AddTooltip('Save up to 10 Notes!\n- Use the textbox to manually add a note.\n- Use Shitf+Click on any message in chat to save it directly as a note.', 0)
+		AddTooltip('\227\131\161\227\131\162\227\129\175\230\156\128\229\164\16710\228\187\182\227\129\167\227\129\153\227\128\130\n- \227\131\134\227\130\173\227\130\185\227\131\136\230\172\132\227\129\139\227\130\137\230\137\139\229\139\149\232\191\189\229\138\160\227\129\167\227\129\141\227\129\190\227\129\153\227\128\130\n- \227\131\129\227\131\163\227\131\131\227\131\136\232\161\140\227\130\146 Shift+\227\130\175\227\131\170\227\131\131\227\130\175\227\129\153\227\130\139\227\129\168\227\128\129\227\129\157\227\129\174\232\161\140\227\130\146\227\131\161\227\131\162\227\129\168\227\129\151\227\129\166\228\191\157\229\173\152\227\129\151\227\129\190\227\129\153\227\128\130', 0)
 		imgui.SameLine() imgui.SetCursorPosY(imgui.GetCursorPosY() - 4)
 
 		imgui.PushItemWidth(imgui.GetWindowWidth() - 316)
 		imgui.InputText('##NoteInput', fcw[1].Note, 300, bit.bor(ImGuiInputTextFlags_AutoSelectAll))
 		imgui.SameLine()
 
-		if imgui.Button('Add Note', {100, 0}) then
+		if imgui.Button('\232\191\189\229\138\160', {100, 0}) then
 			if #allSettings.Notes < 10 and #fcw[1].Note[1] > 0 then
 				table.insert(allSettings.Notes, fcw[1].Note[1])
 				fcw[1].Note = T{''}
@@ -231,9 +231,9 @@ function M.draw_notepad()
 		imgui.SameLine() imgui.Dummy({0, 0}) imgui.SameLine()
 
 		if fcw[1].NotepadDocked then
-			if imgui.Button('Undock', {70, 0}) then fcw[1].NotepadDocked = false end
+			if imgui.Button('\232\167\163\233\153\164', {70, 0}) then fcw[1].NotepadDocked = false end
 		else
-			if imgui.Button('Dock', {70, 0}) then fcw[1].NotepadDocked = true end
+			if imgui.Button('\229\155\186\229\174\154', {70, 0}) then fcw[1].NotepadDocked = true end
 		end
 
 		local font = imgui.GetFont()

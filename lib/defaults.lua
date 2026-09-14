@@ -1,4 +1,4 @@
--- lib/defaults.lua — initial-state factories (default_*) and styling
+-- lib/defaults.lua  initial-state factories (default_*) and styling
 -- constants.  Pure data; sole side effect is utils.LoadTextures().
 
 require('common')
@@ -9,7 +9,7 @@ local utils = require('utils')
 local M = {}
 
 -- ================================================================
--- UIWindow state — memory pointers, FFXI-side menu/window tracking.
+-- UIWindow state  memory pointers, FFXI-side menu/window tracking.
 -- ================================================================
 function M.default_uiw()
 	return T{
@@ -48,7 +48,7 @@ function M.default_uiw()
 end
 
 -- ================================================================
--- FancyChat windows — three indexed entries:
+-- FancyChat windows  three indexed entries:
 --   [1] primary chat (full state)
 --   [2] secondary chat (subset)
 --   [3] BigMode overlay (subset)
@@ -56,10 +56,11 @@ end
 function M.default_fcw()
 	return T{
 		T{
+			-- cexi
 			LastCommands = T{
 				{}, 0,
-				{'/heal', '/sit', '/logout', '/leave', '/invite <t>', '/check <t>',
-				 '/search all', '/playtime'},
+				{'!mog', '!chef', '!signet', '!sanction', '!sigil', '!ventures',
+				 '!points', '!prestige', '!fatigue', '!currency', '!dailies', '!pops'},
 				1
 			},
 			HasDoneServMes		  = false,
@@ -222,6 +223,9 @@ function M.default_fcw()
 			HLeft                = 0,
 			BigModePrev          = false,
 			BigMode              = false,
+			-- Which chat window BigMode is showing (1 or 2).
+			-- Modifier + D-pad left/right switches this when SecondChat is on.
+			SourceWindow         = 1,
 			Clicking             = false,
 			RoRectBaseY          = 0,
 			ScrollPos            = 0,
@@ -314,7 +318,7 @@ function M.default_settings()
 		-- through `set.InstantChatScroll` so it's only committed on
 		-- "Restart & apply".
 		InstantChatScroll    = T{false},
-		CombatSplitChar      = {'Greater >', 0x003E},  -- alternatives: 0x7E ~, 0x2022 •, 0x2043 ⁃
+		CombatSplitChar      = {'Greater >', 0x003E},  -- alternatives: 0x7E ~, 0x2022 , 0x2043 
 		GuideMeSecondWindow  = T{false},
 		GuideMeFontScale     = 1,
 		EnableFastScroll     = T{true},
@@ -333,8 +337,14 @@ function M.default_settings()
 		SelectedTab          = 'All',
 		SelectedTab2         = 'All',
 		HideCombatFromAll    = T{false},
+		-- Window 2 only: All tab shows the AllAlt (non-combat) buffer.
+		-- Window 1 can stay on Combat while window 2 All hides combat.
+		HideCombatFromAll2   = T{false},
 		SecondChat           = T{false},
 		chatLineMaxL         = 100,
+		-- Visual columns consumed by one full-width CJK glyph, relative
+		-- to one half-width (ASCII) column.  Meiryo is ~1.70; MS Gothic 2.00.
+		cjkWidthRatio        = 1.70,
 		ChatLines            = 8,
 		WindowPosOffset      = T{0, 0, 0, 0},
 		defaultColor         = 0xFFFFFFFF,
@@ -432,7 +442,7 @@ function M.default_settings()
 			box_width      = 0,
 			font_alignment = 0,
 			font_color     = 0xFFFFFFFF,
-			font_family    = 'Consolas',
+			font_family    = 'Meiryo',
 			font_flags     = gdi.FontFlags.Bold,
 			font_height    = 20,
 			gradient_color = 0x00000000,
@@ -503,12 +513,13 @@ function M.default_colors()
 		dmggot       = {0xFFFA4343, 0xFFFFA269},
 		spelldmgdone = {0xFFADFF33, 0xFF5EE0DE},
 		spelldmggot  = {0xFFFC2B43, 0xFFE6874C},
+		cexi         = {0xFF00FFB3, 0xFFFF0055},
 	}
 end
 
 -- ================================================================
 -- Human-readable labels + tooltips for each color slot, used by the
--- Settings UI's Font Colors tab.  Constant — exported by reference.
+-- Settings UI's Font Colors tab.  Constant  exported by reference.
 -- ================================================================
 M.color_descriptions = {
 	tell         = {'Tell',                '/tell messages'},
@@ -531,6 +542,7 @@ M.color_descriptions = {
 	dmggot       = {'Damage Taken',  	   'Highlights damage taken by you or your missed attacks.'},
 	spelldmgdone = {'Spell Dmg Done',      'Highlights spell damage done'},
 	spelldmggot  = {'Spell Dmg Taken',     'Highlights spell damage taken'},
+	cexi         = {'CEXI',                'CEXI content messages'},
 	ability      = {'Ability/Spell',       'Highlights an ability or spell used by an Entity'},
 	you          = {'You',                 'Color highlighting youin combat text.'},
 	actor1       = {'Friend Entity',       'Color highlighting the friendly entity in combat text.\n(i.e. the player, party members, etc.'},
@@ -583,6 +595,14 @@ function M.default_gamepad()
 		-- on Escape (key_state callback) or by clicking the same row's
 		-- listen button again.
 		listenKey       = nil,
+		listenEscDown   = false,
+		lastApi         = nil,
+		lastButton      = nil,
+		lastState       = nil,
+		lastHatDir      = nil,
+		lastClock       = 0,
+		lastXinput      = 0,
+		lastBindApi     = nil,
 	}
 end
 

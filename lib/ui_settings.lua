@@ -1,4 +1,4 @@
--- lib/ui_settings.lua — Settings tabbed window.  Six tabs: Chat
+-- lib/ui_settings.lua  Settings tabbed window.  Six tabs: Chat
 -- Window, Font Colors, Shortcuts, Extra, CL Filters, Tools.
 
 require('common')
@@ -58,7 +58,7 @@ function M.draw_settings_panel()
 
 	imgui.SetNextWindowSize({dsize.x / 3.8, dsize.y / 2.7})
 	imgui.SetNextWindowSizeConstraints({550, 300}, {FLT_MAX, FLT_MAX})
-	imgui.Begin('FancyChat Settings##_'+fcw[1].PlayerName, allSettings.settingsOpened,
+	imgui.Begin('FancyChat \232\168\173\229\174\154##_'+fcw[1].PlayerName, allSettings.settingsOpened,
 		bit.bor(ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoNav))
 
 	local setsizex, setsizey = imgui.GetWindowSize()
@@ -68,14 +68,14 @@ function M.draw_settings_panel()
 		----------------------------------------------------------------
 		-- Tab: Chat Window
 		----------------------------------------------------------------
-		if imgui.BeginTabItem('Chat Window', nil) then
+		if imgui.BeginTabItem('\227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166', nil) then
 			imguiWrap.BeginChild('##Chat Window Child',
 				{(setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3, setsizey * 2.7 / 2.8 - 60}, true)
 
 			local fontSize = T{set.FontHeight}
 			local cposY = imgui.GetCursorPosY()
 			local cposX = imgui.GetCursorPosX()
-			imgui.Text('Font Size')
+			imgui.Text('\227\131\149\227\130\169\227\131\179\227\131\136\227\130\181\227\130\164\227\130\186')
 			imgui.SameLine()
 			imgui.SetCursorPosY(cposY - 3)
 			imgui.PushItemWidth(dsize.x / 7.5)
@@ -88,7 +88,7 @@ function M.draw_settings_panel()
 			cposY = imgui.GetCursorPosY()
 			cposX = imgui.GetCursorPosX()
 			imgui.SetCursorPosY(cposY + 10)
-			imgui.Text('Chat Width')
+			imgui.Text('\227\131\129\227\131\163\227\131\131\227\131\136\229\185\133')
 			imgui.SameLine()
 			imgui.SetCursorPosY(cposY + 7)
 			imgui.SetCursorPosX((dsize.x / 4.3 - dsize.x / 8) * (1920 / dsize.x))
@@ -113,7 +113,7 @@ function M.draw_settings_panel()
 			cposY = imgui.GetCursorPosY()
 			cposX = imgui.GetCursorPosX()
 			imgui.SetCursorPosY(cposY + 10)
-			imgui.Text('Plate BG Opacity')
+			imgui.Text('\232\131\140\230\153\175\227\129\174\228\184\141\233\128\143\230\152\142\229\186\166')
 			imgui.SameLine()
 			imgui.SetCursorPosY(cposY + 7)
 			imgui.SetCursorPosX((dsize.x / 4.3 - dsize.x / 8) * (1920 / dsize.x))
@@ -131,7 +131,7 @@ function M.draw_settings_panel()
 			-- row above, hence NoAlpha on both widgets.
 			cposY = imgui.GetCursorPosY()
 			imgui.SetCursorPosY(cposY + 10)
-			imgui.Text('Plate BG Color')
+			imgui.Text('\232\131\140\230\153\175\232\137\178')
 			imgui.SameLine()
 			imgui.SetCursorPosY(cposY + 7)
 			imgui.SetCursorPosX((dsize.x / 4.3 - dsize.x / 8) * (1920 / dsize.x))
@@ -147,7 +147,7 @@ function M.draw_settings_panel()
 					plateBGchanged = true
 				end
 				imgui.Separator()
-				if imgui.Button('Confirm##plateBGColorConfirm', {-1, 0}) then
+				if imgui.Button('\231\162\186\229\174\154##plateBGColorConfirm', {-1, 0}) then
 					imgui.CloseCurrentPopup()
 				end
 				imgui.EndPopup()
@@ -165,7 +165,7 @@ function M.draw_settings_panel()
 			cposY = imgui.GetCursorPosY()
 			cposX = imgui.GetCursorPosX()
 			imgui.SetCursorPosY(cposY + 10)
-			imgui.Text('Number of chat lines')
+			imgui.Text('\232\161\168\231\164\186\232\161\140\230\149\176')
 			imgui.SameLine()
 			imgui.SetCursorPosY(cposY + 7)
 			imgui.SetCursorPosX((dsize.x / 4.3 - dsize.x / 8) * (1920 / dsize.x))
@@ -175,18 +175,33 @@ function M.draw_settings_panel()
 			imgui.PopItemWidth()
 
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Enable second chat window', {set.SecondChat[1]}) then
+			if imgui.Checkbox('\231\172\1722\227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\130\146\230\156\137\229\138\185\227\129\171\227\129\153\227\130\139', {set.SecondChat[1]}) then
 				set.SecondChat[1] = not set.SecondChat[1]
 			end
 
+			imgui.Dummy({0, 2})
+			imgui.Dummy({18, 0})
+			imgui.SameLine()
+			if not allSettings.HideCombatFromAll2 then
+				allSettings.HideCombatFromAll2 = T{false}
+			end
+			if imgui.Checkbox('\231\172\1722\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\174\227\128\140\229\133\168\227\129\166\227\128\141\227\129\139\227\130\137\230\136\166\233\151\152\227\130\146\233\153\164\227\129\143##HideCombatFromAll2', {allSettings.HideCombatFromAll2[1]}) then
+				allSettings.HideCombatFromAll2[1] = not allSettings.HideCombatFromAll2[1]
+				if allSettings.SecondChat[1] then
+					RefreshAllTabBuffer(2)
+				end
+				SaveSettings()
+			end
+			AddTooltip('\231\172\1722\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\174\227\128\140\229\133\168\227\129\166\227\128\141\227\130\191\227\131\150\227\129\160\227\129\145\227\128\129\230\136\166\233\151\152\227\131\173\227\130\176\227\130\146\233\153\164\227\129\141\227\129\190\227\129\153\227\128\130\231\172\1721\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\175\230\136\166\233\151\152\227\130\191\227\131\150\227\129\174\227\129\190\227\129\190\228\189\191\227\129\136\227\129\190\227\129\153\227\128\130\229\134\141\232\181\183\229\139\149\227\129\175\228\184\141\232\166\129\227\129\167\227\129\153\227\128\130Extra \227\129\174\227\128\140\229\133\168\227\129\166\227\130\191\227\131\150\227\129\139\227\130\137\233\154\160\227\129\153\227\128\141\227\129\175\228\184\161\230\150\185\227\129\174\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\171\229\138\185\227\129\141\227\129\190\227\129\153\227\128\130', 0, true)
+
 			imgui.Dummy({0, 5})
-			imgui.Text('Messages shown in Custom tab')
-			AddTooltip('The messages selected for the custom tab won\'t appear in All if Hide from All is enabled in \'Extra\' settings.', 0, true)
+			imgui.Text('\227\130\171\227\130\185\227\130\191\227\131\160\227\130\191\227\131\150\227\129\171\232\161\168\231\164\186\227\129\153\227\130\139\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184')
+			AddTooltip('Extra \232\168\173\229\174\154\227\129\174\227\128\140\229\133\168\227\129\166\227\130\191\227\131\150\227\129\139\227\130\137\230\136\166\233\151\152/\227\130\171\227\130\185\227\130\191\227\131\160\227\130\146\233\154\160\227\129\153\227\128\141\227\129\140\227\130\170\227\131\179\227\129\174\227\129\168\227\129\141\227\128\129\227\129\147\227\129\147\227\129\167\233\129\184\227\130\147\227\129\160\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\175\229\133\168\227\129\166\227\130\191\227\131\150\227\129\171\227\129\175\229\135\186\227\129\190\227\129\155\227\130\147\227\128\130', 0, true)
 			if imgui.Checkbox('NPC',  {set.CustomTabModes[1]}) then set.CustomTabModes[1] = not set.CustomTabModes[1] end imgui.SameLine()
 			cposY = imgui.GetCursorPosY()
-			AddTooltip('Depending on the server settings, this might not catch all NPC messages or catch some /say messages.', 4) imgui.SameLine() imgui.SetCursorPosY(cposY)
+			AddTooltip('\227\130\181\227\131\188\227\131\144\227\131\188\232\168\173\229\174\154\227\129\171\227\130\136\227\129\163\227\129\166\227\129\175\227\128\129NPC\229\143\176\232\169\158\227\130\146\229\143\150\227\130\138\227\129\147\227\129\188\227\129\151\227\129\159\227\130\138\227\128\129/say \227\130\146\230\139\190\227\129\163\227\129\166\227\129\151\227\129\190\227\129\134\227\129\147\227\129\168\227\129\140\227\129\130\227\130\138\227\129\190\227\129\153\227\128\130', 4) imgui.SameLine() imgui.SetCursorPosY(cposY)
 			if imgui.Checkbox('Tell', {set.CustomTabModes[4]}) then set.CustomTabModes[4] = not set.CustomTabModes[4] end imgui.SameLine()
-			if imgui.Checkbox('Party',{set.CustomTabModes[3]}) then set.CustomTabModes[3] = not set.CustomTabModes[3] end imgui.SameLine()
+			if imgui.Checkbox('\227\131\145\227\131\188\227\131\134\227\130\163',{set.CustomTabModes[3]}) then set.CustomTabModes[3] = not set.CustomTabModes[3] end imgui.SameLine()
 			-- Linkshell row mirrors the tab itself: with split off the
 			-- user sees the single LS checkbox driving slot [2]; with
 			-- split on they see independent L1 / L2 checkboxes driving
@@ -198,16 +213,16 @@ function M.draw_settings_panel()
 			else
 				if imgui.Checkbox('LS',   {set.CustomTabModes[2]}) then set.CustomTabModes[2] = not set.CustomTabModes[2] end imgui.SameLine()
 			end
-			if imgui.Checkbox('Shout',{set.CustomTabModes[5]}) then set.CustomTabModes[5] = not set.CustomTabModes[5] end
+			if imgui.Checkbox('\227\130\183\227\131\163\227\130\166\227\131\136',{set.CustomTabModes[5]}) then set.CustomTabModes[5] = not set.CustomTabModes[5] end
 
 			imgui.Dummy({0, 10})
-			if imgui.Checkbox('Instant new line (skip scroll animation)##InstantChatScroll', {set.InstantChatScroll[1]}) then
+			if imgui.Checkbox('\230\150\176\231\157\128\227\130\146\229\141\179\229\186\167\227\129\171\232\161\168\231\164\186\239\188\136\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171\227\130\162\227\131\139\227\131\161\227\129\170\227\129\151\239\188\137##InstantChatScroll', {set.InstantChatScroll[1]}) then
 				set.InstantChatScroll[1] = not set.InstantChatScroll[1]
 			end
-			AddTooltip('When on, new chat lines appear immediately at the bottom instead of sliding up. Useful on busy combat logs or low-FPS setups. Applies on next addon restart.', 4)
+			AddTooltip('\227\130\170\227\131\179\227\129\171\227\129\153\227\130\139\227\129\168\227\128\129\230\150\176\231\157\128\232\161\140\227\129\140\228\184\139\227\129\139\227\130\137\230\187\145\227\130\137\227\129\154\227\129\153\227\129\144\227\129\171\232\161\168\231\164\186\227\129\149\227\130\140\227\129\190\227\129\153\227\128\130\230\136\166\233\151\152\227\131\173\227\130\176\227\129\140\229\191\153\227\129\151\227\129\132\227\129\168\227\129\141\227\130\132\228\189\142FPS\229\144\145\227\129\145\227\128\130\227\130\162\227\131\137\227\130\170\227\131\179\229\134\141\232\181\183\229\139\149\229\190\140\227\129\171\229\143\141\230\152\160\227\129\149\227\130\140\227\129\190\227\129\153\227\128\130', 4)
 
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Split Linkshell tab into L1 / L2##SplitLinkshellTab', {set.SplitLinkshellTab[1]}) then
+			if imgui.Checkbox('\227\131\170\227\131\179\227\130\175\227\130\183\227\130\167\227\131\171\227\130\191\227\131\150\227\130\146 L1 / L2 \227\129\171\229\136\134\229\137\178##SplitLinkshellTab', {set.SplitLinkshellTab[1]}) then
 				set.SplitLinkshellTab[1] = not set.SplitLinkshellTab[1]
 				-- Migrate the Custom-tab LS membership across the
 				-- split / no-split transition so the checkboxes the
@@ -237,10 +252,10 @@ function M.draw_settings_panel()
 					set.CustomTabModes[7] = false
 				end
 			end
-			AddTooltip('When on, the Linkshell tab is replaced by two separate L1 / L2 tabs. LS1 traffic routes to L1, LS2 traffic routes to L2. Either tab can be independently selected on each chat window. Applies on next addon restart.', 4)
+			AddTooltip('\227\130\170\227\131\179\227\129\171\227\129\153\227\130\139\227\129\168\227\128\129\227\131\170\227\131\179\227\130\175\227\130\183\227\130\167\227\131\171\227\130\191\227\131\150\227\129\140 L1 / L2 \227\129\1742\227\129\164\227\129\171\229\136\134\227\129\139\227\130\140\227\129\190\227\129\153\227\128\130LS1 \227\129\175 L1\227\128\129LS2 \227\129\175 L2 \227\129\184\230\140\175\227\130\138\229\136\134\227\129\145\227\130\137\227\130\140\227\129\190\227\129\153\227\128\130\229\144\132\227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\167\231\139\172\231\171\139\227\129\151\227\129\166\233\129\184\227\129\185\227\129\190\227\129\153\227\128\130\227\130\162\227\131\137\227\130\170\227\131\179\229\134\141\232\181\183\229\139\149\229\190\140\227\129\171\229\143\141\230\152\160\227\129\149\227\130\140\227\129\190\227\129\153\227\128\130', 4)
 
 			imgui.Dummy({0, 5})
-			if imgui.Button('Reset default values') then
+			if imgui.Button('\229\136\157\230\156\159\229\128\164\227\129\171\230\136\187\227\129\153') then
 				set.ChatLineMaxL         = 100
 				set.PlateBGColor         = bit.lshift(bit.tobit(0.3 * 255), 24)
 				set.FontHeight           = 20
@@ -261,9 +276,9 @@ function M.draw_settings_panel()
 			imgui.SetCursorPosY(cposY - 20)
 			cposX = imgui.GetCursorPosX()
 			imgui.SetCursorPosX(cposX + 15)
-			imgui.TextColored({1.0, 0.2, 0.2, 1.0}, 'Changes to all settings above require an addon restart')
-			AddTooltip('The changes to options above won\'t take effect until the addon is restarted', 1, 1)
-			if imgui.Button('Restart & apply') then
+			imgui.TextColored({1.0, 0.2, 0.2, 1.0}, '\228\184\138\232\168\152\227\129\174\229\164\137\230\155\180\227\129\175\227\130\162\227\131\137\227\130\170\227\131\179\229\134\141\232\181\183\229\139\149\229\190\140\227\129\171\229\143\141\230\152\160\227\129\149\227\130\140\227\129\190\227\129\153')
+			AddTooltip('\228\184\138\227\129\174\233\160\133\231\155\174\227\129\175\227\130\162\227\131\137\227\130\170\227\131\179\227\130\146\229\134\141\232\181\183\229\139\149\227\129\153\227\130\139\227\129\190\227\129\167\229\143\141\230\152\160\227\129\149\227\130\140\227\129\190\227\129\155\227\130\147', 1, 1)
+			if imgui.Button('\229\134\141\232\181\183\229\139\149\227\129\151\227\129\166\233\129\169\231\148\168') then
 				fcw[1].Closing = true
 				if not set.SecondChat[1] then
 					allSettings.GuideMeSecondWindow[1] = false
@@ -282,9 +297,31 @@ function M.draw_settings_panel()
 				AshitaCore:GetChatManager():QueueCommand(1, '/addon reload fancychat')
 			end
 
+			imgui.Dummy({0, 20})
+			imgui.Text('\229\133\168\232\167\146\227\129\174\229\185\133\239\188\136\229\141\138\232\167\146\230\175\148\239\188\137')
+			AddTooltip('\229\133\168\232\167\146\239\188\136\230\188\162\229\173\151\227\131\187\227\129\139\227\129\170\239\188\1371\230\150\135\229\173\151\227\129\140\227\128\129\229\141\138\232\167\146\228\189\149\230\150\135\229\173\151\229\136\134\227\129\168\227\129\151\227\129\166\230\138\152\227\130\138\232\191\148\227\129\149\227\130\140\227\130\139\227\129\139\227\129\167\227\129\153\227\128\130Meiryo \227\129\175\227\129\138\227\129\138\227\130\136\227\129\157 1.70\227\128\129MS Gothic \227\129\175 2.00\227\128\130\230\150\176\227\129\151\227\129\132\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\139\227\130\137\227\129\153\227\129\144\229\143\141\230\152\160\227\129\149\227\130\140\227\129\190\227\129\153\239\188\136\229\134\141\232\181\183\229\139\149\228\184\141\232\166\129\239\188\137\227\128\130\231\171\175\227\130\136\227\130\138\230\151\169\227\129\143\230\138\152\227\130\140\227\130\139\227\129\170\227\130\137\228\184\139\227\129\146\227\128\129\227\129\175\227\129\191\229\135\186\227\129\153\227\129\170\227\130\137\228\184\138\227\129\146\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130', 0, true)
+			local cjkRatio = T{allSettings.cjkWidthRatio or 1.70}
+			imgui.PushItemWidth(dsize.x / 7.5)
+			if imgui.SliderFloat('##CjkWidthRatioSlider', cjkRatio, 1.50, 2.00, '%.2f',
+				bit.bor(ImGuiSliderFlags_AlwaysClamp, ImGuiSliderFlags_NoRoundToFormat)) then
+				allSettings.cjkWidthRatio = cjkRatio[1]
+				SaveSettings()
+			end
+			imgui.PopItemWidth()
+			imgui.SameLine()
+			if imgui.Button('1.70##CjkWidthRatioMeiryo') then
+				allSettings.cjkWidthRatio = 1.70
+				SaveSettings()
+			end
+			imgui.SameLine()
+			if imgui.Button('2.00##CjkWidthRatioGothic') then
+				allSettings.cjkWidthRatio = 2.00
+				SaveSettings()
+			end
+
 			imgui.Dummy({0, 35})
-			imgui.Text('Adjust final windows position')
-			AddTooltip('After adjusting the chat window positions manually, use this option to make pixel-by-pixel adjustments', 0)
+			imgui.Text('\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\228\189\141\231\189\174\227\129\174\229\190\174\232\170\191\230\149\180')
+			AddTooltip('\230\137\139\229\139\149\227\129\167\229\139\149\227\129\139\227\129\151\227\129\159\227\129\130\227\129\168\227\129\171\227\128\1291\227\131\148\227\130\175\227\130\187\227\131\171\229\141\152\228\189\141\227\129\167\228\189\141\231\189\174\227\130\146\229\144\136\227\130\143\227\129\155\227\130\139\227\129\159\227\130\129\227\129\174\230\147\141\228\189\156\227\129\167\227\129\153', 0)
 			imgui.Dummy({0, 25})
 			imgui.Dummy({5, 0}) imgui.SameLine()
 			if imgui.Checkbox('1##Window1', {set.AdjWin1[1]}) then set.AdjWin1[1] = not set.AdjWin1[1] end imgui.SameLine() imgui.Dummy({2, 0}) imgui.SameLine()
@@ -340,33 +377,33 @@ function M.draw_settings_panel()
 			imgui.Text('W1 [x:'..tostring(allSettings.WindowPosOffset[1])..', y:'..tostring(allSettings.WindowPosOffset[2])..']\nW2 [x:'..tostring(allSettings.WindowPosOffset[3])..', y:'..tostring(allSettings.WindowPosOffset[4])..']')
 			cposX = imgui.GetCursorPosX()
 			imgui.SetCursorPosX(cposX + 230)
-			if imgui.Button('Save##Offsets') then SaveSettings() end imgui.SameLine()
-			if imgui.Button('Reset##Offsets') then allSettings.WindowPosOffset = {0, 0, 0, 0} end
+			if imgui.Button('\228\191\157\229\173\152##Offsets') then SaveSettings() end imgui.SameLine()
+			if imgui.Button('\227\131\170\227\130\187\227\131\131\227\131\136##Offsets') then allSettings.WindowPosOffset = {0, 0, 0, 0} end
 
 			imgui.Dummy({0, 20})
-			if imgui.Checkbox('Lock Windows Positions (disables dragging)##WindowLock', {allSettings.LockWindowPos[1]}) then
+			if imgui.Checkbox('\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\228\189\141\231\189\174\227\130\146\229\155\186\229\174\154\239\188\136\227\131\137\227\131\169\227\131\131\227\130\176\231\132\161\229\138\185\239\188\137##WindowLock', {allSettings.LockWindowPos[1]}) then
 				allSettings.LockWindowPos[1] = not allSettings.LockWindowPos[1]
 				SaveSettings()
 			end
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Keep FancyChat visible while legacy chat is open##ShowWithLegacy', {allSettings.ShowWithLegacy[1]}) then
+			if imgui.Checkbox('\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\130\146\233\150\139\227\129\132\227\129\166\227\130\130 FancyChat \227\130\146\232\161\168\231\164\186\227\129\151\227\129\159\227\129\190\227\129\190##ShowWithLegacy', {allSettings.ShowWithLegacy[1]}) then
 				allSettings.ShowWithLegacy[1] = not allSettings.ShowWithLegacy[1]
 				SaveSettings()
 			end
-			AddTooltip('When off (default), FancyChat hides itself the moment you click on the legacy FFXI chat or open the chat input. When on, both windows stay visible side by side.', 4)
+			AddTooltip('\227\130\170\227\131\149\239\188\136\229\136\157\230\156\159\229\128\164\239\188\137\227\129\167\227\129\175\227\128\129\229\190\147\230\157\165\227\129\174FFXI\227\131\129\227\131\163\227\131\131\227\131\136\227\130\146\227\130\175\227\131\170\227\131\131\227\130\175\227\129\151\227\129\159\227\130\138\229\133\165\229\138\155\227\130\146\233\150\139\227\129\132\227\129\159\231\158\172\233\150\147\227\129\171 FancyChat \227\129\140\233\154\160\227\130\140\227\129\190\227\129\153\227\128\130\227\130\170\227\131\179\227\129\171\227\129\153\227\130\139\227\129\168\228\184\161\230\150\185\228\184\166\227\130\147\227\129\167\232\161\168\231\164\186\227\129\149\227\130\140\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Show help (i) hover button on the first chat window##HelpButton', {allSettings.HelpButton[1]}) then
+			if imgui.Checkbox('1\231\149\170\231\155\174\227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\227\129\171\227\131\152\227\131\171\227\131\151 (?) \227\131\156\227\130\191\227\131\179\227\130\146\232\161\168\231\164\186##HelpButton', {allSettings.HelpButton[1]}) then
 				allSettings.HelpButton[1] = not allSettings.HelpButton[1]
 				SaveSettings()
 			end
-			AddTooltip('Toggles the small (?) icon at the top-left corner of the first chat window. Hovering it shows a quick reference of built-in mouse / keyboard interactions.', 4)
+			AddTooltip('1\231\149\170\231\155\174\227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\229\183\166\228\184\138\227\129\174 (?) \227\130\162\227\130\164\227\130\179\227\131\179\227\129\174\232\161\168\231\164\186\227\130\146\229\136\135\227\130\138\230\155\191\227\129\136\227\129\190\227\129\153\227\128\130\227\131\155\227\131\144\227\131\188\227\129\167\227\131\158\227\130\166\227\130\185 / \227\130\173\227\131\188\227\131\156\227\131\188\227\131\137\230\147\141\228\189\156\227\129\174\231\176\161\230\152\147\228\184\128\232\166\167\227\129\140\229\135\186\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Compact tabs in the bottom-left corner##ComapctBL', {allSettings.CompactTabsBL[1]}) then
+			if imgui.Checkbox('\227\130\191\227\131\150\227\130\146\229\183\166\228\184\139\227\129\171\227\130\179\227\131\179\227\131\145\227\130\175\227\131\136\233\133\141\231\189\174##ComapctBL', {allSettings.CompactTabsBL[1]}) then
 				allSettings.CompactTabsBL[1] = not allSettings.CompactTabsBL[1]
 				SaveSettings()
 			end
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Enable Auto-Hide window', {allSettings.AutoHideWindow[1]}) then
+			if imgui.Checkbox('\232\135\170\229\139\149\227\129\167\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\130\146\233\154\160\227\129\153', {allSettings.AutoHideWindow[1]}) then
 				allSettings.AutoHideWindow[1] = not allSettings.AutoHideWindow[1]
 				SaveSettings()
 			end
@@ -376,7 +413,7 @@ function M.draw_settings_panel()
 			imgui.Dummy({3, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 18)
 			imgui.Dummy({20, 0}) imgui.SameLine()
-			imgui.Text('Auto-Hide time (seconds) >')
+			imgui.Text('\232\135\170\229\139\149\233\157\158\232\161\168\231\164\186\227\129\190\227\129\167\227\129\174\231\167\146\230\149\176 >')
 			imgui.SameLine()
 			imgui.SetCursorPosY(cposY + 0.5)
 			imgui.SetCursorPosX((dsize.x / 3.7 - dsize.x / 8) * (1920 / dsize.x))
@@ -387,37 +424,44 @@ function M.draw_settings_panel()
 			end
 			imgui.PopItemWidth()
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Use half window length for docked UI elements', {allSettings.UseHalfLength[1]}) then
+			if imgui.Checkbox('\227\131\137\227\131\131\227\130\173\227\131\179\227\130\176UI\227\129\174\229\185\133\227\130\146\227\131\129\227\131\163\227\131\131\227\131\136\227\129\174\229\141\138\229\136\134\227\129\171\227\129\153\227\130\139', {allSettings.UseHalfLength[1]}) then
 				allSettings.UseHalfLength[1] = not allSettings.UseHalfLength[1]
 				SaveSettings()
 			end
-			AddTooltip('Only uses half the length of the chat window as reference for UI elements docked to chat window.', 4)
+			AddTooltip('GuideMe / \227\131\161\227\131\162\229\184\179\227\129\170\227\129\169\227\128\129\227\131\129\227\131\163\227\131\131\227\131\136\227\129\171\227\131\137\227\131\131\227\130\173\227\131\179\227\130\176\227\129\153\227\130\139UI\227\129\174\229\185\133\227\130\146\227\128\129\227\131\129\227\131\163\227\131\131\227\131\136\229\185\133\227\129\174\229\141\138\229\136\134\227\129\171\227\129\151\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Prevent obstructing FFXI UI', {allSettings.EnabledChatMove[1]}) then
+			if imgui.Checkbox('FFXI\227\129\174UI\227\129\168\233\135\141\227\129\170\227\130\137\227\129\170\227\129\132\227\130\136\227\129\134\227\129\171\227\129\154\227\130\137\227\129\153', {allSettings.EnabledChatMove[1]}) then
 				allSettings.EnabledChatMove[1] = not allSettings.EnabledChatMove[1]
 				SaveSettings()
 			end
-			imgui.Dummy({1, 0}) imgui.SameLine() imgui.Text('|  Set what happens to the 2nd chat')
-			local csmodes = {{'Nothing', 1}, {'Hide 2nd', 2}, {'Shift along', 3}}
+			imgui.Dummy({1, 0}) imgui.SameLine() imgui.Text('|  2\231\149\170\231\155\174\227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\227\129\174\229\139\149\228\189\156')
+			local csmodes = {{'Nothing', 1, '\228\189\149\227\130\130\227\129\151\227\129\170\227\129\132'}, {'Hide 2nd', 2, '2\231\149\170\231\155\174\227\130\146\233\154\160\227\129\153'}, {'Shift along', 3, '\228\184\128\231\183\146\227\129\171\227\129\154\227\130\137\227\129\153'}}
+			local cs_preview = allSettings.CSMode[1]
+			for CS_i = 1, #csmodes do
+				if csmodes[CS_i][2] == allSettings.CSMode[2] or csmodes[CS_i][1] == allSettings.CSMode[1] then
+					cs_preview = csmodes[CS_i][3]
+					break
+				end
+			end
 			imgui.Dummy({1, 0}) imgui.SameLine() imgui.SetCursorPosY(imgui.GetCursorPosY() + 4) imgui.Text('| ') imgui.SetCursorPosY(imgui.GetCursorPosY() - 4) imgui.SameLine()
-			if imgui.BeginCombo('##ChatShiftMode', allSettings.CSMode[1], ImGuiComboFlags_None) then
+			if imgui.BeginCombo('##ChatShiftMode', cs_preview, ImGuiComboFlags_None) then
 				for CS_i = 1, #csmodes do
-					if imgui.Selectable(csmodes[CS_i][1]) then
-						allSettings.CSMode = csmodes[CS_i]
+					if imgui.Selectable(csmodes[CS_i][3]) then
+						allSettings.CSMode = {csmodes[CS_i][1], csmodes[CS_i][2]}
 						SaveSettings()
 					end
 				end
 				imgui.EndCombo()
 			end
 			imgui.Dummy({1, 0}) imgui.SameLine() imgui.Text('| ') imgui.SameLine()
-			if imgui.Checkbox('Prevent obstructing Auto-Translate menu as well', {allSettings.MoveChatATMenu[1]}) then
+			if imgui.Checkbox('\227\130\170\227\131\188\227\131\136\227\131\136\227\131\169\227\131\179\227\130\185\227\131\172\227\131\188\227\131\136\227\131\161\227\131\139\227\131\165\227\131\188\227\129\168\227\130\130\233\135\141\227\129\170\227\130\137\227\129\170\227\129\132\227\130\136\227\129\134\227\129\171\227\129\153\227\130\139', {allSettings.MoveChatATMenu[1]}) then
 				allSettings.MoveChatATMenu[1] = not allSettings.MoveChatATMenu[1]
 				SaveSettings()
 			end
 			imgui.Dummy({3, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 18)
 			imgui.Dummy({27, 0}) imgui.SameLine()
-			imgui.Text('[ Experimental ]\n[ Reposition chats if FFXI UI elements overlap ]\n[ Works with the most common game UI elements ]\n[ Only works with chat positions locked ]')
+			imgui.Text('[ \229\174\159\233\168\147\231\154\132 ]\n[ FFXI\227\129\174UI\227\129\168\233\135\141\227\129\170\227\129\163\227\129\159\227\130\137\227\131\129\227\131\163\227\131\131\227\131\136\228\189\141\231\189\174\227\130\146\227\129\154\227\130\137\227\129\151\227\129\190\227\129\153 ]\n[ \227\130\136\227\129\143\228\189\191\227\129\134\227\130\178\227\131\188\227\131\160UI\227\129\171\229\175\190\229\191\156 ]\n[ \227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\228\189\141\231\189\174\227\129\174\229\155\186\229\174\154\227\129\140\227\130\170\227\131\179\227\129\174\227\129\168\227\129\141\227\129\174\227\129\191\229\139\149\228\189\156 ]')
 
 			imgui.EndChild()
 			imgui.EndTabItem()
@@ -426,7 +470,7 @@ function M.draw_settings_panel()
 		----------------------------------------------------------------
 		-- Tab: Font Colors
 		----------------------------------------------------------------
-		if imgui.BeginTabItem('Font Colors', nil) then
+		if imgui.BeginTabItem('\227\131\149\227\130\169\227\131\179\227\131\136\232\137\178', nil) then
 			imguiWrap.BeginChild('leftpane',
 				{((setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3) * set.colorTextW, setsizey * 2.7 / 3 - 60}, true)
 
@@ -445,7 +489,7 @@ function M.draw_settings_panel()
 				local lb = colorDesc[b] and colorDesc[b][1] or b
 				return la < lb
 			end)
-			local skip = {'combat', 'combatspell'}
+			local skip = {'combat', 'combatspell', 'cexi'}
 			set.colorTextW = 0
 			for _, key in ipairs(keys) do
 				if not utils.FindInStringTable(key, skip, 0) then
@@ -461,21 +505,21 @@ function M.draw_settings_panel()
 			imguiWrap.BeginChild('righttpane',
 				{((setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3) * (1 - (set.colorTextW + 0.01)), setsizey * 2.7 / 3 - 60}, true)
 
-			imgui.Text('Color Picker')
+			imgui.Text('\227\130\171\227\131\169\227\131\188\227\131\148\227\131\131\227\130\171\227\131\188')
 			imgui.Separator()
-			imgui.TextWrapped('Pick a color and click an arrow button on the left pane to assign it.')
+			imgui.TextWrapped('\232\137\178\227\130\146\233\129\184\227\130\147\227\129\167\227\128\129\229\183\166\227\131\154\227\130\164\227\131\179\227\129\174\231\159\162\229\141\176\227\131\156\227\130\191\227\131\179\227\129\167\229\137\178\227\130\138\229\189\147\227\129\166\227\129\190\227\129\153\227\128\130')
 			if tmpcolor[1] then set.PickedColor = utils.cloneTable(tmpcolor[1]) end
 			imgui.PushItemWidth(dsize.x / (set.colorTextW * 25))
-			imgui.ColorPicker3('Preview', set.PickedColor)
+			imgui.ColorPicker3('\227\131\151\227\131\172\227\131\147\227\131\165\227\131\188', set.PickedColor)
 			imgui.PopItemWidth()
 			imgui.EndChild()
 
-			if imgui.Button('Reset Colors') then
+			if imgui.Button('\232\137\178\227\130\146\227\131\170\227\130\187\227\131\131\227\131\136') then
 				allSettings.colors = utils.cloneTable(defaultColors)
 				SaveSettings()
 			end
 			imgui.SameLine()
-			if imgui.Button('Export Colors') then
+			if imgui.Button('\232\137\178\227\130\146\230\155\184\227\129\141\229\135\186\227\129\151') then
 				-- Mutex: opening Export closes Import.
 				set.colorIO.importOpen      = false
 				-- (Re-)open: hard-regenerate the suggested filename.
@@ -483,21 +527,21 @@ function M.draw_settings_panel()
 				set.colorIO.exportName[1]   = utils.NextColorsetName(addon.path, fcw[1].PlayerName)
 			end
 			imgui.SameLine()
-			if imgui.Button('Import Colors') then
+			if imgui.Button('\232\137\178\227\130\146\232\170\173\227\129\191\232\190\188\227\129\191') then
 				set.colorIO.exportOpen      = false
 				set.colorIO.importOpen      = true
 				set.colorIO.importFiles     = utils.ListColorsetFiles(addon.path)
 				set.colorIO.importSelected  = 0
 			end
 			imgui.SameLine()
-			AddTooltip('Do not alter the files!', 3, true)
+			AddTooltip('\227\131\149\227\130\161\227\130\164\227\131\171\227\129\175\231\155\180\230\142\165\231\183\168\233\155\134\227\129\151\227\129\170\227\129\132\227\129\167\227\129\143\227\129\160\227\129\149\227\129\132\239\188\129', 3, true)
 			imgui.EndTabItem()
 		end
 
 		----------------------------------------------------------------
 		-- Tab: Shortcuts
 		----------------------------------------------------------------
-		if imgui.BeginTabItem('Shortcuts', nil) then
+		if imgui.BeginTabItem('\227\130\183\227\131\167\227\131\188\227\131\136\227\130\171\227\131\131\227\131\136', nil) then
 			imguiWrap.BeginChild('##Shortcuts Child',
 				{(setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3, setsizey * 2.7 / 2.8 - 60}, true)
 
@@ -511,11 +555,11 @@ function M.draw_settings_panel()
 			local letterS4 = utils.keycodesSpecial[utils.findIndexOfValue(utils.keycodesSpecial, allSettings.shortcutBigS ) ][1]
 
 			-- Hide shortcut
-			imgui.Text('Hide FancyChat Addon')
-			AddTooltip('Quickly hide FancyChat temporarily re-enabling the legacy chat.', 0)
+			imgui.Text('FancyChat \227\130\146\228\184\128\230\153\130\231\154\132\227\129\171\233\154\160\227\129\153')
+			AddTooltip('FancyChat \227\130\146\228\184\128\230\153\130\231\154\132\227\129\171\233\154\160\227\129\151\227\128\129\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\130\146\229\134\141\232\161\168\231\164\186\227\129\151\227\129\190\227\129\153\227\128\130', 0)
 			local cposY = imgui.GetCursorPosY()
 			imgui.SetCursorPosY(cposY + 5)
-			if imgui.Checkbox('Enabled##HideShortcut', {allSettings.shortcutHideEnabled[1]}) then
+			if imgui.Checkbox('\230\156\137\229\138\185##HideShortcut', {allSettings.shortcutHideEnabled[1]}) then
 				allSettings.shortcutHideEnabled[1] = not allSettings.shortcutHideEnabled[1]
 				SaveSettings()
 			end
@@ -546,9 +590,9 @@ function M.draw_settings_panel()
 			imgui.Dummy({0, 20})
 
 			-- BigMode shortcut
-			imgui.Text('Big Window Mode')
-			AddTooltip('Show Window 1 of FancyChat in "Big Mode".', 0)
-			if imgui.Checkbox('Enabled##BigShortcut', {allSettings.shortcutBigEnabled[1]}) then
+			imgui.Text('\227\131\147\227\131\131\227\130\176\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\131\162\227\131\188\227\131\137')
+			AddTooltip('1\231\149\170\231\155\174\227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\227\130\146 Big Mode \227\129\167\232\161\168\231\164\186\227\129\151\227\129\190\227\129\153\227\128\130', 0)
+			if imgui.Checkbox('\230\156\137\229\138\185##BigShortcut', {allSettings.shortcutBigEnabled[1]}) then
 				allSettings.shortcutBigEnabled[1] = not allSettings.shortcutBigEnabled[1]
 				SaveSettings()
 			end
@@ -579,10 +623,10 @@ function M.draw_settings_panel()
 			imgui.Dummy({0, 20})
 
 			-- Tab cycle (window 1) shortcut
-			imgui.Text('Scroll Chat Tabs (window 1)')
+			imgui.Text('\227\131\129\227\131\163\227\131\131\227\131\136\227\130\191\227\131\150\227\130\146\229\136\135\227\130\138\230\155\191\227\129\136\239\188\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1661\239\188\137')
 			cposY = imgui.GetCursorPosY()
 			imgui.SetCursorPosY(cposY + 5)
-			if imgui.Checkbox('Enabled##TabShortcut', {allSettings.shortcutTabEnabled[1]}) then
+			if imgui.Checkbox('\230\156\137\229\138\185##TabShortcut', {allSettings.shortcutTabEnabled[1]}) then
 				allSettings.shortcutTabEnabled[1] = not allSettings.shortcutTabEnabled[1]
 				SaveSettings()
 			end
@@ -613,10 +657,10 @@ function M.draw_settings_panel()
 			imgui.Dummy({0, 20})
 
 			-- Tab cycle (window 2) shortcut
-			imgui.Text('Scroll Chat Tabs (window 2)')
+			imgui.Text('\227\131\129\227\131\163\227\131\131\227\131\136\227\130\191\227\131\150\227\130\146\229\136\135\227\130\138\230\155\191\227\129\136\239\188\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1662\239\188\137')
 			cposY = imgui.GetCursorPosY()
 			imgui.SetCursorPosY(cposY + 5)
-			if imgui.Checkbox('Enabled##Tab2Shortcut', {allSettings.shortcutTab2Enabled[1]}) then
+			if imgui.Checkbox('\230\156\137\229\138\185##Tab2Shortcut', {allSettings.shortcutTab2Enabled[1]}) then
 				allSettings.shortcutTab2Enabled[1] = not allSettings.shortcutTab2Enabled[1]
 				SaveSettings()
 			end
@@ -645,7 +689,7 @@ function M.draw_settings_panel()
 			imgui.PopItemWidth()
 
 			imgui.Dummy({0, 10})
-			if imgui.Button('Reset default keys') then
+			if imgui.Button('\227\130\173\227\131\188\229\137\178\227\130\138\229\189\147\227\129\166\227\130\146\229\136\157\230\156\159\229\140\150') then
 				allSettings.shortcutHide  = 46
 				allSettings.shortcutTab   = 45
 				allSettings.shortcutTab2  = 48
@@ -658,18 +702,17 @@ function M.draw_settings_panel()
 
 			-- Inline command reference
 			imgui.Dummy({0, 20})
-			imgui.Text('Commands to manually macro features')
+			imgui.Text('\227\131\158\227\130\175\227\131\173\231\148\168\227\130\179\227\131\158\227\131\179\227\131\137')
 			local cmds = {
-				{'/fancychat settings', '[Opens/Closes Settings window]'},
-				{'/fancychat guideme',  '[Opens/Closes GuideMe window]'},
-				{'/fancychat notes',    '[Opens/Closes Notes window]'},
-				{'/fancychat compact',  '[Toggles Tabs Compact mode]'},
-				{'/fancychat manual',   '[Opens the addon Manual]'},
-				{'/fancychat bigmode',  '[Toggles the BigMode overlay]'},
-				{'/fancychat tod',      '[Toggles TOD timestamps]'},
-				{'/fancychat ts',       '[Prints a timestamp of the current time]'},
-				{'/fancychat savelogs', '[Saves chat logs in the addon folder]'},
-				--{'/fancychat debug',    '[Opens the developer debug window]'},   -- debug_window disabled
+				{'/fancychat settings', '[\232\168\173\229\174\154\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\130\146\233\150\139\233\150\137]'},
+				{'/fancychat guideme',  '[GuideMe \227\130\146\233\150\139\233\150\137]'},
+				{'/fancychat notes',    '[\227\131\161\227\131\162\229\184\179\227\130\146\233\150\139\233\150\137]'},
+				{'/fancychat compact',  '[\227\130\191\227\131\150\227\129\174\227\130\179\227\131\179\227\131\145\227\130\175\227\131\136\232\161\168\231\164\186\227\130\146\229\136\135\230\155\191]'},
+				{'/fancychat manual',   '[\227\131\158\227\131\139\227\131\165\227\130\162\227\131\171\227\130\146\233\150\139\227\129\143]'},
+				{'/fancychat bigmode',  '[BigMode \227\130\170\227\131\188\227\131\144\227\131\188\227\131\172\227\130\164\227\130\146\229\136\135\230\155\191]'},
+				{'/fancychat tod',      '[\231\178\190\229\175\134TOD\227\130\191\227\130\164\227\131\160\227\130\185\227\130\191\227\131\179\227\131\151\227\130\146\229\136\135\230\155\191]'},
+				{'/fancychat ts',       '[\231\143\190\229\156\168\230\153\130\229\136\187\227\130\146\232\161\168\231\164\186]'},
+				{'/fancychat savelogs', '[\227\131\129\227\131\163\227\131\131\227\131\136\227\131\173\227\130\176\227\130\146\228\191\157\229\173\152]'},
 			}
 			for _, c in ipairs(cmds) do
 				imgui.Dummy({0, 5}) imgui.Dummy({3, 0}) imgui.SameLine()
@@ -680,22 +723,22 @@ function M.draw_settings_panel()
 
 			-- Built-in (non-configurable) mouse + keyboard interactions
 			-- baked into the chat windows.  Distinct from the
-			-- configurable shortcuts above — these are hard-coded
+			-- configurable shortcuts above  these are hard-coded
 			-- behaviors users may not know exist.  Same [Name]\n* keys
 			-- pattern as before for visual consistency.
 			imgui.Dummy({0, 20})
-			imgui.Text('Other Interactions')
+			imgui.Text('\227\129\157\227\129\174\228\187\150\227\129\174\230\147\141\228\189\156')
 			local interactions = {
-				{'Copy chat line to clipboard',         'Left-Click on a chat line'},
-				{'Open URL in browser',                 'Left-Click on a [link] tag'},
-				{'Open zone map / search popup',        'Ctrl + Left-Click on a chat line containing a zone name'},
-				{'Save chat line to Notepad',           'Shift + Left-Click on a chat line  (max 10 notes)'},
-				{'Reposition chat window',              'Left-Click + Drag on the chat plate'},
-				{'Jump to bottom of chat (reset scroll)', 'Right-Click anywhere'},
-				{'Scroll chat history',                 'Mouse Wheel'},
-				{'Fast scroll (5 lines per tick)',      'Shift + Mouse Wheel'},
-				{'Reveal Settings icon on compact bar', 'Hold Shift while hovering the compact-tab expand icon'},
-				{'Dismiss zone map / search popup',     'Click outside the popup, or press Escape'},
+				{'\227\131\129\227\131\163\227\131\131\227\131\136\232\161\140\227\130\146\227\130\175\227\131\170\227\131\131\227\131\151\227\131\156\227\131\188\227\131\137\227\129\171\227\130\179\227\131\148\227\131\188',   '\227\131\129\227\131\163\227\131\131\227\131\136\232\161\140\227\130\146\229\183\166\227\130\175\227\131\170\227\131\131\227\130\175'},
+				{'\227\131\150\227\131\169\227\130\166\227\130\182\227\129\167URL\227\130\146\233\150\139\227\129\143',                 '[link] \227\130\191\227\130\176\227\130\146\229\183\166\227\130\175\227\131\170\227\131\131\227\130\175'},
+				{'\227\130\168\227\131\170\227\130\162\229\156\176\229\155\179 / \230\164\156\231\180\162\227\131\157\227\131\131\227\131\151\227\130\162\227\131\131\227\131\151',       '\227\130\168\227\131\170\227\130\162\229\144\141\227\130\146\229\144\171\227\130\128\232\161\140\227\130\146 Ctrl + \229\183\166\227\130\175\227\131\170\227\131\131\227\130\175'},
+				{'\227\131\161\227\131\162\229\184\179\227\129\171\227\131\129\227\131\163\227\131\131\227\131\136\232\161\140\227\130\146\228\191\157\229\173\152',             '\227\131\129\227\131\163\227\131\131\227\131\136\232\161\140\227\130\146 Shift + \229\183\166\227\130\175\227\131\170\227\131\131\227\130\175\239\188\136\230\156\128\229\164\16710\228\187\182\239\188\137'},
+				{'\227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\130\146\231\167\187\229\139\149',             '\227\131\129\227\131\163\227\131\131\227\131\136\230\157\191\227\130\146\229\183\166\227\131\137\227\131\169\227\131\131\227\130\176'},
+				{'\230\156\128\230\150\176\232\161\140\227\129\184\227\130\184\227\131\163\227\131\179\227\131\151\239\188\136\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171\232\167\163\233\153\164\239\188\137',   '\227\129\169\227\129\147\227\129\167\227\130\130\229\143\179\227\130\175\227\131\170\227\131\131\227\130\175'},
+				{'\227\131\129\227\131\163\227\131\131\227\131\136\229\177\165\230\173\180\227\130\146\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171',             '\227\131\158\227\130\166\227\130\185\227\131\155\227\130\164\227\131\188\227\131\171'},
+				{'\233\171\152\233\128\159\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171\239\188\1365\232\161\140\239\188\137',               'Shift + \227\131\158\227\130\166\227\130\185\227\131\155\227\130\164\227\131\188\227\131\171'},
+				{'\227\130\179\227\131\179\227\131\145\227\130\175\227\131\136\227\131\144\227\131\188\227\129\171\232\168\173\229\174\154\227\130\162\227\130\164\227\130\179\227\131\179\227\130\146\229\135\186\227\129\153',   '\227\130\179\227\131\179\227\131\145\227\130\175\227\131\136\227\130\191\227\131\150\227\129\174\229\177\149\233\150\139\227\130\162\227\130\164\227\130\179\227\131\179\227\129\171 Shift+\227\131\155\227\131\144\227\131\188'},
+				{'\229\156\176\229\155\179 / \230\164\156\231\180\162\227\131\157\227\131\131\227\131\151\227\130\162\227\131\131\227\131\151\227\130\146\233\150\137\227\129\152\227\130\139',      '\229\164\150\229\129\180\227\130\146\227\130\175\227\131\170\227\131\131\227\130\175\227\128\129\227\129\190\227\129\159\227\129\175 Escape'},
 			}
 			for _, s in ipairs(interactions) do
 				imgui.Dummy({0, 8})
@@ -713,7 +756,7 @@ function M.draw_settings_panel()
 		----------------------------------------------------------------
 		-- Tab: Gamepad
 		----------------------------------------------------------------
-		if imgui.BeginTabItem('Gamepad', nil) then
+		if imgui.BeginTabItem('\227\130\178\227\131\188\227\131\160\227\131\145\227\131\131\227\131\137', nil) then
 			imguiWrap.BeginChild('##Gamepad Child',
 				{(setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3, setsizey * 2.7 / 2.8 - 60}, true)
 
@@ -724,6 +767,15 @@ function M.draw_settings_panel()
 			-- because non-Xbox pads map physical buttons to different
 			-- XInput numbers than an Xbox pad would.
 			local function gp_label_for(id)
+				if type(id) == 'string' then
+					local hat_name = ({
+						hat_up    = '\227\131\143\227\131\131\227\131\136 \228\184\138',
+						hat_down  = '\227\131\143\227\131\131\227\131\136 \228\184\139',
+						hat_left  = '\227\131\143\227\131\131\227\131\136 \229\183\166',
+						hat_right = '\227\131\143\227\131\131\227\131\136 \229\143\179',
+					})[id]
+					if hat_name then return hat_name end
+				end
 				if allSettings.XboxController[1] then
 					local idx = utils.findIndexOfValue(utils.gamepadButtonList, id)
 					if idx then return utils.gamepadButtonList[idx][1] end
@@ -736,7 +788,7 @@ function M.draw_settings_panel()
 			-- correct regardless of the active font (gdifonts, scale,
 			-- etc.).  Falls back to a generous fixed minimum if the
 			-- measurement returns 0 for any reason.
-			local longest_gp_label = 'Modifier (hold to enable navigation)'
+			local longest_gp_label = '\228\191\174\233\163\190\227\131\156\227\130\191\227\131\179\239\188\136\230\138\188\227\129\151\227\129\166\227\129\132\227\130\139\233\150\147\227\129\160\227\129\145\227\131\138\227\131\147\230\156\137\229\138\185\239\188\137'
 			local label_w          = imgui.CalcTextSize(longest_gp_label)
 			local GP_TOOLTIP_X     = math.max((label_w or 0) + 20, 320)
 
@@ -744,7 +796,7 @@ function M.draw_settings_panel()
 				imgui.SameLine(GP_TOOLTIP_X)
 				imguiWrap.Image(fcw[1].TextureIDInfo, {15, 15})
 				if imgui.IsItemHovered(0) then
-					imgui.SetTooltip(utils.breakLine(message, 40))
+					ShowTooltip(message)
 				end
 			end
 
@@ -769,7 +821,7 @@ function M.draw_settings_panel()
 				if tooltip then gp_inline_tooltip(tooltip) end
 				local is_listen = (gamepadButtons.listenKey == key)
 				local btn_text  = is_listen
-					and '(press a gamepad button - Esc to cancel)'
+					and '(\227\130\178\227\131\188\227\131\160\227\131\145\227\131\131\227\131\137\227\129\174\227\131\156\227\130\191\227\131\179\227\130\146\230\138\188\227\129\153 - Esc\227\129\167\227\130\173\227\131\163\227\131\179\227\130\187\227\131\171)'
 					or  gp_label_for(allSettings.GamepadBindings[key])
 				-- Highlight the active row so it's obvious which one
 				-- is waiting for input.
@@ -790,45 +842,75 @@ function M.draw_settings_panel()
 			end
 
 			-- Top-of-tab toggles: master enable + label style.
-			if imgui.Checkbox('Enable Gamepad Chat Navigation##GamepadNav', {allSettings.GamepadNav[1]}) then
+			if imgui.Checkbox('\227\130\178\227\131\188\227\131\160\227\131\145\227\131\131\227\131\137\227\129\167\227\131\129\227\131\163\227\131\131\227\131\136\230\147\141\228\189\156##GamepadNav', {allSettings.GamepadNav[1]}) then
 				allSettings.GamepadNav[1] = not allSettings.GamepadNav[1]
 				SaveSettings()
 			end
-			AddTooltip('Master switch for gamepad input. When off, none of the bindings below fire in-game and the modifier button is ignored.', 4)
+			AddTooltip('\227\130\178\227\131\188\227\131\160\227\131\145\227\131\131\227\131\137\229\133\165\229\138\155\227\129\174\227\131\158\227\130\185\227\130\191\227\131\188\227\130\185\227\130\164\227\131\131\227\131\129\227\129\167\227\129\153\227\128\130\227\130\170\227\131\179\227\129\171\227\129\151\227\129\166\227\128\129\228\191\174\233\163\190\227\131\156\227\130\191\227\131\179\239\188\136\229\136\157\230\156\159\227\129\175 LB\239\188\137\227\130\146\230\138\188\227\129\151\227\129\170\227\129\140\227\130\137\228\187\150\227\129\174\229\137\178\227\130\138\229\189\147\227\129\166\227\129\175\229\139\149\227\129\141\227\129\190\227\129\155\227\130\147\227\128\130Xbox\228\187\165\229\164\150\227\129\174\227\131\145\227\131\131\227\131\137\227\129\175 DirectInput \227\129\167\229\177\139\227\130\139\227\129\174\227\129\167\227\128\129\228\184\139\227\129\174\229\137\178\227\130\138\229\189\147\227\129\166\227\130\146\229\143\150\227\130\138\231\155\180\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130', 4)
 			imgui.Dummy({0, 5})
-			if imgui.Checkbox('Xbox Controller##XboxLabels', {allSettings.XboxController[1]}) then
+			if imgui.Checkbox('Xbox \227\130\179\227\131\179\227\131\136\227\131\173\227\131\188\227\131\169\227\131\188##XboxLabels', {allSettings.XboxController[1]}) then
 				allSettings.XboxController[1] = not allSettings.XboxController[1]
 				SaveSettings()
 			end
-			AddTooltip('When on, buttons are labelled with their Xbox names (A, B, LB, RT, ...). When off, buttons are labelled with their raw XInput index - safer for non-Xbox controllers whose physical layout maps to different XInput numbers.', 4)
-			imgui.Dummy({0, 15})
-
-			imgui.Text('Gamepad button bindings')
-			AddTooltip('Click a binding to listen for the next gamepad button press. If the chosen button is already used by another action, the two actions swap. Stick scroll axes are not remappable.', 0)
-			imgui.Dummy({0, 4})
-			imgui.TextColored({0.70, 0.70, 0.70, 1.0},
-				'Click a button on the right side of a row, then press the')
-			imgui.TextColored({0.70, 0.70, 0.70, 1.0},
-				'controller button you want to assign.  Esc cancels.')
+			AddTooltip('\227\130\170\227\131\179\227\129\171\227\129\153\227\130\139\227\129\168\227\131\156\227\130\191\227\131\179\229\144\141\227\130\146 Xbox \232\161\168\232\168\152\239\188\136A, B, LB, RT \227\129\170\227\129\169\239\188\137\227\129\167\232\161\168\231\164\186\227\129\151\227\129\190\227\129\153\227\128\130\227\130\170\227\131\149\227\129\171\227\129\153\227\130\139\227\129\168\231\148\159\227\129\174 XInput \231\149\170\229\143\183\227\129\167\227\129\153\227\128\130Xbox\228\187\165\229\164\150\227\129\174\227\131\145\227\131\131\227\131\137\227\129\167\227\129\175\227\130\170\227\131\149\227\129\174\227\129\187\227\129\134\227\129\140\229\174\137\229\133\168\227\129\167\227\129\153\227\128\130', 4)
 			imgui.Dummy({0, 10})
 
-			draw_gp_row('Modifier (hold to enable navigation)', 'modifier',
-				'While held, the other gamepad bindings below become active. All other buttons are blocked from the rest of the game during this time.',
+			imgui.Text('\230\156\128\229\190\140\227\129\171\229\143\151\227\129\145\229\143\150\227\129\163\227\129\159\229\133\165\229\138\155')
+			if not gamepadButtons.lastApi then
+				imgui.TextColored({0.70, 0.70, 0.70, 1.0},
+					'\227\129\190\227\129\160\227\129\130\227\130\138\227\129\190\227\129\155\227\130\147\227\128\130\227\130\179\227\131\179\227\131\136\227\131\173\227\131\188\227\131\169\227\131\188\227\129\174\227\131\156\227\130\191\227\131\179\227\130\146\230\138\188\227\129\153\227\129\168\231\149\170\229\143\183\227\129\140\229\135\186\227\129\190\227\129\153\227\128\130')
+			else
+				local api_name = (gamepadButtons.lastApi == 'dinput') and 'DirectInput' or 'XInput'
+				local hat_dir  = gamepadButtons.lastHatDir
+				local hat_jp   = ({
+					up    = '\228\184\138',
+					down  = '\228\184\139',
+					left  = '\229\183\166',
+					right = '\229\143\179',
+				})[hat_dir]
+				local hat_txt  = hat_jp
+					and ('  (\227\131\143\227\131\131\227\131\136 '..hat_jp..')')
+					or ''
+				imgui.Text(string.format('%s  \227\131\156\227\130\191\227\131\179 %s  \231\138\182\230\133\139 %s%s',
+					api_name, tostring(gamepadButtons.lastButton), tostring(gamepadButtons.lastState), hat_txt))
+				if gamepadButtons.lastApi == 'dinput' then
+					imgui.TextColored({1.00, 0.75, 0.30, 1.0},
+						'DirectInput \227\129\167\227\129\153\227\128\130\229\136\157\230\156\159\227\129\174 Xbox \231\149\170\229\143\183\227\129\168\227\129\175\228\184\128\232\135\180\227\129\151\227\129\170\227\129\132\227\129\174\227\129\167\227\128\129\228\184\139\227\129\174\232\161\140\227\129\167\227\131\156\227\130\191\227\131\179\227\130\146\229\143\150\227\130\138\231\155\180\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130')
+					imgui.TextColored({0.80, 0.85, 0.70, 1.0},
+						'\229\141\129\229\173\151\227\130\173\227\131\188\227\129\175\227\131\143\227\131\131\227\131\136\239\188\136\232\167\146\229\186\166\239\188\137\227\129\167\227\129\153\227\128\130\229\137\178\227\130\138\229\189\147\227\129\166\228\184\173\227\129\175\230\150\185\229\144\145\227\130\146\227\131\143\227\131\131\227\131\136\229\183\166\227\129\170\227\129\169\227\129\168\232\161\168\231\164\186\227\129\151\227\129\190\227\129\153\227\128\130')
+				end
+			end
+			imgui.Dummy({0, 15})
+
+			imgui.Text('\227\130\178\227\131\188\227\131\160\227\131\145\227\131\131\227\131\137\227\129\174\227\131\156\227\130\191\227\131\179\229\137\178\227\130\138\229\189\147\227\129\166')
+			AddTooltip('\232\161\140\227\129\174\229\143\179\229\129\180\227\130\146\227\130\175\227\131\170\227\131\131\227\130\175\227\129\153\227\130\139\227\129\168\227\128\129\230\172\161\227\129\171\230\138\188\227\129\151\227\129\159\227\130\178\227\131\188\227\131\160\227\131\145\227\131\131\227\131\137\227\131\156\227\130\191\227\131\179\227\130\146\229\137\178\227\130\138\229\189\147\227\129\166\227\129\190\227\129\153\227\128\130\227\129\153\227\129\167\227\129\171\228\187\150\227\129\174\230\147\141\228\189\156\227\129\167\228\189\191\227\129\163\227\129\166\227\129\132\227\130\139\227\131\156\227\130\191\227\131\179\227\129\170\227\130\137\227\128\1292\227\129\164\227\129\174\229\137\178\227\130\138\229\189\147\227\129\166\227\129\140\229\133\165\227\130\140\230\155\191\227\130\143\227\130\138\227\129\190\227\129\153\227\128\130\227\130\185\227\131\134\227\130\163\227\131\131\227\130\175\227\129\174\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171\232\187\184\227\129\175\229\164\137\230\155\180\227\129\167\227\129\141\227\129\190\227\129\155\227\130\147\227\128\130', 0)
+			imgui.Dummy({0, 4})
+			imgui.TextColored({0.70, 0.70, 0.70, 1.0},
+				'\232\161\140\227\129\174\229\143\179\229\129\180\227\129\174\227\131\156\227\130\191\227\131\179\227\130\146\227\130\175\227\131\170\227\131\131\227\130\175\227\129\151\227\129\166\227\129\139\227\130\137\227\128\129\229\137\178\227\130\138\229\189\147\227\129\166\227\129\159\227\129\132')
+			imgui.TextColored({0.70, 0.70, 0.70, 1.0},
+				'\227\130\179\227\131\179\227\131\136\227\131\173\227\131\188\227\131\169\227\131\188\227\129\174\227\131\156\227\130\191\227\131\179\227\130\146\230\138\188\227\129\151\227\129\190\227\129\153\227\128\130Esc \227\129\167\227\130\173\227\131\163\227\131\179\227\130\187\227\131\171\227\128\130')
+			imgui.Dummy({0, 10})
+
+			draw_gp_row('\228\191\174\233\163\190\227\131\156\227\130\191\227\131\179\239\188\136\230\138\188\227\129\151\227\129\166\227\129\132\227\130\139\233\150\147\227\129\160\227\129\145\227\131\138\227\131\147\230\156\137\229\138\185\239\188\137', 'modifier',
+				'\230\138\188\227\129\151\227\129\166\227\129\132\227\130\139\233\150\147\227\128\129\228\184\139\227\129\174\227\130\178\227\131\188\227\131\160\227\131\145\227\131\131\227\131\137\229\137\178\227\130\138\229\189\147\227\129\166\227\129\140\230\156\137\229\138\185\227\129\171\227\129\170\227\130\138\227\129\190\227\129\153\227\128\130\227\129\147\227\129\174\233\150\147\227\128\129\228\187\150\227\129\174\227\131\156\227\130\191\227\131\179\227\129\175\227\130\178\227\131\188\227\131\160\229\129\180\227\129\171\230\184\161\227\130\138\227\129\190\227\129\155\227\130\147\227\128\130',
 				{1.00, 0.65, 0.20, 1.0})
-			draw_gp_row('Cycle tabs (window 1)',     'cyclePrimaryTab')
-			draw_gp_row('Cycle tabs (window 2)',     'cycleSecondaryTab')
-			draw_gp_row('Snap chat to bottom',       'snapToBottom')
-			draw_gp_row('Toggle BigMode overlay',    'toggleBigMode')
-			draw_gp_row('Open FFXI chat input',      'openChatInput')
-			draw_gp_row('Submit input as command',   'submitInput',
-				'Sends the line currently in the FFXI chat input box.')
-			draw_gp_row('Command history: previous', 'historyPrev')
-			draw_gp_row('Command history: next',     'historyNext')
-			draw_gp_row('Preset command: previous',  'presetPrev')
-			draw_gp_row('Preset command: next',      'presetNext')
+			draw_gp_row('\227\130\191\227\131\150\229\136\135\230\155\191\239\188\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1661\239\188\137',     'cyclePrimaryTab')
+			draw_gp_row('\227\130\191\227\131\150\229\136\135\230\155\191\239\188\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1662\239\188\137',     'cycleSecondaryTab')
+			draw_gp_row('\230\156\128\230\150\176\232\161\140\227\129\184\227\130\184\227\131\163\227\131\179\227\131\151',           'snapToBottom')
+			draw_gp_row('BigMode \227\130\146\229\136\135\230\155\191',             'toggleBigMode',
+				'BigMode \228\184\173\227\129\175\227\128\129\228\191\174\233\163\190\227\131\156\227\130\191\227\131\179\239\188\139\229\183\166\229\143\179\227\129\167\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1661\227\128\129\229\143\179\227\129\167\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1662\227\129\171\229\136\135\227\130\138\230\155\191\227\129\136\227\129\190\227\129\153\227\128\130\231\172\1722\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\140\230\156\137\229\138\185\227\129\174\227\129\168\227\129\141\227\129\171\228\189\191\227\129\136\227\129\190\227\129\153\227\128\130')
+			draw_gp_row('FFXI\227\131\129\227\131\163\227\131\131\227\131\136\229\133\165\229\138\155\227\130\146\233\150\139\227\129\143',     'openChatInput')
+			draw_gp_row('\229\133\165\229\138\155\227\130\146\227\130\179\227\131\158\227\131\179\227\131\137\227\129\168\227\129\151\227\129\166\233\128\129\228\191\161',   'submitInput',
+				'\227\129\132\227\129\190 FFXI \227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\229\133\165\229\138\155\230\172\132\227\129\171\227\129\130\227\130\139\232\161\140\227\130\146\233\128\129\228\191\161\227\129\151\227\129\190\227\129\153\227\128\130')
+			draw_gp_row('\227\130\179\227\131\158\227\131\179\227\131\137\229\177\165\230\173\180: \229\137\141\227\129\184',         'historyPrev')
+			draw_gp_row('\227\130\179\227\131\158\227\131\179\227\131\137\229\177\165\230\173\180: \230\172\161\227\129\184',         'historyNext')
+			draw_gp_row('\227\131\151\227\131\170\227\130\187\227\131\131\227\131\136\227\130\179\227\131\158\227\131\179\227\131\137: \229\137\141\227\129\184',   'presetPrev',
+				'FFXI \229\133\165\229\138\155\228\184\173\227\129\175\227\131\151\227\131\170\227\130\187\227\131\131\227\131\136\227\130\179\227\131\158\227\131\179\227\131\137\227\128\130BigMode \228\184\173\227\129\175\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1661\227\129\171\229\136\135\227\130\138\230\155\191\227\128\130DirectInput \227\129\174\229\141\129\229\173\151\227\130\173\227\131\188\229\183\166\227\129\175\227\131\143\227\131\131\227\131\136\227\129\168\227\129\151\227\129\166\232\135\170\229\139\149\227\129\167\232\170\141\232\173\152\227\129\151\227\129\190\227\129\153\227\128\130')
+			draw_gp_row('\227\131\151\227\131\170\227\130\187\227\131\131\227\131\136\227\130\179\227\131\158\227\131\179\227\131\137: \230\172\161\227\129\184',   'presetNext',
+				'FFXI \229\133\165\229\138\155\228\184\173\227\129\175\227\131\151\227\131\170\227\130\187\227\131\131\227\131\136\227\130\179\227\131\158\227\131\179\227\131\137\227\128\130BigMode \228\184\173\227\129\175\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1662\227\129\171\229\136\135\227\130\138\230\155\191\227\128\130DirectInput \227\129\174\229\141\129\229\173\151\227\130\173\227\131\188\229\143\179\227\129\175\227\131\143\227\131\131\227\131\136\227\129\168\227\129\151\227\129\166\232\135\170\229\139\149\227\129\167\232\170\141\232\173\152\227\129\151\227\129\190\227\129\153\227\128\130')
 
 			imgui.Dummy({0, 6})
-			if imgui.Button('Reset to defaults##GPReset') then
+			if imgui.Button('\229\136\157\230\156\159\229\128\164\227\129\171\230\136\187\227\129\153##GPReset') then
 				allSettings.GamepadBindings.modifier          = 8
 				allSettings.GamepadBindings.cyclePrimaryTab   = 9
 				allSettings.GamepadBindings.cycleSecondaryTab = 17
@@ -850,15 +932,15 @@ function M.draw_settings_panel()
 		----------------------------------------------------------------
 		-- Tab: Extra
 		----------------------------------------------------------------
-		if imgui.BeginTabItem('Extra', nil) then
+		if imgui.BeginTabItem('\227\129\157\227\129\174\228\187\150', nil) then
 			imguiWrap.BeginChild('##Extra Child',
 				{(setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3, setsizey * 2.7 / 2.8 - 60}, true)
 
-			imgui.Text('Block legacy chat messages')
-			AddTooltip('Blocks incoming messages to the legacy chat and only display them on FancyChat. This will block the window resize animation that makes it flicker when new chat messages arrive.', 0)
+			imgui.Text('\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\129\184\227\129\174\232\161\168\231\164\186\227\130\146\227\131\150\227\131\173\227\131\131\227\130\175')
+			AddTooltip('\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\129\184\227\129\174\231\157\128\228\191\161\227\130\146\230\173\162\227\130\129\227\128\129FancyChat \227\129\160\227\129\145\227\129\171\232\161\168\231\164\186\227\129\151\227\129\190\227\129\153\227\128\130\230\150\176\231\157\128\230\153\130\227\129\174\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\228\188\184\231\184\174\227\130\162\227\131\139\227\131\161\239\188\136\227\129\161\227\130\137\227\129\164\227\129\141\239\188\137\227\130\130\230\173\162\227\129\190\227\130\138\227\129\190\227\129\153\227\128\130', 0)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('All', {allSettings.blockAll[1]}) then
+			if imgui.Checkbox('\227\129\153\227\129\185\227\129\166', {allSettings.blockAll[1]}) then
 				allSettings.blockAll[1] = not allSettings.blockAll[1]
 				if allSettings.blockAll[1] then
 					if not set.Popup[1] then set.Popup[1] = true end
@@ -869,21 +951,21 @@ function M.draw_settings_panel()
 				SaveSettings()
 			end
 			if set.Popup[1] then
-				AddWarning('While this option has been tested throughfully, it might lead to getting stuck in dialgoues in untested scenarios.\n\nDisable it if you experience such issues.\n\nTo submit chat logs for support tickets, use the "Restore Legacy Chat Logs" function under "Tools" and take a screenshot of the legacy chat!', 350)
+				AddWarning('\228\184\128\233\128\154\227\130\138\227\131\134\227\130\185\227\131\136\230\184\136\227\129\191\227\129\167\227\129\153\227\129\140\227\128\129\230\156\170\231\162\186\232\170\141\227\129\174\229\160\180\233\157\162\227\129\167\227\129\175\228\188\154\232\169\177\227\129\140\233\128\178\227\130\129\227\130\137\227\130\140\227\129\170\227\129\143\227\129\170\227\130\139\229\143\175\232\131\189\230\128\167\227\129\140\227\129\130\227\130\138\227\129\190\227\129\153\227\128\130\n\n\229\149\143\233\161\140\227\129\140\229\135\186\227\129\159\227\130\137\227\130\170\227\131\149\227\129\171\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130\n\n\227\130\181\227\131\157\227\131\188\227\131\136\231\148\168\227\129\171\227\131\129\227\131\163\227\131\131\227\131\136\227\131\173\227\130\176\227\130\146\230\143\144\229\135\186\227\129\153\227\130\139\227\129\168\227\129\141\227\129\175\227\128\129\227\128\140\227\131\132\227\131\188\227\131\171\227\128\141\227\129\174\227\128\140\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\129\174\227\131\173\227\130\176\227\130\146\229\190\169\229\133\131\227\128\141\227\130\146\228\189\191\227\129\132\227\128\129\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\129\174\227\130\185\227\130\175\227\131\170\227\131\188\227\131\179\227\130\183\227\131\167\227\131\131\227\131\136\227\130\146\230\146\174\227\129\163\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130', 350)
 			end
-			AddTooltip('Disable this if you are experiencing getting stuck in conversations with NPCs', 4, 1)
+			AddTooltip('NPC\228\188\154\232\169\177\227\129\167\232\169\176\227\129\190\227\130\139\229\160\180\229\144\136\227\129\175\227\130\170\227\131\149\227\129\171\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132', 4, 1)
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Combat (recommended)', {allSettings.blockCombat[1]}) then
+			if imgui.Checkbox('\230\136\166\233\151\152\227\129\174\227\129\191\239\188\136\230\142\168\229\165\168\239\188\137', {allSettings.blockCombat[1]}) then
 				allSettings.blockCombat[1] = not allSettings.blockCombat[1]
 				SaveSettings()
 			end
 
 			imgui.Dummy({0, 15})
-			imgui.Text('Chat message filtering (experimental)')
-			AddTooltip('These are meant for quick changes on the fly. Use the in-game filter system first!', 0, 1)
+			imgui.Text('\227\131\129\227\131\163\227\131\131\227\131\136\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\174\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\239\188\136\229\174\159\233\168\147\231\154\132\239\188\137')
+			AddTooltip('\227\129\157\227\129\174\229\160\180\227\129\167\231\180\160\230\151\169\227\129\143\229\136\135\227\130\138\230\155\191\227\129\136\227\130\139\231\148\168\227\129\167\227\129\153\227\128\130\227\129\190\227\129\154\227\129\175\227\130\178\227\131\188\227\131\160\230\156\172\228\189\147\227\129\174\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\130\146\228\189\191\227\129\163\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130', 0, 1)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Hide combat and custom logs from \'All\' tab.', {allSettings.HideCombatFromAll[1]}) then
+			if imgui.Checkbox('\230\136\166\233\151\152\227\131\187\227\130\171\227\130\185\227\130\191\227\131\160\227\131\173\227\130\176\227\130\146\227\128\140\229\133\168\227\129\166\227\128\141\227\130\191\227\131\150\227\129\139\227\130\137\233\154\160\227\129\153', {allSettings.HideCombatFromAll[1]}) then
 				allSettings.HideCombatFromAll[1] = not allSettings.HideCombatFromAll[1]
 				if allSettings.HideCombatFromAll[1] then
 					tab.Tabs[1] = 'AllAlt'
@@ -900,6 +982,7 @@ function M.draw_settings_panel()
 				end
 				SaveSettings()
 			end
+			AddTooltip('\228\184\161\230\150\185\227\129\174\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\174\227\128\140\229\133\168\227\129\166\227\128\141\227\130\191\227\131\150\227\129\139\227\130\137\230\136\166\233\151\152\227\131\187\227\130\171\227\130\185\227\130\191\227\131\160\227\131\173\227\130\176\227\130\146\233\154\160\227\129\151\227\129\190\227\129\153\227\128\130\231\172\1722\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\160\227\129\145\233\153\164\227\129\141\227\129\159\227\129\132\227\129\168\227\129\141\227\129\175\227\128\129\227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\232\168\173\229\174\154\227\129\174\227\128\140\231\172\1722\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\174\227\128\140\229\133\168\227\129\166\227\128\141\227\129\139\227\130\137\230\136\166\233\151\152\227\130\146\233\153\164\227\129\143\227\128\141\227\130\146\228\189\191\227\129\163\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130', 4, true)
 			-- Filter mode selector.  Text-based = the three legacy
 			-- boolean toggles that use name-matching in the parser;
 			-- Packet-based = the 0x0028-driven hierarchy that's
@@ -910,17 +993,17 @@ function M.draw_settings_panel()
 			-- Align the label with the radio circles by using the same
 			-- frame padding ImGui applies to the radio widgets.
 			imgui.AlignTextToFramePadding()
-			imgui.Text('Filter mode:')
+			imgui.Text('\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\230\150\185\229\188\143:')
 			imgui.SameLine()
-			if imgui.RadioButton('Text-based', not allSettings.PacketFilterEnabled2[1]) then
+			if imgui.RadioButton('\227\131\134\227\130\173\227\130\185\227\131\136', not allSettings.PacketFilterEnabled2[1]) then
 				allSettings.PacketFilterEnabled2[1] = false
 				SaveSettings()
 			end
 			imgui.SameLine()
 			local cposY = imgui.GetCursorPosY()
-			AddTooltip('Text-based filtering matches by actor name only. Messages from a filtered entity can slip through when another visible entity nearby shares the same name (most common with trusts, pets, and adventuring fellows that multiple players summon). If this happens often, switch to Packet-based mode. It filters by server entity ID, so name collisions never confuse it.', 4, true)
+			AddTooltip('\227\131\134\227\130\173\227\130\185\227\131\136\230\150\185\229\188\143\227\129\175\227\130\162\227\130\175\227\130\191\227\131\188\229\144\141\227\129\160\227\129\145\227\129\167\229\136\164\229\174\154\227\129\151\227\129\190\227\129\153\227\128\130\229\144\140\227\129\152\229\144\141\229\137\141\227\129\174\227\131\136\227\131\169\227\130\185\227\131\136\227\131\187\227\131\154\227\131\131\227\131\136\227\131\187\227\131\149\227\130\167\227\131\173\227\131\188\227\129\140\232\191\145\227\129\143\227\129\171\227\129\132\227\130\139\227\129\168\227\128\129\233\154\160\227\129\151\227\129\159\227\129\132\231\155\184\230\137\139\227\129\174\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\140\230\188\143\227\130\140\227\130\139\227\129\147\227\129\168\227\129\140\227\129\130\227\130\138\227\129\190\227\129\153\227\128\130\227\130\136\227\129\143\232\181\183\227\129\141\227\130\139\227\129\170\227\130\137\227\131\145\227\130\177\227\131\131\227\131\136\230\150\185\229\188\143\227\129\171\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130\227\130\181\227\131\188\227\131\144\227\131\188\227\129\174\227\130\168\227\131\179\227\131\134\227\130\163\227\131\134\227\130\163ID\227\129\167\229\136\164\229\174\154\227\129\153\227\130\139\227\129\174\227\129\167\227\128\129\229\144\140\229\144\141\227\129\167\227\130\130\230\183\183\229\144\140\227\129\151\227\129\190\227\129\155\227\130\147\227\128\130', 4, true)
 			imgui.SameLine() imgui.SetCursorPosY(cposY)
-			if imgui.RadioButton('Packet-based', allSettings.PacketFilterEnabled2[1]) then
+			if imgui.RadioButton('\227\131\145\227\130\177\227\131\131\227\131\136', allSettings.PacketFilterEnabled2[1]) then
 				allSettings.PacketFilterEnabled2[1] = true
 				SaveSettings()
 			end
@@ -929,14 +1012,14 @@ function M.draw_settings_panel()
 				-- Text-based system: the original three checkboxes.
 				imgui.Dummy({0, 5})
 				imgui.Dummy({5, 0}) imgui.SameLine()
-				if imgui.Checkbox('Hide alliance combat log', {allSettings.hideAlliance[1]}) then
+				if imgui.Checkbox('\227\130\162\227\131\169\227\130\164\227\130\162\227\131\179\227\130\185\227\129\174\230\136\166\233\151\152\227\131\173\227\130\176\227\130\146\233\154\160\227\129\153', {allSettings.hideAlliance[1]}) then
 					allSettings.hideAlliance[1] = not allSettings.hideAlliance[1]
 					if not allSettings.hideAlliance[1] then allSettings.hideNonYou[1] = false end
 					SaveSettings()
 				end
 				imgui.Dummy({0, 5})
 				imgui.Dummy({5, 0}) imgui.SameLine()
-				if imgui.Checkbox('Hide non-party combat log', {allSettings.hideNonParty[1]}) then
+				if imgui.Checkbox('\227\131\145\227\131\188\227\131\134\227\130\163\228\187\165\229\164\150\227\129\174\230\136\166\233\151\152\227\131\173\227\130\176\227\130\146\233\154\160\227\129\153', {allSettings.hideNonParty[1]}) then
 					allSettings.hideNonParty[1] = not allSettings.hideNonParty[1]
 					if not allSettings.hideNonParty[1] then allSettings.hideNonYou[1] = false end
 					SaveSettings()
@@ -944,7 +1027,7 @@ function M.draw_settings_panel()
 				imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 				imgui.SetCursorPosY(imgui.GetCursorPosY() - 20)
 				imgui.Dummy({27, 0}) imgui.SameLine()
-				if imgui.Checkbox('Only show you and your pet logs.', {allSettings.hideNonYou[1]}) then
+				if imgui.Checkbox('\232\135\170\229\136\134\227\129\168\227\131\154\227\131\131\227\131\136\227\129\174\227\131\173\227\130\176\227\129\160\227\129\145\232\161\168\231\164\186', {allSettings.hideNonYou[1]}) then
 					allSettings.hideNonYou[1] = not allSettings.hideNonYou[1]
 					if allSettings.hideNonYou[1] then allSettings.hideNonParty[1] = true end
 					if allSettings.hideNonYou[1] then allSettings.hideAlliance[1] = true end
@@ -957,15 +1040,15 @@ function M.draw_settings_panel()
 				-- mob you / party are engaged with) is always shown.
 				imgui.Dummy({0, 5})
 				imgui.Dummy({5, 0}) imgui.SameLine()
-				imgui.Text('Show combat from:')
-				AddTooltip('The mob you or any of your party members are engaged with is always shown, regardless of which option you pick below.', 0, 1)
+				imgui.Text('\230\136\166\233\151\152\227\131\173\227\130\176\227\129\174\232\161\168\231\164\186\231\175\132\229\155\178:')
+				AddTooltip('\232\135\170\229\136\134\227\129\190\227\129\159\227\129\175\227\131\145\227\131\188\227\131\134\227\130\163\227\129\140\228\186\164\230\136\166\228\184\173\227\129\174\227\131\162\227\131\179\227\130\185\227\130\191\227\131\188\227\129\175\227\128\129\228\184\139\227\129\174\227\129\169\227\130\140\227\130\146\233\129\184\227\130\147\227\129\167\227\130\130\229\184\184\227\129\171\232\161\168\231\164\186\227\129\149\227\130\140\227\129\190\227\129\153\227\128\130', 0, 1)
 				imgui.Dummy({0, 3})
 				local levels = {
-					{1, 'Everyone (Others + Alliance + Party + You + Pet)'},
-					{2, 'Alliance + Party + You + Pet'},
-					{3, 'Party + You + Pet'},
-					{4, 'You + Pet'},
-					{5, 'You only'},
+					{1, '\229\133\168\229\147\161\239\188\136\227\129\157\227\129\174\228\187\150 + \227\130\162\227\131\169\227\130\164\227\130\162\227\131\179\227\130\185 + \227\131\145\227\131\188\227\131\134\227\130\163 + \232\135\170\229\136\134 + \227\131\154\227\131\131\227\131\136\239\188\137'},
+					{2, '\227\130\162\227\131\169\227\130\164\227\130\162\227\131\179\227\130\185 + \227\131\145\227\131\188\227\131\134\227\130\163 + \232\135\170\229\136\134 + \227\131\154\227\131\131\227\131\136'},
+					{3, '\227\131\145\227\131\188\227\131\134\227\130\163 + \232\135\170\229\136\134 + \227\131\154\227\131\131\227\131\136'},
+					{4, '\232\135\170\229\136\134 + \227\131\154\227\131\131\227\131\136'},
+					{5, '\232\135\170\229\136\134\227\129\174\227\129\191'},
 				}
 				for _, lv in ipairs(levels) do
 					imgui.Dummy({15, 0}) imgui.SameLine()
@@ -981,27 +1064,27 @@ function M.draw_settings_panel()
 				-- "only show what's happening to me" play.
 				imgui.Dummy({0, 5})
 				imgui.Dummy({15, 0}) imgui.SameLine()
-				if imgui.Checkbox('Only show TARGET actions that involve me##PacketFilterTargetMeOnly',
+				if imgui.Checkbox('\232\135\170\229\136\134\227\129\140\229\175\190\232\177\161\227\129\174TARGET\232\161\140\229\139\149\227\129\160\227\129\145\232\161\168\231\164\186##PacketFilterTargetMeOnly',
 					{allSettings.PacketFilterTargetMeOnly[1]}) then
 					allSettings.PacketFilterTargetMeOnly[1] = not allSettings.PacketFilterTargetMeOnly[1]
 					SaveSettings()
 				end
-				AddTooltip('When checked, the engaged mob\'s actions only show if you are one of its targets. Hits / abilities aimed only at party members get hidden.', 4)
+				AddTooltip('\227\130\170\227\131\179\227\129\171\227\129\153\227\130\139\227\129\168\227\128\129\228\186\164\230\136\166\228\184\173\227\131\162\227\131\179\227\130\185\227\130\191\227\131\188\227\129\174\232\161\140\229\139\149\227\129\175\227\128\129\232\135\170\229\136\134\227\129\140\229\175\190\232\177\161\227\129\171\229\144\171\227\129\190\227\130\140\227\130\139\227\129\168\227\129\141\227\129\160\227\129\145\232\161\168\231\164\186\227\129\151\227\129\190\227\129\153\227\128\130\227\131\145\227\131\188\227\131\134\227\130\163\227\131\161\227\131\179\227\131\144\227\131\188\227\129\160\227\129\145\227\129\171\229\189\147\227\129\159\227\129\163\227\129\159\230\148\187\230\146\131\227\131\187\227\130\162\227\131\147\227\131\170\227\131\134\227\130\163\227\129\175\233\154\160\227\130\140\227\129\190\227\129\153\227\128\130', 4)
 			end
 
 			imgui.Dummy({0, 5})
-			imgui.Text('Other settings')
-			AddTooltip('Read the manual for more detailed info', 0)
+			imgui.Text('\227\129\157\227\129\174\228\187\150\227\129\174\232\168\173\229\174\154')
+			AddTooltip('\232\169\179\227\129\151\227\129\143\227\129\175\227\131\158\227\131\139\227\131\165\227\130\162\227\131\171\227\130\146\229\143\130\231\133\167\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132', 0)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Compact Combat Log', {allSettings.CompactCombat[1]}) then
+			if imgui.Checkbox('\227\130\179\227\131\179\227\131\145\227\130\175\227\131\136\230\136\166\233\151\152\227\131\173\227\130\176', {allSettings.CompactCombat[1]}) then
 				allSettings.CompactCombat[1] = not allSettings.CompactCombat[1]
 				SaveSettings()
 			end
-			AddTooltip('Disable if you have other addons such as simplelog enabled.', 4)
+			AddTooltip('simplelog \227\129\170\227\129\169\228\187\150\227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\230\148\185\229\164\137\227\130\162\227\131\137\227\130\170\227\131\179\227\130\146\228\189\191\227\129\134\229\160\180\229\144\136\227\129\175\227\130\170\227\131\149\227\129\171\227\129\151\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130', 4)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Timestamp', {allSettings.timeStamp[1]}) then
+			if imgui.Checkbox('\227\130\191\227\130\164\227\131\160\227\130\185\227\130\191\227\131\179\227\131\151', {allSettings.timeStamp[1]}) then
 				allSettings.timeStamp[1] = not allSettings.timeStamp[1]
 				if allSettings.timeStamp[1] then allSettings.timeStampLine[1] = false end
 				SaveSettings()
@@ -1009,7 +1092,7 @@ function M.draw_settings_panel()
 			imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 18)
 			imgui.Dummy({30, 0}) imgui.SameLine()
-			imgui.Text('Format')
+			imgui.Text('\229\189\162\229\188\143')
 			imgui.SameLine()
 			local formats = {'[00:00:00]', '[00:00]'}
 			local currentFormat = formats[allSettings.FormatTSMode]
@@ -1023,14 +1106,14 @@ function M.draw_settings_panel()
 			end
 			imgui.PopItemWidth()
 			imgui.SameLine()
-			if imgui.Checkbox('12-hour clock', {allSettings.TimeStamp12h[1]}) then
+			if imgui.Checkbox('12\230\153\130\233\150\147\232\161\168\231\164\186', {allSettings.TimeStamp12h[1]}) then
 				allSettings.TimeStamp12h[1] = not allSettings.TimeStamp12h[1]
 				SaveSettings()
 			end
-			AddTooltip('Hours above 12 get reduced by 12 (e.g. 14:30 becomes 2:30). AM/PM is not shown.', 4)
+			AddTooltip('13\230\153\130\228\187\165\233\153\141\227\129\17512\227\130\146\229\188\149\227\129\132\227\129\166\232\161\168\231\164\186\227\129\151\227\129\190\227\129\153\239\188\136\228\190\139: 14:30 \226\134\146 2:30\239\188\137\227\128\130AM/PM \227\129\175\229\135\186\227\129\151\227\129\190\227\129\155\227\130\147\227\128\130', 4)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Timestamp as a line', {allSettings.timeStampLine[1]}) then
+			if imgui.Checkbox('\227\130\191\227\130\164\227\131\160\227\130\185\227\130\191\227\131\179\227\131\151\227\130\146\231\139\172\231\171\139\227\129\151\227\129\159\232\161\140\227\129\171\227\129\153\227\130\139', {allSettings.timeStampLine[1]}) then
 				allSettings.timeStampLine[1] = not allSettings.timeStampLine[1]
 				if allSettings.timeStampLine[1] then allSettings.timeStamp[1] = false end
 				SaveSettings()
@@ -1038,41 +1121,55 @@ function M.draw_settings_panel()
 			imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 18)
 			imgui.Dummy({30, 0}) imgui.SameLine()
-			imgui.Text('Every')
+			imgui.Text('\233\150\147\233\154\148')
 			imgui.SameLine()
-			local minutes = {{'1 minute', 60}, {'5 minutes', 300}, {'10 minutes', 600}, {'30 minutes', 1800}, {'60 minutes', 3600}}
+			local minutes = {
+				{'1 minute', 60, '1\229\136\134'},
+				{'5 minutes', 300, '5\229\136\134'},
+				{'10 minutes', 600, '10\229\136\134'},
+				{'30 minutes', 1800, '30\229\136\134'},
+				{'60 minutes', 3600, '60\229\136\134'},
+			}
+			local freq_preview = allSettings.timeStampLineFreq[1]
+			for TS_i = 1, #minutes do
+				if minutes[TS_i][1] == allSettings.timeStampLineFreq[1] then
+					freq_preview = minutes[TS_i][3]
+					break
+				end
+			end
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 3)
 			imgui.PushItemWidth(dsize.x / 15)
-			if imgui.BeginCombo('##TimeStampLineFreq', allSettings.timeStampLineFreq[1], ImGuiComboFlags_None) then
+			if imgui.BeginCombo('##TimeStampLineFreq', freq_preview, ImGuiComboFlags_None) then
 				for TS_i = 1, #minutes do
-					if imgui.Selectable(minutes[TS_i][1]) then
-						allSettings.timeStampLineFreq = minutes[TS_i]
+					if imgui.Selectable(minutes[TS_i][3]) then
+						allSettings.timeStampLineFreq = {minutes[TS_i][1], minutes[TS_i][2]}
 						SaveSettings()
 					end
 				end
 				imgui.EndCombo()
 			end
+			imgui.PopItemWidth()
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Warning messages on R0s', {allSettings.R0warning[1]}) then
+			if imgui.Checkbox('R0 \230\153\130\227\129\171\232\173\166\229\145\138\227\130\146\229\135\186\227\129\153', {allSettings.R0warning[1]}) then
 				allSettings.R0warning[1] = not allSettings.R0warning[1]
 				SaveSettings()
 			end
-			AddTooltip('Shows a warning messagee in chat when you R0 (possible disconnection happening).', 4)
+			AddTooltip('R0\239\188\136\229\136\135\230\150\173\227\129\174\228\186\136\229\133\134\239\188\137\227\129\140\229\135\186\227\129\159\227\129\168\227\129\141\227\129\171\227\131\129\227\131\163\227\131\131\227\131\136\227\129\184\232\173\166\229\145\138\227\130\146\229\135\186\227\129\151\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Precise TOD Timestamps', {allSettings.PreciseTS[1]}) then
+			if imgui.Checkbox('\231\178\190\229\175\134TOD\227\130\191\227\130\164\227\131\160\227\130\185\227\130\191\227\131\179\227\131\151', {allSettings.PreciseTS[1]}) then
 				allSettings.PreciseTS[1] = not allSettings.PreciseTS[1]
 				SaveSettings()
 			end
-			AddTooltip('Shows timestamps, precise to the second, next to \'defeat mob\' messages.', 4)
+			AddTooltip('\230\149\181\227\130\146\229\128\146\227\129\151\227\129\159\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\174\230\168\170\227\129\171\227\128\129\231\167\146\229\141\152\228\189\141\227\129\174\230\153\130\229\136\187\227\130\146\228\187\152\227\129\145\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Incoming /tell notifications', {allSettings.tellNotification[1]}) then
+			if imgui.Checkbox('Tell \231\157\128\228\191\161\233\128\154\231\159\165', {allSettings.tellNotification[1]}) then
 				allSettings.tellNotification[1] = not allSettings.tellNotification[1]
 				SaveSettings()
 			end
-			AddTooltip('Plays a notification sound of choice when an incoming Tell message is received.', 4)
+			AddTooltip('Tell \227\130\146\229\143\151\227\129\145\229\143\150\227\129\163\227\129\159\227\129\168\227\129\141\227\129\171\227\128\129\233\129\184\227\130\147\227\129\160\233\128\154\231\159\165\233\159\179\227\130\146\233\179\180\227\130\137\227\129\151\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 20)
 			imgui.Dummy({27, 0}) imgui.SameLine()
@@ -1093,25 +1190,25 @@ function M.draw_settings_panel()
 					addon.path, allSettings.selectedNotification, allSettings.boostNotification[1] and 'B' or ''))
 			end
 			imgui.SameLine()
-			imgui.Text('Play!')
+			imgui.Text('\229\134\141\231\148\159')
 			imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 20)
 			imgui.Dummy({27, 0}) imgui.SameLine()
-			if imgui.Checkbox('Volume Boost', {allSettings.boostNotification[1]}) then
+			if imgui.Checkbox('\233\159\179\233\135\143\227\131\150\227\131\188\227\130\185\227\131\136', {allSettings.boostNotification[1]}) then
 				allSettings.boostNotification[1] = not allSettings.boostNotification[1]
 				SaveSettings()
 			end
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Chat word alert', {allSettings.Alert[1]}) then
+			if imgui.Checkbox('\229\141\152\232\170\158\227\130\162\227\131\169\227\131\188\227\131\136', {allSettings.Alert[1]}) then
 				allSettings.Alert[1] = not allSettings.Alert[1]
 				SaveSettings()
 			end
-			AddTooltip('Plays a notification sound of choice when one of the alert words appears in a message.', 4)
+			AddTooltip('\230\140\135\229\174\154\227\129\151\227\129\159\229\141\152\232\170\158\227\129\140\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\171\229\144\171\227\129\190\227\130\140\227\130\139\227\129\168\227\128\129\233\129\184\227\130\147\227\129\160\233\128\154\231\159\165\233\159\179\227\130\146\233\179\180\227\130\137\227\129\151\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 18)
 			imgui.Dummy({30, 0}) imgui.SameLine()
-			imgui.Text('Alert words') imgui.SameLine()
+			imgui.Text('\227\130\162\227\131\169\227\131\188\227\131\136\229\141\152\232\170\158') imgui.SameLine()
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 2)
 			imgui.PushItemWidth(dsize.x / 10)
 			imgui.InputText('##AlertWords', set.alertBuffer, 255,
@@ -1122,7 +1219,7 @@ function M.draw_settings_panel()
 					SaveSettings()
 				end)
 			imgui.SameLine()
-			AddTooltip('Separate words with commas. Case insensitive.', 4)
+			AddTooltip('\229\141\152\232\170\158\227\129\175\227\130\171\227\131\179\227\131\158\229\140\186\229\136\135\227\130\138\227\128\130\229\164\167\230\150\135\229\173\151\229\176\143\230\150\135\229\173\151\227\129\175\229\140\186\229\136\165\227\129\151\227\129\190\227\129\155\227\130\147\227\128\130', 4)
 			imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 20)
 			imgui.Dummy({27, 0}) imgui.SameLine()
@@ -1143,11 +1240,11 @@ function M.draw_settings_panel()
 					addon.path, allSettings.selectedAlert, allSettings.boostAlert[1] and 'B' or ''))
 			end
 			imgui.SameLine()
-			imgui.Text('Play!')
+			imgui.Text('\229\134\141\231\148\159')
 			imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 			imgui.SetCursorPosY(imgui.GetCursorPosY() - 20)
 			imgui.Dummy({27, 0}) imgui.SameLine()
-			if imgui.Checkbox('Volume Boost##Alert', {allSettings.boostAlert[1]}) then
+			if imgui.Checkbox('\233\159\179\233\135\143\227\131\150\227\131\188\227\130\185\227\131\136##Alert', {allSettings.boostAlert[1]}) then
 				allSettings.boostAlert[1] = not allSettings.boostAlert[1]
 				SaveSettings()
 			end
@@ -1155,8 +1252,8 @@ function M.draw_settings_panel()
 				imgui.Dummy({15, 0}) imgui.SameLine() imgui.Text('L')
 				imgui.SetCursorPosY(imgui.GetCursorPosY() - 18)
 				imgui.Dummy({30, 0}) imgui.SameLine()
-				imgui.Text('Checked channels')
-				local channels = {'Say', 'Shout', 'Party', 'Linkshell', 'Unity'}
+				imgui.Text('\229\175\190\232\177\161\227\131\129\227\131\163\227\131\179\227\131\141\227\131\171')
+				local channels = {'Say', '\227\130\183\227\131\163\227\130\166\227\131\136', '\227\131\145\227\131\188\227\131\134\227\130\163', '\227\131\170\227\131\179\227\130\175\227\130\183\227\130\167\227\131\171', '\227\131\166\227\131\139\227\131\134\227\130\163'}
 				for c_i = 1, 5 do
 					imgui.Dummy({0, 5})
 					imgui.Dummy({30, 0}) imgui.SameLine()
@@ -1169,13 +1266,13 @@ function M.draw_settings_panel()
 
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Preview Items/Abilities/Spells on mouse hover', {allSettings.ItemPreview[1]}) then
+			if imgui.Checkbox('\227\130\162\227\130\164\227\131\134\227\131\160 / \227\130\162\227\131\147\227\131\170\227\131\134\227\130\163 / \233\173\148\230\179\149\227\130\146\227\131\155\227\131\144\227\131\188\227\129\167\227\131\151\227\131\172\227\131\147\227\131\165\227\131\188', {allSettings.ItemPreview[1]}) then
 				allSettings.ItemPreview[1] = not allSettings.ItemPreview[1]
 				SaveSettings()
 			end
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Auto-restore logs when opening Legacy Chat', {allSettings.autoDumpChat[1]}) then
+			if imgui.Checkbox('\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\130\146\233\150\139\227\129\132\227\129\159\227\129\168\227\129\141\227\129\171\227\131\173\227\130\176\227\130\146\229\190\169\229\133\131', {allSettings.autoDumpChat[1]}) then
 				if not allSettings.autoDumpChat[1] and allSettings.blockAll[1] then
 					allSettings.autoDumpChat[1] = true
 				elseif allSettings.autoDumpChat[1] then
@@ -1183,30 +1280,30 @@ function M.draw_settings_panel()
 				end
 				SaveSettings()
 			end
-			AddTooltip('Available when Block All Messages from Legacy Chat is enabled.\nAutomatically restores chat messages in the Legacy Chat upon opening it.', 4)
+			AddTooltip('\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\129\184\227\129\174\229\133\168\227\131\150\227\131\173\227\131\131\227\130\175\227\129\140\227\130\170\227\131\179\227\129\174\227\129\168\227\129\141\227\129\160\227\129\145\228\189\191\227\129\136\227\129\190\227\129\153\227\128\130\n\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\130\146\233\150\139\227\129\132\227\129\159\227\129\168\227\129\141\227\129\171\227\128\129FancyChat \229\129\180\227\129\174\229\177\165\230\173\180\227\130\146\229\190\169\229\133\131\227\129\151\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Colorblind mode for damage done/taken text', {allSettings.ColorBlind[1]}) then
+			if imgui.Checkbox('\228\184\142\227\131\128\227\131\161\227\131\188\227\130\184 / \232\162\171\227\131\128\227\131\161\227\131\188\227\130\184\227\130\146\232\137\178\232\166\154\227\130\181\227\131\157\227\131\188\227\131\136\233\133\141\232\137\178\227\129\171', {allSettings.ColorBlind[1]}) then
 				allSettings.ColorBlind[1] = not allSettings.ColorBlind[1]
 				SaveSettings()
 			end
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Fast scroll chat history', {allSettings.EnableFastScroll[1]}) then
+			if imgui.Checkbox('\227\131\129\227\131\163\227\131\131\227\131\136\229\177\165\230\173\180\227\130\146\233\171\152\233\128\159\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171', {allSettings.EnableFastScroll[1]}) then
 				allSettings.EnableFastScroll[1] = not allSettings.EnableFastScroll[1]
 				SaveSettings()
 			end
-			AddTooltip('While scrolling the chat and hovering the chat window, use [Shift] + [<] or [>] to quickly scroll the history more than one line at the time.', 4)
+			AddTooltip('\227\131\129\227\131\163\227\131\131\227\131\136\228\184\138\227\129\171\227\131\158\227\130\166\227\130\185\227\130\146\231\189\174\227\129\141\227\128\129[Shift] + [<] \227\129\190\227\129\159\227\129\175 [>] \227\129\167\229\177\165\230\173\180\227\130\146\232\164\135\230\149\176\232\161\140\227\129\190\227\129\168\227\130\129\227\129\166\233\128\129\227\130\140\227\129\190\227\129\153\227\128\130', 4)
 			imgui.Dummy({0, 5})
 			imgui.Dummy({5, 0}) imgui.SameLine()
-			if imgui.Checkbox('Dock GuideMe/Notes on the second chat window', {allSettings.GuideMeSecondWindow[1]}) then
+			if imgui.Checkbox('GuideMe / \227\131\161\227\131\162\229\184\179\227\130\146\231\172\1722\227\131\129\227\131\163\227\131\131\227\131\136\227\129\171\227\131\137\227\131\131\227\130\173\227\131\179\227\130\176', {allSettings.GuideMeSecondWindow[1]}) then
 				if allSettings.SecondChat[1] then
 					allSettings.GuideMeSecondWindow[1] = not allSettings.GuideMeSecondWindow[1]
 					SaveSettings()
 				end
 			end
-			AddTooltip('Requires second chat window enabled.', 4)
-			-- "Enable FC color marking" toggle is hidden for now —
+			AddTooltip('\231\172\1722\227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\140\230\156\137\229\138\185\227\129\170\227\129\168\227\129\141\227\129\160\227\129\145\228\189\191\227\129\136\227\129\190\227\129\153\227\128\130', 4)
+			-- "Enable FC color marking" toggle is hidden for now 
 			-- the addon currently relies on FC marking being on for
 			-- correct combat / actor highlighting and legacy-escape
 			-- handling.  The underlying allSettings.EnableFCColorMarking
@@ -1235,7 +1332,7 @@ function M.draw_settings_panel()
 		----------------------------------------------------------------
 		-- Tab: Filters  (contains two sub-tabs: Combat / Other)
 		----------------------------------------------------------------
-		if imgui.BeginTabItem('Filters', nil) then
+		if imgui.BeginTabItem('\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188', nil) then
 			imguiWrap.BeginChild('##Filters Child',
 				{(setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3, setsizey * 2.7 / 2.8 - 60}, true)
 
@@ -1270,16 +1367,16 @@ function M.draw_settings_panel()
 				local filterFiles = cachedFilterFiles[opts.kind]
 				local missing     = set[opts.missingKey]
 
-				imgui.Text('Active filter file:')
+				imgui.Text('\228\189\191\231\148\168\227\129\153\227\130\139\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\131\149\227\130\161\227\130\164\227\131\171:')
 				imgui.SameLine()
 				imgui.SetNextItemWidth(setsizex * 0.4)
 				local comboLabel = allSettings[opts.selectedKey] or ''
 				if missing then
-					comboLabel = '[missing] '..comboLabel
+					comboLabel = '[\232\166\139\227\129\164\227\129\139\227\130\138\227\129\190\227\129\155\227\130\147] '..comboLabel
 				end
 				if imgui.BeginCombo('##SelectedFilter_'..opts.kind, comboLabel, ImGuiComboFlags_None) then
 					if #filterFiles == 0 then
-						imgui.TextDisabled('(no .txt files in filters/'..opts.kind..'/)')
+						imgui.TextDisabled('(filters/'..opts.kind..'/ \227\129\171 .txt \227\129\140\227\129\130\227\130\138\227\129\190\227\129\155\227\130\147)')
 					else
 						for fi = 1, #filterFiles do
 							if imgui.Selectable(filterFiles[fi], filterFiles[fi] == allSettings[opts.selectedKey]) then
@@ -1293,39 +1390,39 @@ function M.draw_settings_panel()
 					imgui.EndCombo()
 				end
 				imgui.SameLine()
-				if imgui.Button('Refresh##FilterFiles_'..opts.kind) then
+				if imgui.Button('\230\155\180\230\150\176##FilterFiles_'..opts.kind) then
 					cachedFilterFiles[opts.kind] = utils.ListFilters(opts.kind)
 					CheckActiveFilter(opts.kind)
 				end
-				AddTooltip('Pick which file in filters/'..opts.kind..'/ to use as the active filter list.\n\nRefresh re-scans the folder for newly-added or renamed .txt files.', 4)
+				AddTooltip('filters/'..opts.kind..'/ \227\129\174\227\129\169\227\129\174\227\131\149\227\130\161\227\130\164\227\131\171\227\130\146\228\189\191\227\129\134\227\129\139\227\130\146\233\129\184\227\129\179\227\129\190\227\129\153\227\128\130\n\n\227\128\140\230\155\180\230\150\176\227\128\141\227\129\167\227\131\149\227\130\169\227\131\171\227\131\128\227\130\146\229\134\141\227\130\185\227\130\173\227\131\163\227\131\179\227\129\151\227\128\129\232\191\189\229\138\160\227\131\187\230\148\185\229\144\141\227\129\151\227\129\159 .txt \227\130\146\229\143\141\230\152\160\227\129\151\227\129\190\227\129\153\227\128\130', 4)
 				imgui.Dummy({0, 5})
 
 				if missing then
-					imgui.TextColored({1.0, 0.3, 0.3, 1.0}, '[!] The active filter file no longer exists in the folder.')
-					imgui.TextColored({1.0, 0.3, 0.3, 1.0}, '    Click Refresh, then pick another from the dropdown.')
+					imgui.TextColored({1.0, 0.3, 0.3, 1.0}, '[!] \228\189\191\231\148\168\228\184\173\227\129\174\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\131\149\227\130\161\227\130\164\227\131\171\227\129\140\227\131\149\227\130\169\227\131\171\227\131\128\227\129\171\227\129\130\227\130\138\227\129\190\227\129\155\227\130\147\227\128\130')
+					imgui.TextColored({1.0, 0.3, 0.3, 1.0}, '    \227\128\140\230\155\180\230\150\176\227\128\141\227\130\146\230\138\188\227\129\151\227\129\166\227\129\139\227\130\137\227\128\129\227\131\137\227\131\173\227\131\131\227\131\151\227\131\128\227\130\166\227\131\179\227\129\167\229\136\165\227\131\149\227\130\161\227\130\164\227\131\171\227\130\146\233\129\184\227\130\147\227\129\167\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130')
 					imgui.Dummy({0, 5})
 				end
 
-				if imgui.Button('Edit Selected Filter##'..opts.kind) then
+				if imgui.Button('\233\129\184\230\138\158\227\131\149\227\130\161\227\130\164\227\131\171\227\130\146\231\183\168\233\155\134##'..opts.kind) then
 					local filepath = addon.path..'\\filters\\'..opts.kind..'\\'..allSettings[opts.selectedKey]
 					os.execute('start "" "'..filepath..'"')
 				end
 				if missing and imgui.IsItemHovered() then
-					imgui.SetTooltip('Active filter file is missing - pick another from the dropdown above.')
+					ShowTooltip('\228\189\191\231\148\168\228\184\173\227\129\174\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\131\149\227\130\161\227\130\164\227\131\171\227\129\140\227\129\130\227\130\138\227\129\190\227\129\155\227\130\147\227\128\130\228\184\138\227\129\174\227\131\137\227\131\173\227\131\131\227\131\151\227\131\128\227\130\166\227\131\179\227\129\139\227\130\137\229\136\165\227\131\149\227\130\161\227\130\164\227\131\171\227\130\146\233\129\184\227\130\147\227\129\167\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130')
 				end
 				imgui.SameLine()
-				if imgui.Button('Reload Selected Filter##'..opts.kind) then
+				if imgui.Button('\233\129\184\230\138\158\227\131\149\227\130\161\227\130\164\227\131\171\227\130\146\229\134\141\232\170\173\232\190\188##'..opts.kind) then
 					par[opts.listKey] = utils.LoadFilters(opts.kind, allSettings[opts.selectedKey])
 					CheckActiveFilter(opts.kind)
 				end
 				if missing and imgui.IsItemHovered() then
-					imgui.SetTooltip('Active filter file is missing - pick another from the dropdown above.')
+					ShowTooltip('\228\189\191\231\148\168\228\184\173\227\129\174\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\131\149\227\130\161\227\130\164\227\131\171\227\129\140\227\129\130\227\130\138\227\129\190\227\129\155\227\130\147\227\128\130\228\184\138\227\129\174\227\131\137\227\131\173\227\131\131\227\131\151\227\131\128\227\130\166\227\131\179\227\129\139\227\130\137\229\136\165\227\131\149\227\130\161\227\130\164\227\131\171\227\130\146\233\129\184\227\130\147\227\129\167\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130')
 				end
 				imgui.SameLine()
-				if imgui.Button('Open Folder##'..opts.kind) then
+				if imgui.Button('\227\131\149\227\130\169\227\131\171\227\131\128\227\130\146\233\150\139\227\129\143##'..opts.kind) then
 					os.execute('start "" "'..addon.path..'\\filters\\'..opts.kind..'\\"')
 				end
-				AddTooltip('Open the filters/'..opts.kind..'/ folder in Explorer to add or rename filter files.', 4)
+				AddTooltip('filters/'..opts.kind..'/ \227\130\146\227\130\168\227\130\175\227\130\185\227\131\151\227\131\173\227\131\188\227\131\169\227\131\188\227\129\167\233\150\139\227\129\141\227\128\129\227\131\149\227\130\161\227\130\164\227\131\171\227\129\174\232\191\189\229\138\160\227\130\132\230\148\185\229\144\141\227\129\140\227\129\167\227\129\141\227\129\190\227\129\153\227\128\130', 4)
 				imgui.Separator()
 				imgui.Dummy({0, 5})
 
@@ -1350,10 +1447,10 @@ function M.draw_settings_panel()
 					if imgui.BeginTable('resultTable_'..opts.kind, nCols,
 						bit.bor(ImGuiTableFlags_RowBg, ImGuiTableFlags_BordersH, ImGuiTableFlags_BordersV, ImGuiTableFlags_ContextMenuInBody)) then
 						if hasScope then
-							imgui.TableSetupColumn('Filter',     ImGuiTableColumnFlags_WidthFixed,   imgui.GetWindowWidth() * 0.7, 0)
-							imgui.TableSetupColumn('Applied to', ImGuiTableColumnFlags_WidthStretch, 0, 0)
+							imgui.TableSetupColumn('\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188',     ImGuiTableColumnFlags_WidthFixed,   imgui.GetWindowWidth() * 0.7, 0)
+							imgui.TableSetupColumn('\229\175\190\232\177\161', ImGuiTableColumnFlags_WidthStretch, 0, 0)
 						else
-							imgui.TableSetupColumn('Filter', ImGuiTableColumnFlags_WidthStretch, 0, 0)
+							imgui.TableSetupColumn('\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188', ImGuiTableColumnFlags_WidthStretch, 0, 0)
 						end
 						imgui.TableHeadersRow()
 						local list = par[opts.listKey]
@@ -1367,9 +1464,9 @@ function M.draw_settings_panel()
 								imgui.TableSetColumnIndex(1)
 								local cf_scope = ''
 								if list[cf][2] then
-									if     list[cf][2] == '_z' then cf_scope = cf_scope + 'All'
-									elseif list[cf][2] == '_y' then cf_scope = cf_scope + 'All but you'
-									elseif list[cf][2] == '_p' then cf_scope = cf_scope + 'All but party' end
+									if     list[cf][2] == '_z' then cf_scope = cf_scope + '\227\129\153\227\129\185\227\129\166'
+									elseif list[cf][2] == '_y' then cf_scope = cf_scope + '\232\135\170\229\136\134\228\187\165\229\164\150'
+									elseif list[cf][2] == '_p' then cf_scope = cf_scope + '\227\131\145\227\131\188\227\131\134\227\130\163\228\187\165\229\164\150' end
 								end
 								imgui.PushTextWrapPos(imgui.GetWindowWidth() * 0.9)
 								imgui.TextWrapped(cf_scope)
@@ -1383,30 +1480,30 @@ function M.draw_settings_panel()
 			end
 
 			if imgui.BeginTabBar('##FiltersInnerTabs', ImGuiTabBarFlags_NoCloseWithMiddleMouseButton) then
-				if imgui.BeginTabItem('Combat Filters', nil) then
+				if imgui.BeginTabItem('\230\136\166\233\151\152\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188', nil) then
 					draw_filter_panel({
 						kind        = 'combat',
 						masterKey   = 'CustomFilters',
 						selectedKey = 'SelectedCombatFilter',
 						missingKey  = 'filterFileMissing',
 						listKey     = 'customFilters',
-						introBlurb  = 'You can filter combat messages by adding words to a filter file in the filters/combat folder. Each filter file is a plain-text list of words that would appear in unwanted messages.\n(e.g. effect wears off)\n\n> Words must be present in the original game combat message\n  (i.e. not words modified by addons)\n> Word matching is non case sensitive\n> More details in each filter file\n\n!!! Very long lists could cause performance issues !!!',
-						masterLabel = 'Enable Combat Log chat filters',
-						tableHeader = 'Current Combat Log Filters:',
+						introBlurb  = 'filters/combat \227\131\149\227\130\169\227\131\171\227\131\128\227\129\174\227\131\134\227\130\173\227\130\185\227\131\136\227\131\149\227\130\161\227\130\164\227\131\171\227\129\171\229\141\152\232\170\158\227\130\146\230\155\184\227\129\143\227\129\168\227\128\129\230\136\166\233\151\152\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\130\146\233\154\160\227\129\155\227\129\190\227\129\153\227\128\130\229\144\132\227\131\149\227\130\161\227\130\164\227\131\171\227\129\175\227\128\129\233\154\160\227\129\151\227\129\159\227\129\132\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\171\229\144\171\227\129\190\227\130\140\227\130\139\229\141\152\232\170\158\227\129\174\227\131\170\227\130\185\227\131\136\227\129\167\227\129\153\227\128\130\n\239\188\136\228\190\139: effect wears off\239\188\137\n\n> \229\141\152\232\170\158\227\129\175\227\128\129\227\130\162\227\131\137\227\130\170\227\131\179\230\148\185\229\164\137\229\137\141\227\129\174\227\130\178\227\131\188\227\131\160\230\156\172\228\189\147\227\129\174\230\136\166\233\151\152\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\171\229\144\171\227\129\190\227\130\140\227\130\139\229\191\133\232\166\129\227\129\140\227\129\130\227\130\138\227\129\190\227\129\153\n> \229\164\167\230\150\135\229\173\151\229\176\143\230\150\135\229\173\151\227\129\175\229\140\186\229\136\165\227\129\151\227\129\190\227\129\155\227\130\147\n> \232\169\179\231\180\176\227\129\175\229\144\132\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\131\149\227\130\161\227\130\164\227\131\171\229\134\133\227\129\171\227\129\130\227\130\138\227\129\190\227\129\153\n\n!!! \227\131\170\227\130\185\227\131\136\227\129\140\233\157\158\229\184\184\227\129\171\233\149\183\227\129\132\227\129\168\232\178\160\232\141\183\227\129\140\233\171\152\227\129\143\227\129\170\227\130\138\227\129\190\227\129\153 !!!',
+						masterLabel = '\230\136\166\233\151\152\227\131\173\227\130\176\227\129\174\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\130\146\230\156\137\229\138\185\227\129\171\227\129\153\227\130\139',
+						tableHeader = '\231\143\190\229\156\168\227\129\174\230\136\166\233\151\152\227\131\173\227\130\176\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188:',
 					})
 					imgui.EndTabItem()
 				end
 
-				if imgui.BeginTabItem('Other Filters', nil) then
+				if imgui.BeginTabItem('\227\129\157\227\129\174\228\187\150\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188', nil) then
 					draw_filter_panel({
 						kind        = 'other',
 						masterKey   = 'OtherFilters',
 						selectedKey = 'SelectedOtherFilter',
 						missingKey  = 'otherFilterFileMissing',
 						listKey     = 'otherFilters',
-						introBlurb  = 'You can filter non-combat chat messages (NPC dialog, system, tells, shouts, ...) by adding words to a filter file in the filters/other folder. Each filter file is a plain-text list of words that would appear in unwanted messages.\n\n> Words must be present in the original game message\n  (i.e. not words modified by addons)\n> Word matching is non case sensitive\n> More details in each filter file\n\n!!! Very long lists could cause performance issues !!!',
-						masterLabel = 'Enable Other chat filters',
-						tableHeader = 'Current Other Filters:',
+						introBlurb  = 'filters/other \227\131\149\227\130\169\227\131\171\227\131\128\227\129\174\227\131\134\227\130\173\227\130\185\227\131\136\227\131\149\227\130\161\227\130\164\227\131\171\227\129\171\229\141\152\232\170\158\227\130\146\230\155\184\227\129\143\227\129\168\227\128\129\230\136\166\233\151\152\228\187\165\229\164\150\227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\239\188\136NPC\229\143\176\232\169\158\227\128\129\227\130\183\227\130\185\227\131\134\227\131\160\227\128\129Tell\227\128\129\227\130\183\227\131\163\227\130\166\227\131\136\227\129\170\227\129\169\239\188\137\227\130\146\233\154\160\227\129\155\227\129\190\227\129\153\227\128\130\229\144\132\227\131\149\227\130\161\227\130\164\227\131\171\227\129\175\227\128\129\233\154\160\227\129\151\227\129\159\227\129\132\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\171\229\144\171\227\129\190\227\130\140\227\130\139\229\141\152\232\170\158\227\129\174\227\131\170\227\130\185\227\131\136\227\129\167\227\129\153\227\128\130\n\n> \229\141\152\232\170\158\227\129\175\227\128\129\227\130\162\227\131\137\227\130\170\227\131\179\230\148\185\229\164\137\229\137\141\227\129\174\227\130\178\227\131\188\227\131\160\230\156\172\228\189\147\227\129\174\227\131\161\227\131\131\227\130\187\227\131\188\227\130\184\227\129\171\229\144\171\227\129\190\227\130\140\227\130\139\229\191\133\232\166\129\227\129\140\227\129\130\227\130\138\227\129\190\227\129\153\n> \229\164\167\230\150\135\229\173\151\229\176\143\230\150\135\229\173\151\227\129\175\229\140\186\229\136\165\227\129\151\227\129\190\227\129\155\227\130\147\n> \232\169\179\231\180\176\227\129\175\229\144\132\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\131\149\227\130\161\227\130\164\227\131\171\229\134\133\227\129\171\227\129\130\227\130\138\227\129\190\227\129\153\n\n!!! \227\131\170\227\130\185\227\131\136\227\129\140\233\157\158\229\184\184\227\129\171\233\149\183\227\129\132\227\129\168\232\178\160\232\141\183\227\129\140\233\171\152\227\129\143\227\129\170\227\130\138\227\129\190\227\129\153 !!!',
+						masterLabel = '\227\129\157\227\129\174\228\187\150\227\131\129\227\131\163\227\131\131\227\131\136\227\129\174\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188\227\130\146\230\156\137\229\138\185\227\129\171\227\129\153\227\130\139',
+						tableHeader = '\231\143\190\229\156\168\227\129\174\227\129\157\227\129\174\228\187\150\227\131\149\227\130\163\227\131\171\227\130\191\227\131\188:',
 					})
 					imgui.EndTabItem()
 				end
@@ -1421,7 +1518,7 @@ function M.draw_settings_panel()
 		----------------------------------------------------------------
 		-- Tab: Tools
 		----------------------------------------------------------------
-		if imgui.BeginTabItem('Tools', nil) then
+		if imgui.BeginTabItem('\227\131\132\227\131\188\227\131\171', nil) then
 			imguiWrap.BeginChild('##Tools Child',
 				{(setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3, setsizey * 2.7 / 2.8 - 60}, true)
 
@@ -1444,7 +1541,7 @@ function M.draw_settings_panel()
 			end
 			imgui.SameLine()
 			imgui.SetCursorPosY(imgui.GetCursorPosY() + dsize.x / 300)
-			if fcw[1].SaveStart > 0 then imgui.Text('Saving...') else imgui.Text('Save Chat Logs') end
+			if fcw[1].SaveStart > 0 then imgui.Text('\228\191\157\229\173\152\228\184\173...') else imgui.Text('\227\131\129\227\131\163\227\131\131\227\131\136\227\131\173\227\130\176\227\130\146\228\191\157\229\173\152') end
 
 			-- Open Logs Folder
 			imgui.Dummy({0, 5})
@@ -1461,7 +1558,7 @@ function M.draw_settings_panel()
 			end
 			imgui.SameLine()
 			imgui.SetCursorPosY(imgui.GetCursorPosY() + dsize.x / 300)
-			imgui.Text('Open Logs Folder')
+			imgui.Text('\227\131\173\227\130\176\227\131\149\227\130\169\227\131\171\227\131\128\227\130\146\233\150\139\227\129\143')
 
 			-- Open Manual
 			imgui.Dummy({0, 5})
@@ -1475,7 +1572,7 @@ function M.draw_settings_panel()
 			end
 			imgui.SameLine()
 			imgui.SetCursorPosY(imgui.GetCursorPosY() + dsize.x / 300)
-			imgui.Text('Open Manual')
+			imgui.Text('\227\131\158\227\131\139\227\131\165\227\130\162\227\131\171\227\130\146\233\150\139\227\129\143')
 
 			-- Restore Legacy Chat Logs (DumpChat)
 			imgui.Dummy({0, 5})
@@ -1484,14 +1581,14 @@ function M.draw_settings_panel()
 				if imguiWrap.ImageButton('TextureIDDumpchat', fcw[1].TextureIDDumpchat,
 					{dsize.x / 100, dsize.x / 100}, {0.05, 0.01}, {0.98, 1.0},
 					-1, {0, 0, 0, 0}, {1, 1, 1, 1}) then
-					DumpChat('-------------- Chat restored --------------')
+					DumpChat('-------------- \227\131\129\227\131\163\227\131\131\227\131\136\227\130\146\229\190\169\229\133\131\227\129\151\227\129\190\227\129\151\227\129\159 --------------')
 					b.OriginalBuffer = T{}
 				end
 			end
 			imgui.SameLine()
 			imgui.SetCursorPosY(imgui.GetCursorPosY() + dsize.x / 300)
-			imgui.Text('Restore Legacy Chat Logs')
-			AddTooltip('Use this to restore chat logs in the legacy chat window. Use this to take chat log screenshots to submit for support tickets', 0, 1)
+			imgui.Text('\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\129\174\227\131\173\227\130\176\227\130\146\229\190\169\229\133\131')
+			AddTooltip('\229\190\147\230\157\165\227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\171\229\177\165\230\173\180\227\130\146\230\136\187\227\129\151\227\129\190\227\129\153\227\128\130\227\130\181\227\131\157\227\131\188\227\131\136\231\148\168\227\129\174\227\130\185\227\130\175\227\131\170\227\131\188\227\131\179\227\130\183\227\131\167\227\131\131\227\131\136\227\130\146\230\146\174\227\130\139\227\129\168\227\129\141\227\129\171\228\189\191\227\129\132\227\129\190\227\129\153\227\128\130', 0, 1)
 
 			imgui.EndChild()
 			imgui.EndTabItem()
@@ -1500,7 +1597,7 @@ function M.draw_settings_panel()
 		----------------------------------------------------------------
 		-- Tab: Credits
 		----------------------------------------------------------------
-		if imgui.BeginTabItem('Credits', nil) then
+		if imgui.BeginTabItem('\227\130\175\227\131\172\227\130\184\227\131\131\227\131\136', nil) then
 			imguiWrap.BeginChild('##Credits Child',
 				{(setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3, setsizey * 2.7 / 2.8 - 60}, true)
 
@@ -1530,32 +1627,32 @@ function M.draw_settings_panel()
 			end
 
 			-- ----- Version + author line, centered, yellow -----
-			-- addon.version is of the form "<major>.<minor>.<YYMMDD>";
-			-- extract the 6-digit suffix and format it as "DD Month YYYY".
+			-- addon.version is of the form "<major>.<minor>.<YYMMDD>" or
+			-- "<major>.<minor>.<YYMMDD>-JP"; take the 6-digit date.
 			local _winW       = imgui.GetWindowWidth()
 			local _versionStr = tostring(addon.version or '')
-			local _datePart   = _versionStr:match('(%d%d%d%d%d%d)$')
+			local _datePart   = _versionStr:match('(%d%d%d%d%d%d)')
 			local _dateDisplay = nil
 			if _datePart then
-				local _months = {'January','February','March','April','May','June',
-				                 'July','August','September','October','November','December'}
+				local _months = {'1\230\156\136','2\230\156\136','3\230\156\136','4\230\156\136','5\230\156\136','6\230\156\136',
+				                 '7\230\156\136','8\230\156\136','9\230\156\136','10\230\156\136','11\230\156\136','12\230\156\136'}
 				local yy = tonumber(_datePart:sub(1, 2))
 				local mm = tonumber(_datePart:sub(3, 4))
 				local dd = tonumber(_datePart:sub(5, 6))
 				if yy and mm and dd and _months[mm] then
-					_dateDisplay = string.format('%d %s %d', dd, _months[mm], 2000 + yy)
+					_dateDisplay = string.format('%d\229\185\180%s%d\230\151\165', 2000 + yy, _months[mm], dd)
 				end
 			end
 
 			local _YELLOW = {1.0, 0.92, 0.16, 1.0}
 
-			local _line1 = 'Version: '..(_versionStr ~= '' and _versionStr or '?')
+			local _line1 = '\227\131\144\227\131\188\227\130\184\227\131\167\227\131\179: '..(_versionStr ~= '' and _versionStr or '?')
 			local _w1    = imgui.CalcTextSize(_line1)
 			imgui.SetCursorPosX((_winW - _w1) * 0.5)
 			imgui.TextColored(_YELLOW, _line1)
 
 			if _dateDisplay then
-				local _line2 = 'Created by Arielfy on '.._dateDisplay
+				local _line2 = '\228\189\156\230\136\144\232\128\133 Arielfy / Hando  '.._dateDisplay
 				local _w2    = imgui.CalcTextSize(_line2)
 				imgui.SetCursorPosX((_winW - _w2) * 0.5)
 				imgui.TextColored(_YELLOW, _line2)
@@ -1568,7 +1665,7 @@ function M.draw_settings_panel()
 			local _SECTION = {0.50, 0.78, 0.95, 1.0}
 
 			-- ----- Links -----
-			imgui.TextColored(_SECTION, 'Links')
+			imgui.TextColored(_SECTION, '\227\131\170\227\131\179\227\130\175')
 			imgui.Separator()
 			imgui.Dummy({0, 8})
 
@@ -1580,7 +1677,8 @@ function M.draw_settings_panel()
 			-- the Major Thanks green / light-red.
 			local _LIGHT_PURPLE = {0.80, 0.65, 0.95, 1.0}
 			local _links = {
-				{'FancyChat GitHub Repo:', 'https://github.com/ariel-logos/Fancychat'},
+				{'FancyChat JP GitHub:',   addon.link or 'https://github.com/handomade/FancyChatJP'},
+				{'FancyChat (original):',  'https://github.com/ariel-logos/Fancychat'},
 				{'Arielfy GitHub:',        'https://github.com/ariel-logos'},
 				{'ElfyLab:',               'http://ariel-logos.github.io/ElfyLab'},
 			}
@@ -1605,7 +1703,7 @@ function M.draw_settings_panel()
 						:gsub('^www%.', '')
 					imguiWrap.TextLinkOpenURL(_display, _link[2])
 				else
-					imgui.TextDisabled('(link coming)')
+					imgui.TextDisabled('\239\188\136\230\186\150\229\130\153\228\184\173\239\188\137')
 				end
 			end
 
@@ -1618,7 +1716,7 @@ function M.draw_settings_panel()
 			-- green channel noticeably higher than blue).  Each name
 			-- can carry an optional URL; when set, it renders as
 			-- "Name(<clickable url>)" with no space before the parens.
-			imgui.TextColored(_SECTION, 'Major Thanks')
+			imgui.TextColored(_SECTION, '\231\137\185\229\136\165\227\129\170\230\132\159\232\172\157')
 			imgui.Separator()
 			imgui.Dummy({0, 8})
 
@@ -1654,7 +1752,7 @@ function M.draw_settings_panel()
 
 			-- Subsection 1: Ashita platform + key devs (green)
 			imgui.Dummy({10, 0}) imgui.SameLine()
-			imgui.Text('For the invaluable addon dev tools, help and patience:')
+			imgui.Text('\227\130\162\227\131\137\227\130\170\227\131\179\233\150\139\231\153\186\227\131\132\227\131\188\227\131\171\227\129\168\227\128\129\229\138\169\227\129\145\227\129\168\229\191\141\232\128\144\227\129\171\230\132\159\232\172\157\227\129\151\227\129\190\227\129\153:')
 			imgui.Dummy({0, 4})
 			-- TODO: fill optional URLs.  Empty string = no link.
 			local _ashita = {
@@ -1672,7 +1770,7 @@ function M.draw_settings_panel()
 
 			-- Subsection 2: Testers (light red)
 			imgui.Dummy({10, 0}) imgui.SameLine()
-			imgui.Text('For their time spent catching bugs and providing feedback:')
+			imgui.Text('\227\131\144\227\130\176\229\160\177\229\145\138\227\129\168\227\131\149\227\130\163\227\131\188\227\131\137\227\131\144\227\131\131\227\130\175\227\130\146\227\129\143\227\130\140\227\129\159\227\131\134\227\130\185\227\130\191\227\131\188\227\129\174\231\154\134\227\129\149\227\130\147:')
 			imgui.Dummy({0, 4})
 			-- TODO: fill optional URLs.  Empty string = no link.
 			local _testers = {
@@ -1693,18 +1791,18 @@ function M.draw_settings_panel()
 			-- inside jokes, whatever you want.  Edit the lines below.
 			-- TextWrapped honors the child's content width so long lines
 			-- wrap to fit the panel.
-			imgui.TextColored(_SECTION, 'Special Thanks')
+			imgui.TextColored(_SECTION, '\227\130\185\227\131\154\227\130\183\227\131\163\227\131\171\227\130\181\227\131\179\227\130\175\227\130\185')
 			imgui.Separator()
 			imgui.Dummy({0, 8})
 
 			imgui.PushTextWrapPos(imgui.GetWindowWidth() * 0.95)
 			imgui.Dummy({10, 0}) imgui.SameLine()
-			imgui.TextWrapped('Thanks to my family and all my friends who, for the past year, watched me disappear into my room to push this project forward. Even through the countless hours I spent buried in code, you stayed close to me, checking in, dragging me out for a meal, putting up with the late nights and the monologues about chat windows.')
+			imgui.TextWrapped('\227\129\147\227\129\1741\229\185\180\227\128\129\233\131\168\229\177\139\227\129\171\227\129\147\227\130\130\227\129\163\227\129\166\227\129\147\227\129\174\227\131\151\227\131\173\227\130\184\227\130\167\227\130\175\227\131\136\227\130\146\233\128\178\227\130\129\227\130\139\231\167\129\227\130\146\232\166\139\229\174\136\227\129\163\227\129\166\227\129\143\227\130\140\227\129\159\229\174\182\230\151\143\227\129\168\229\143\139\228\186\186\227\129\159\227\129\161\227\129\184\227\128\130\227\130\179\227\131\188\227\131\137\227\129\171\229\159\139\227\130\130\227\130\140\227\129\159\233\149\183\227\129\132\230\153\130\233\150\147\227\129\174\227\129\130\227\129\132\227\129\160\227\130\130\227\128\129\229\163\176\227\130\146\227\129\139\227\129\145\227\129\166\227\129\143\227\130\140\227\128\129\233\163\159\228\186\139\227\129\171\233\128\163\227\130\140\229\135\186\227\129\151\227\129\166\227\129\143\227\130\140\227\128\129\229\164\156\230\155\180\227\129\139\227\129\151\227\130\132\227\131\129\227\131\163\227\131\131\227\131\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\174\231\139\172\231\153\189\227\129\171\228\187\152\227\129\141\229\144\136\227\129\163\227\129\166\227\129\143\227\130\140\227\129\190\227\129\151\227\129\159\227\128\130\227\129\130\227\130\138\227\129\140\227\129\168\227\129\134\227\128\130')
 
 			imgui.Dummy({0, 12})
 
 			imgui.Dummy({10, 0}) imgui.SameLine()
-			imgui.TextWrapped('A final thanks to my dad, I am sorry I could not show you the final result; you would have been happy and proud, as you always were with everything I did. I miss you.')
+			imgui.TextWrapped('\230\156\128\229\190\140\227\129\171\231\136\182\227\129\184\227\128\130\229\174\140\230\136\144\227\129\151\227\129\159\229\167\191\227\130\146\232\166\139\227\129\155\227\130\137\227\130\140\227\129\170\227\129\139\227\129\163\227\129\159\227\129\147\227\129\168\227\129\140\229\191\131\230\174\139\227\130\138\227\129\167\227\129\153\227\128\130\227\129\132\227\129\164\227\130\130\227\129\157\227\129\134\227\129\160\227\129\163\227\129\159\227\130\136\227\129\134\227\129\171\227\128\129\229\150\156\227\130\147\227\129\167\227\128\129\232\170\135\227\130\138\227\129\171\230\128\157\227\129\163\227\129\166\227\129\143\227\130\140\227\129\159\227\129\175\227\129\154\227\129\167\227\129\153\227\128\130\228\188\154\227\129\132\227\129\159\227\129\132\227\129\167\227\129\153\227\128\130')
 			imgui.PopTextWrapPos()
 			
 			imgui.Dummy({0, 24})
@@ -1723,7 +1821,7 @@ function M.draw_settings_panel()
 	-- no title bar, opaque black background, ImGui-orange buttons.
 	-- The Load popup's file list lives in a scrollable child so a
 	-- long folder doesn't push the buttons off-screen.  Dismissed
-	-- only via the Save / Load action, Cancel, or Escape — clicking
+	-- only via the Save / Load action, Cancel, or Escape  clicking
 	-- outside is intentionally a no-op.
 	-- ----------------------------------------------------------------
 	local popupFlags = bit.bor(
@@ -1750,13 +1848,13 @@ function M.draw_settings_panel()
 		imgui.SetNextWindowSize({440, 130}, ImGuiCond_Always)
 		pushPopupStyle()
 		if imgui.Begin('##fc_export', true, popupFlags) then
-			imgui.Text('Filename:')
+			imgui.Text('\227\131\149\227\130\161\227\130\164\227\131\171\229\144\141:')
 			imgui.PushItemWidth(-1)                      -- fill the popup width
 			imgui.InputText('##fc_export_name', set.colorIO.exportName, 64)
 			imgui.PopItemWidth()
 			imgui.Spacing()
-			if imgui.Button('Save##fc_export_save', {80, 0}) then
-				local skipKeys = {'combat', 'combatspell'}
+			if imgui.Button('\228\191\157\229\173\152##fc_export_save', {80, 0}) then
+				local skipKeys = {'combat', 'combatspell', 'cexi'}
 				local payload  = {}
 				for k, v in pairs(allSettings.colors) do
 					if not utils.FindInStringTable(k, skipKeys, 0) then
@@ -1767,7 +1865,7 @@ function M.draw_settings_panel()
 				set.colorIO.exportOpen = false
 			end
 			imgui.SameLine()
-			if imgui.Button('Cancel##fc_export_cancel', {80, 0}) then
+			if imgui.Button('\227\130\173\227\131\163\227\131\179\227\130\187\227\131\171##fc_export_cancel', {80, 0}) then
 				set.colorIO.exportOpen = false
 			end
 			if imguiWrap.GetKeyDown(1) then     -- Escape
@@ -1784,7 +1882,7 @@ function M.draw_settings_panel()
 		pushPopupStyle()
 		if imgui.Begin('##fc_import', true, popupFlags) then
 			local files = set.colorIO.importFiles
-			imgui.Text('Select a colorset file:')
+			imgui.Text('\227\130\171\227\131\169\227\131\188\227\130\187\227\131\131\227\131\136\227\131\149\227\130\161\227\130\164\227\131\171\227\130\146\233\129\184\230\138\158:')
 			-- Reserve the bottom row of the popup for the buttons:
 			-- list height = (whatever vertical space is left) - one row
 			-- for the buttons - a small spacing gap.  Negative Y in
@@ -1794,7 +1892,7 @@ function M.draw_settings_panel()
 			local listH     = math.max(80, availY - 40)  -- 40 = one button row + gap
 			imguiWrap.BeginChild('##fc_import_list', {0, listH}, true)
 			if #files == 0 then
-				imgui.TextDisabled('(no files in chatcolors/)')
+				imgui.TextDisabled('\239\188\136chatcolors/ \227\129\171\227\131\149\227\130\161\227\130\164\227\131\171\227\129\140\227\129\130\227\130\138\227\129\190\227\129\155\227\130\147\239\188\137')
 			else
 				for i, name in ipairs(files) do
 					if imgui.Selectable(name, set.colorIO.importSelected == i) then
@@ -1809,7 +1907,7 @@ function M.draw_settings_panel()
 				imgui.PushStyleColor(ImGuiCol_ButtonHovered, {0.35, 0.35, 0.35, 0.5})
 				imgui.PushStyleColor(ImGuiCol_ButtonActive,  {0.35, 0.35, 0.35, 0.5})
 			end
-			if imgui.Button('Load##fc_import_load', {80, 0}) and hasSel then
+			if imgui.Button('\232\170\173\232\190\188##fc_import_load', {80, 0}) and hasSel then
 				local fname = files[set.colorIO.importSelected]
 				allSettings.colors = utils.ImportColors(addon.path, fname, allSettings.colors)
 				SaveSettings()
@@ -1817,7 +1915,7 @@ function M.draw_settings_panel()
 			end
 			if not hasSel then imgui.PopStyleColor(3) end
 			imgui.SameLine()
-			if imgui.Button('Cancel##fc_import_cancel', {80, 0}) then
+			if imgui.Button('\227\130\173\227\131\163\227\131\179\227\130\187\227\131\171##fc_import_cancel', {80, 0}) then
 				set.colorIO.importOpen = false
 			end
 			if imguiWrap.GetKeyDown(1) then     -- Escape

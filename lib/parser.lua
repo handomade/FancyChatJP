@@ -25,7 +25,7 @@
 	Helper functions kept here because they only make sense in the
 	parser context:
 	  CleanTextFunctionNew  Byte-pass cleaner: strips colors, FFXI bytes,
-	                        SJIS multibytes.
+	                        SJIS multibytes, optional emoji substitution.
 	  HandleSpecial    Find the [prefix..suffix] span in a chat line
 	                   and return an MCList tuple to colorize it.
 	  CheckSpecial     Mode-specific dispatcher for HandleSpecial
@@ -95,9 +95,11 @@ local utils_FindLastOfString       = utils.FindLastOfString
 local utils_FindInStringTable      = utils.FindInStringTable
 local utils_FindInStringTableFilters = utils.FindInStringTableFilters
 local utils_IsInTable              = utils.IsInTable
-local utils_CountExtraBytesT       = utils.CountExtraBytesT
+local utils_FindWrapCutIdx         = utils.FindWrapCutIdx
 local utils_utf8split              = utils.utf8split
 local utils_ParseUrlLink           = utils.ParseUrlLink
+local utils_parseEmoji             = utils.parseEmoji
+local utils_emojiCols              = utils.emojiCols
 local utils_MC                     = utils.MC
 local utils_MCCheck                = utils.MCCheck
 local utils_LoadFilters            = utils.LoadFilters
@@ -122,16 +124,16 @@ local M = {}
 
 -- ===================================================================
 -- CleanTextFunctionNew: byte-level pass over an incoming chat line.
--- Uses the single-pass utils.TranscodeFFXI byte walker for SJIS → UTF-8
+-- Uses the single-pass utils.TranscodeFFXI byte walker for SJIS  UTF-8
 -- transcoding, glyph remapping, and codepoint replacement.
 --
 -- Responsibilities:
---   • Conversation-prompt tracking (uiw.DialogPromptStart on
+--    Conversation-prompt tracking (uiw.DialogPromptStart on
 --     mode-150/151 dialog-end transitions).
---   • Compact-combat fast path: arrow glyph dropped when mode
+--    Compact-combat fast path: arrow glyph dropped when mode
 --     contains 'combat', channel is not 80, and CompactCombat is on.
 --     Combat lines skip outer-whitespace trim.
---   • Heart emoji (<3 → ❤) on the full path.
+--    Heart emoji (<3  ) on the full path.
 -- ===================================================================
 function M.CleanTextFunctionNew(text, mode)
 	-- 1. Conversation tracking.
@@ -159,13 +161,13 @@ function M.CleanTextFunctionNew(text, mode)
 	-- Decide whether the legacy in-band palette escapes
 	-- (\x1E\NN, \x1F\NN) should be PRESERVED through CleanTextFunctionNew so
 	-- a downstream step can translate them to MC tokens:
-	--   • FC marking inactive  → preserve (legacy escapes are the
+	--    FC marking inactive   preserve (legacy escapes are the
 	--     only colour information left).
-	--   • FC marking active + channel-default colour is pure white
-	--     → preserve (FC has no opinion about this channel's
+	--    FC marking active + channel-default colour is pure white
+	--      preserve (FC has no opinion about this channel's
 	--     colour, so let inline escapes through).
-	--   • FC marking active + channel colour non-white
-	--     → drop (FC's per-channel colour owns the line).
+	--    FC marking active + channel colour non-white
+	--      drop (FC's per-channel colour owns the line).
 	local channel_col_default = utils_modesDA[par.MessageMode + 1][3]
 	local respectLegacyColors = (not fcMarkingActive)
 		or (channel_col_default == 0xFFFFFFFF)
@@ -284,7 +286,10 @@ _G.HandleSpecial = M.HandleSpecial
 -- ===================================================================
 -- CheckSpecial: dispatch by MessageMode to the right HandleSpecial
 -- pattern.  Recognises:
+--   * CEXI accumulators (linkshell-points / activity-points / summit
+--     objectives / point accumulation / partyfinder)
 --   * Loot results: You find / synth / throw / lot / sell / buy
+--   * Quest accept / complete (CEXI)
 --   * Level attain (with icons.LVLUP), caught/learn
 --   * Item obtain / key-item / bazaar / use
 --   * Exp / limit gain (with icons.EXP)
@@ -331,6 +336,24 @@ function M.CheckSpecial(newText, col, cutIdx)
 			return HandleSpecial(newText, 'sell', 'You sell ', ' to ', cutIdx, allSettings.colors.obtained[1])
 		elseif newText:find('You buy ') or par.checkAgain[2] == 'buy' then
 			return HandleSpecial(newText, 'buy', 'You buy ', ' from ', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find('\227\130\146\232\166\139\227\129\164\227\129\145\227\129\159') or par.checkAgain[2] == 'youfindjp' then
+			return HandleSpecial(newText, 'youfindjp', '\227\129\139\227\130\137', '\227\130\146\232\166\139\227\129\164\227\129\145\227\129\159', cutIdx, allSettings.colors.found[1])
+		elseif newText:find('\227\130\146\229\144\136\230\136\144\227\129\151\227\129\159') or par.checkAgain[2] == 'synthjp' then
+			return HandleSpecial(newText, 'synthjp', nil, '\227\130\146\229\144\136\230\136\144\227\129\151\227\129\159', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find('\227\130\146\230\141\168\227\129\166\227\129\159') or par.checkAgain[2] == 'throwjp' then
+			return HandleSpecial(newText, 'throwjp', nil, '\227\130\146\230\141\168\227\129\166\227\129\159', cutIdx, allSettings.colors.negative[1])
+		elseif (newText:find('\227\129\171\227\129\170\227\129\163\227\129\159') and newText:find('\227\131\172\227\131\153\227\131\171')) or par.checkAgain[2] == 'attainjp' then
+			return HandleSpecial(newText, 'attainjp', '\227\129\175\227\131\172\227\131\153\227\131\171', nil, cutIdx, allSettings.colors.attain[1])
+		elseif newText:find('\227\130\146\232\166\154\227\129\136\227\129\159') or par.checkAgain[2] == 'learnjp' then
+			return HandleSpecial(newText, 'learnjp', nil, '\227\130\146\232\166\154\227\129\136\227\129\159', cutIdx, allSettings.colors.learn[1])
+		elseif newText:find('\227\131\173\227\131\131\227\131\136') or par.checkAgain[2] == 'lotjp' then
+			par.tabmode = -1
+			par.LastMode = 'lot'
+			return HandleSpecial(newText, 'lotjp', '\227\131\173\227\131\131\227\131\136', '\227\128\130', cutIdx, allSettings.colors.lot[1])
+		elseif newText:find('\227\130\146\229\163\178\229\141\180\227\129\151\227\129\159') or par.checkAgain[2] == 'selljp' then
+			return HandleSpecial(newText, 'selljp', nil, '\227\130\146\229\163\178\229\141\180\227\129\151\227\129\159', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find('\227\130\146\232\179\188\229\133\165\227\129\151\227\129\159') or par.checkAgain[2] == 'buyjp' then
+			return HandleSpecial(newText, 'buyjp', nil, '\227\130\146\232\179\188\229\133\165\227\129\151\227\129\159', cutIdx, allSettings.colors.obtained[1])
 		end
 	end
 
@@ -364,6 +387,12 @@ function M.CheckSpecial(newText, col, cutIdx)
 			return HandleSpecial(newText, 'fshm', nil, 'Something', cutIdx,  0xFFFF391F)
 		elseif newText:find('Obtained key item: ') or par.checkAgain[2] == 'KI' then
 			return HandleSpecial(newText, 'KI', 'Obtained key item: ', '%.', cutIdx, allSettings.colors.keyitem[1])
+		elseif newText:find('\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159') or par.checkAgain[2] == 'obtain1jp' then
+			return HandleSpecial(newText, 'obtain1jp', nil, '\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find('\227\130\146\229\133\165\230\137\139\227\129\151\227\129\159') or par.checkAgain[2] == 'obtain2jp' then
+			return HandleSpecial(newText, 'obtain2jp', nil, '\227\130\146\229\133\165\230\137\139\227\129\151\227\129\159', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find('\227\130\173\227\131\188\227\130\162\227\130\164\227\131\134\227\131\160') or par.checkAgain[2] == 'KIjp' then
+			return HandleSpecial(newText, 'KIjp', '\227\130\173\227\131\188\227\130\162\227\130\164\227\131\134\227\131\160', '\227\128\130', cutIdx, allSettings.colors.keyitem[1])
 		end
 	end
 
@@ -384,6 +413,8 @@ function M.CheckSpecial(newText, col, cutIdx)
 			return HandleSpecial(newText, 'roe', 'Records of Eminence: ', '%.', cutIdx, allSettings.colors.roe[1])
 		elseif newText:find('Progress: [0-9]*/[0-9]*') or par.checkAgain[2] == 'roep' then
 			return HandleSpecial(newText, 'roep', 'Progress: ', '%.', cutIdx, allSettings.colors.roe[1])
+		elseif newText:find('\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159') or par.checkAgain[2] == 'obtain5jp' then
+			return HandleSpecial(newText, 'obtain5jp', nil, '\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159', cutIdx, allSettings.colors.obtained[1])
 		end
 	end
 
@@ -404,22 +435,63 @@ function M.CheckSpecial(newText, col, cutIdx)
 			par.tabmode = 3
 			par.LastMode = 'combat'
 			return HandleSpecial(newText, 'lim', ' gains ', nil, cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find('\231\181\140\233\168\147\229\128\164') or par.checkAgain[2] == 'expjp' then
+			par.tabmode = 3
+			par.LastMode = 'combat'
+			return HandleSpecial(newText, 'expjp', nil, '\231\181\140\233\168\147\229\128\164', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find('\227\131\170\227\131\159\227\131\131\227\131\136\227\131\157\227\130\164\227\131\179\227\131\136') or par.checkAgain[2] == 'limjp' then
+			par.tabmode = 3
+			par.LastMode = 'combat'
+			return HandleSpecial(newText, 'limjp', nil, '\227\131\170\227\131\159\227\131\131\227\131\136\227\131\157\227\130\164\227\131\179\227\131\136', cutIdx, allSettings.colors.obtained[1])
 		end
 	end
 
 	if par.MessageMode == 90 or par.MessageMode == 85 then
 		if newText:find(' uses ') or par.checkAgain[2] == 'use' then
 			return HandleSpecial(newText, 'use', ' uses ', '%.', cutIdx, allSettings.colors.useitem[1])
+		elseif newText:find('\227\130\146\228\189\191\227\129\163\227\129\159') or par.checkAgain[2] == 'usejp' then
+			return HandleSpecial(newText, 'usejp', nil, '\227\130\146\228\189\191\227\129\163\227\129\159', cutIdx, allSettings.colors.useitem[1])
 		end
 	end
 
 	if par.MessageMode == 138 then
 		if newText:find(' bought ') or par.checkAgain[2] == 'bazaar' then
 			return HandleSpecial(newText, 'bazaar', ' bought ', '%.', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find('\232\179\188\229\133\165\227\129\151\227\129\159') or par.checkAgain[2] == 'bazaarjp' then
+			return HandleSpecial(newText, 'bazaarjp', nil, '\232\179\188\229\133\165\227\129\151\227\129\159', cutIdx, allSettings.colors.obtained[1])
 		end
 	end
 	
-
+	if set.isCEXI and (par.MessageMode == 9 or par.MessageMode == 127 or par.MessageMode == 121) then
+		if newText:find('Now accumulating linkshell points for ') or par.checkAgain[2] == 'CE-acc' then
+			return HandleSpecial(newText, 'CE-acc', 'Now accumulating linkshell points for ', '%.', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('Activity Points: ') or par.checkAgain[2] == 'CE-AP' then
+			return HandleSpecial(newText, 'CE-AP', 'Activity Points: ', '%.', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('Summit Objective:') or par.checkAgain[2] == 'CE-SO' then
+			return HandleSpecial(newText, 'CE-SO', 'Summit Objective:', '%.', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('Summit Bonus:') or par.checkAgain[2] == 'CE-SB' then
+			return HandleSpecial(newText, 'CE-SB', 'Summit Bonus:', nil, cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('Summit of the Stars perk') or par.checkAgain[2] == 'CE-SP' then
+			return HandleSpecial(newText, 'CE-SP', 'now active:', nil, cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find(' activity points%.') or par.checkAgain[2] == 'CE-AP2' then
+			return HandleSpecial(newText, 'CE-AP2', 'gains', '%.', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('Point Accumulation:') or par.checkAgain[2] == 'CE-PA' then
+			return HandleSpecial(newText, 'CE-PA', 'Point Accumulation:', '%.', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('PartyFinder') or par.checkAgain[2] == 'CE-PF' then
+			return HandleSpecial(newText, 'CE-PF', nil, '%[PartyFinder', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('completed a special venture') or par.checkAgain[2] == 'CE-venC' then
+			return HandleSpecial(newText, 'CE-venC', nil, 'You have completed a special venture objective%. %(Progress: [0-9]*/[0-9]*%)', cutIdx, 0xFFFFD500)
+		elseif newText:find('Defeat Mobs') or par.checkAgain[2] == 'CE-DM' then
+			return HandleSpecial(newText, 'CE-DM', 'Defeat Mobs ', ' %(', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('Quest Accepted:') or par.checkAgain[2] == 'CE-QA' then
+			return HandleSpecial(newText, 'CE-QA', nil, utf8.char(0x25C7)..' Quest Accepted:', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('Quest Completed:') or par.checkAgain[2] == 'CE-QC2' then
+			return HandleSpecial(newText, 'CE-QC2', nil, utf8.char(0x25C6)..' Quest Completed:', cutIdx, allSettings.colors.cexi[1])
+		elseif newText:find('Quest Completed') or par.checkAgain[2] == 'CE-QC' then
+			return HandleSpecial(newText, 'CE-QC', nil, utf8.char(0x25C6)..' Quest Completed', cutIdx, allSettings.colors.cexi[1])
+		end
+	end
+	
 end
 _G.CheckSpecial = M.CheckSpecial
 
@@ -490,12 +562,15 @@ function M.HandleActors(text, scol)
 
 	if #par.actor1 > 0 then
 		par.handled_actors = true
-		-- (#11) Cache the escaped pattern: it's used 2× (gsub + find).
+		-- (#11) Cache the escaped pattern: it's used 2 (gsub + find).
 		local act1     = par.actor1
 		local act1_esc = act1:escape()
 		local color    = (act1 == player_name) and colors_you or colors_actor1
 		text = text:gsub(act1_esc..'([^%a-])',
 			(utils_MC(color)..act1..utils_MC('reset')):gsub('%%', '%%%%')..'%1', 1)
+		if not text:find(utils_MC(color), 1, true) then
+			text = text:replace(act1, utils_MC(color)..act1..utils_MC('reset'), 1)
+		end
 		_, a1 = text:find(act1_esc, 1, false)
 		par.actor1 = ''
 	end
@@ -510,11 +585,14 @@ function M.HandleActors(text, scol)
 
 	if #par.actor2 > 0 then
 		par.handled_actors = true
-		-- (#11) Cache the escaped pattern: used 2×.
+		-- (#11) Cache the escaped pattern: used 2.
 		local act2     = par.actor2
 		local act2_esc = act2:escape()
 		text = text:gsub(act2_esc..'([^%a-])',
 			(utils_MC(colors_actor2)..act2..utils_MC('reset')):gsub('%%', '%%%%')..'%1', 1)
+		if not text:find(utils_MC(colors_actor2), 1, true) then
+			text = text:replace(act2, utils_MC(colors_actor2)..act2..utils_MC('reset'), 1)
+		end
 		_, a2 = text:find(act2_esc, 1, false)
 		par.actor2 = ''
 	end
@@ -685,7 +763,7 @@ parseThis = function(e, e_message)
 
 	-- Pick base color from the modesDA descriptor table, then override
 	-- `defaultColor` is a pre-existing dead reference (defaultColor is
-	-- nil; col is always overwritten on the next line) — preserved
+	-- nil; col is always overwritten on the next line)  preserved
 	-- byte-for-byte to avoid behaviour drift.
 	local colstring = defaultColor
 	local col = colstring
@@ -708,10 +786,10 @@ parseThis = function(e, e_message)
 	-- Whether to honour legacy in-band palette escapes
 	-- (\x1E\NN, \x1F\NN).  TRUE means the wrap-loop will run
 	-- translateLegacyColors on each wrapped line.
-	--   • Always TRUE when fcMarkingActive is FALSE — legacy
+	--    Always TRUE when fcMarkingActive is FALSE  legacy
 	--     escapes are the only colour info left.
-	--   • Also TRUE when fcMarkingActive is TRUE but the channel-
-	--     default colour from modesDA is pure white — FC has no
+	--    Also TRUE when fcMarkingActive is TRUE but the channel-
+	--     default colour from modesDA is pure white  FC has no
 	--     opinion about the channel's colour, so we let inline
 	--     escapes through and they coexist with FC's MCList /
 	--     HandleActors highlights.
@@ -719,7 +797,7 @@ parseThis = function(e, e_message)
 	local respectLegacyColors = (not fcMarkingActive)
 		or (mdRow[3] == 0xFFFFFFFF)
 
-	-- (#10) Direct prefix comparison via string_sub is ~3× faster than
+	-- (#10) Direct prefix comparison via string_sub is ~3 faster than
 	-- pattern :find for fixed prefixes.  Order matters: combatspell_
 	-- must be checked before combat_ (the former has the latter as a
 	-- substring once the underscore is included).
@@ -782,6 +860,27 @@ parseThis = function(e, e_message)
 	end
 
 	local newText = CleanTextFunctionNew(msg, par.LastMode)
+
+	-- Discord-bridge text rewrite: server-side discord relay messages
+	-- start with a lowercase letter on emoji-allowed channels.  Rewrite
+	-- bracketed names "<x>" to "{x}" and parse :emoji_name: tokens.
+	local isDiscordText = false
+	if set.isCEXI then
+		if utils_IsInTable(par.emojiChannels, par.MessageMode) then
+			for i = 1, #newText do
+				local first_letter = newText:sub(i, i)
+				if first_letter:match('%a') then
+					if first_letter >= 'a' and first_letter <= 'z' then
+						newText = utils_parseEmoji(newText:gsub('<', '{', 1):gsub('>', '}', 1))
+						isDiscordText = true
+						break
+					else
+						break
+					end
+				end
+			end
+		end
+	end
 
 	if newText:match('^%s*\n?$') then par.LastMode = 'empty' return end
 
@@ -1064,7 +1163,7 @@ parseThis = function(e, e_message)
 		-- / Tell / Shout into the Custom tab via Settings.  When the
 		-- Linkshell tab is split into L1 / L2, slot [2] (combined LS)
 		-- is bypassed and slots [6] (L1) / [7] (L2) drive the linkshell
-		-- routing instead — exactly mirroring how the tab itself is
+		-- routing instead  exactly mirroring how the tab itself is
 		-- rendered.
 		par.isCustom = false
 		local ctm = allSettings.CustomTabModes
@@ -1098,7 +1197,7 @@ parseThis = function(e, e_message)
 		--local HELMfound = FindHELM(newText, par.MessageMode)
 
 		-- (#2) Hoist the primary chat buffer once.  Inside this loop
-		-- it gets touched up to 14× per iteration; reading b.ChatBuffer
+		-- it gets touched up to 14 per iteration; reading b.ChatBuffer
 		-- [1][2] each time would re-traverse the 4-deep table chain.
 		local buf1 = b.ChatBuffer[1][2]
 
@@ -1115,8 +1214,10 @@ parseThis = function(e, e_message)
 			local special_text  = ''
 			local special_color = ''
 
-			local bytesLine = utils_CountExtraBytesT(newText)
-			local cutIdx = math_min(allSettings.chatLineMaxL + bytesLine[math_min(allSettings.chatLineMaxL, #bytesLine)], textLeft)
+			local cutIdx = math_min(
+				utils_FindWrapCutIdx(newText, allSettings.chatLineMaxL, allSettings.cjkWidthRatio),
+				textLeft, #newText)
+			if cutIdx < 1 then cutIdx = math_min(textLeft, #newText) end
 
 			-- Atomicity for legacy colour escapes: never let a slice
 			-- end on the lead byte of \x1E\NN or \x1F\NN with the
@@ -1135,9 +1236,22 @@ parseThis = function(e, e_message)
 			local lineBreak = ''
 
 			if L_i < n_lines and string_byte(newText, cutIdx) ~= 32 and cutIdx ~= textLeft then
-				cutIdx = utils_utf8split(newText, cutIdx)
 				if not isCombatMsg and urlText == '' and string_byte(newText, cutIdx) ~= 32 and cutIdx < #newText and string_byte(newText, cutIdx + 1) ~= 32 then
-					lineBreak = '-'
+					-- JP fork: only add the mid-word hyphen continuation
+					-- marker when both sides of the cut are plain
+					-- ASCII/Latin text. Japanese has no spaces between
+					-- words, so the "not a space" check above fires on
+					-- almost every wrap of JP text -- a hyphen there
+					-- isn't how Japanese line-breaking works and just
+					-- reads as a stray dash.
+					-- FindWrapCutIdx already returns a char-aligned
+					-- last-included byte, so JP keeps that character.
+					-- ASCII still drops the last char via utf8split and
+					-- replaces it with '-', matching the original look.
+					if string_byte(newText, cutIdx) < 0x80 and string_byte(newText, cutIdx + 1) < 0x80 then
+						cutIdx = utils_utf8split(newText, cutIdx)
+						lineBreak = '-'
+					end
 				else
 					cutIdx = cutIdx + 1
 				end
@@ -1188,9 +1302,15 @@ parseThis = function(e, e_message)
 
 			if L_i == n_lines then
 				if string_byte(newText, cutIdx) ~= 32 and cutIdx < textLeft then
-					cutIdx = utils_utf8split(newText, cutIdx)
 					if not isCombatMsg and urlText == '' and string_byte(newText, cutIdx) ~= 32 and cutIdx < #newText and string_byte(newText, cutIdx + 1) ~= 32 then
-						lineBreak = '-'
+						-- JP fork: same ASCII-only hyphen as above.
+						-- FindWrapCutIdx is already char-aligned, so JP
+						-- keeps the last fitting glyph instead of
+						-- backing up one character.
+						if string_byte(newText, cutIdx) < 0x80 and string_byte(newText, cutIdx + 1) < 0x80 then
+							cutIdx = utils_utf8split(newText, cutIdx)
+							lineBreak = '-'
+						end
 					else
 						cutIdx = cutIdx + 1
 					end
@@ -1331,7 +1451,7 @@ parseThis = function(e, e_message)
 			-- adds 28 bytes, so the i-th insertion at index k must be
 			-- offset by 28*(i-1).  Then HandleActors paints actor names.
 			-- Skipped when fcMarkingActive is false (FC marking off
-			-- AND not a combat-with-compact line) — the line stays
+			-- AND not a combat-with-compact line)  the line stays
 			-- as the plain post-CleanTextFunctionNew text the table_insert above
 			-- wrote, which the renderer draws in the single
 			-- buf1.color[i] colour.
@@ -1360,8 +1480,18 @@ parseThis = function(e, e_message)
 				buf1.text[#buf1.text] = utils_MCCheck(mctext)
 			end
 
+			-- Discord emoji painter  also gated by FC colour marking
+			-- because emojiCols emits MC escapes around every emoji.
+			if fcMarkingActive and set.isCEXI and isDiscordText then
+				local mctext = buf1.text[#buf1.text]
+				mctext = utils_emojiCols(mctext)
+				if #mctext < 4096 then
+					buf1.text[#buf1.text] = utils_MCCheck(mctext)
+				end
+			end
+
 			-- Legacy in-band palette escape translation.  Runs when
-			-- respectLegacyColors is TRUE — either FC marking is
+			-- respectLegacyColors is TRUE  either FC marking is
 			-- inactive (legacy escapes are the only colour info) or
 			-- FC marking is active but this channel's default colour
 			-- is white (so FC has no opinion on it and we let inline
@@ -1387,7 +1517,7 @@ parseThis = function(e, e_message)
 			end
 
 			-- White-paint the FancyChat timestamp prefix on the first
-			-- wrapped line of a message — but only when FC marking
+			-- wrapped line of a message  but only when FC marking
 			-- is INACTIVE.  When FC marking is active the MCList
 			-- block above already inserts a white MC entry for the
 			-- timestamp, so doing it here would be redundant.
@@ -1395,9 +1525,9 @@ parseThis = function(e, e_message)
 				and L_i == 1 and allSettings.timeStamp[1] and #ts > 0 then
 				local mctext = buf1.text[#buf1.text]
 				if mctext and #mctext >= #ts then
-					buf1.text[#buf1.text] = '\\§FFFFFFFFç\\'
+					buf1.text[#buf1.text] = '\\\194\167FFFFFFFF\195\167\\'
 						..string_sub(mctext, 1, #ts)
-						..'\\§--------ç\\'
+						..'\\\194\167--------\195\167\\'
 						..string_sub(mctext, #ts + 1)
 				end
 			end
@@ -1605,7 +1735,7 @@ function M.register()
 		if mode_pre == 191 and string_find(e.message, 'version') then
 			-- /servmes injection used to live here, gated on the
 			-- "Loaded addon: fancychat" message arriving via mode 191.
-			-- Moved to render.lua because the message is too early —
+			-- Moved to render.lua because the message is too early 
 			-- it lands the moment Ashita finishes loading us, while
 			-- the server may still be wrapping up its session
 			-- handshake and silently drops the command.  render.lua's

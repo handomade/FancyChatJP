@@ -48,6 +48,7 @@ M.tab = {
 
 -- Settings UI scratch state.
 M.set = {
+	isCEXI              = true,
 	colorTextW          = 1,
 	alertList           = {},
 	alertBuffer         = T{},
@@ -150,6 +151,7 @@ M.par = {
 	LoginTime		= 0,
 	tabmode         = nil,
 	checkAgain      = {0, ''},
+	emojiChannels   = {6, 14, 205, 213, 214, 217},
 	allowed         = {0, 0},
 	dumping         = false,
 	LastMsgLength   = 0,

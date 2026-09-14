@@ -1,4 +1,4 @@
--- lib/bigmode.lua — full-screen chat-history overlay (fcw[3]).  A
+-- lib/bigmode.lua  full-screen chat-history overlay (fcw[3]).  A
 -- second view of b.ChatBuffer for scroll-back review.  Exposes
 -- ShowBigMode / DrawBigMode / DestroyBigMode as globals.
 
@@ -7,6 +7,7 @@ local imgui     = require('imgui')
 local imguiWrap = require('imguiWrap')
 local gdi       = require('gdifonts.include')
 local utils     = require('utils')
+local i18n      = require('lib.i18n')
 local state     = require('lib.state')
 
 local fcw            = state.fcw
@@ -38,6 +39,8 @@ function M.draw()
 	fcw[3].Anchor_Y = dsize.y * 0.9
 
 	local ChatLines = fcw[3].ChatLines
+	local src       = bigmode_source()
+	local srcTab    = (src == 2) and allSettings.SelectedTab2 or allSettings.SelectedTab
 
 	-- Lazy GDI creation: build fcw[3]'s font/aux objects on first call.
 	if #fo.Chat[3] == 0 then
@@ -59,7 +62,7 @@ function M.draw()
 		end
 	end
 
-	-- Background rect: full chat width × (ChatLines+1) rows tall.
+	-- Background rect: full chat width  (ChatLines+1) rows tall.
 	ro.BigMode:set_fill_color(allSettings.rectSettings.fill_color)
 	ro.BigMode:set_width(allSettings.chatLineMaxL * allSettings.fontSettings.font_height * 0.58)
 	ro.BigMode:set_height(allSettings.fontSettings.font_height * (ChatLines + 1) + (allSettings.fontSettings.font_height / 5))
@@ -69,7 +72,7 @@ function M.draw()
 	-- Title bar showing which tab is being viewed.
 	fo.BigMode:set_position_x(fcw[3].Anchor_X)
 	fo.BigMode:set_position_y(dsize.y - fcw[3].Anchor_Y + allSettings.fontSettings.font_height - (allSettings.fontSettings.font_height - fcw[3].HLeft))
-	fo.BigMode:set_text('Big Mode: ['..allSettings.SelectedTab:gsub('AllAlt', 'All')..']')
+	fo.BigMode:set_text('Big Mode: [W'..tostring(src)..' '..i18n.tab_label(srcTab)..']')
 
 	imgui.SetNextWindowSize({fcw[3].BG_W, ro.BigMode.settings.height + 16}, ImGuiCond_None)
 
@@ -112,12 +115,12 @@ function M.draw()
 					if fo.Aux[3][targetLine] ~= nil then
 						fo.Aux[3][targetLine]:set_font_color(0xFFCCEEFF)
 						fcw[3].HoverLine = ChatLines - HL_i
-						local ChatHoverIdx = #b.ChatBuffer[b.ChatBufferMode[1]][2].url
+						local ChatHoverIdx = #b.ChatBuffer[b.ChatBufferMode[src]][2].url
 							- fcw[3].HoverLine - fcw[3].ScrolledBack
-							- (b.ChatBufferN[1] - b.ChatBufferIdx[3]) + 1
+							- (b.ChatBufferN[src] - b.ChatBufferIdx[3]) + 1
 
 						if ChatHoverIdx > 0 and imgui.IsMouseClicked(ImGuiMouseButton_Left) then
-							local urlText = utils.stringsplit(b.ChatBuffer[b.ChatBufferMode[1]][2].url[ChatHoverIdx], '|')
+							local urlText = utils.stringsplit(b.ChatBuffer[b.ChatBufferMode[src]][2].url[ChatHoverIdx], '|')
 							ashita.misc.open_url(string.find(urlText[2], 'https://') and urlText[2] or 'https://'..urlText[2])
 						end
 						fcw[3].HoverLine = -1
@@ -156,30 +159,30 @@ function M.draw()
 		-- before line wrapping) and on click copy / save it.
 		-------------------------------------------------------------
 		if fcw[3].HoverLine > 0 and imguiWrap.IsWindowHovered(ImGuiHoveredFlags_RectOnly) then
-			local copyBufferIdx = #b.ChatBuffer[b.ChatBufferMode[1]][2].text
+			local copyBufferIdx = #b.ChatBuffer[b.ChatBufferMode[src]][2].text
 				- fcw[3].HoverLine - fcw[3].ScrolledBack
-				- (b.ChatBufferN[1] - b.ChatBufferIdx[3]) + 1
+				- (b.ChatBufferN[src] - b.ChatBufferIdx[3]) + 1
 			local copyBufferText = ''
 
 			if copyBufferIdx > 0 then
-				local ID  = b.ChatBuffer[b.ChatBufferMode[1]][2].url[copyBufferIdx]
+				local ID  = b.ChatBuffer[b.ChatBufferMode[src]][2].url[copyBufferIdx]
 				local IDs = 0
 				local IDe = 0
-				while b.ChatBuffer[b.ChatBufferMode[1]][2].url[copyBufferIdx + IDs]
-					and b.ChatBuffer[b.ChatBufferMode[1]][2].url[copyBufferIdx + IDs] == ID do
+				while b.ChatBuffer[b.ChatBufferMode[src]][2].url[copyBufferIdx + IDs]
+					and b.ChatBuffer[b.ChatBufferMode[src]][2].url[copyBufferIdx + IDs] == ID do
 					IDs = IDs - 1
 				end
-				while b.ChatBuffer[b.ChatBufferMode[1]][2].url[copyBufferIdx + IDe]
-					and b.ChatBuffer[b.ChatBufferMode[1]][2].url[copyBufferIdx + IDe] == ID do
+				while b.ChatBuffer[b.ChatBufferMode[src]][2].url[copyBufferIdx + IDe]
+					and b.ChatBuffer[b.ChatBufferMode[src]][2].url[copyBufferIdx + IDe] == ID do
 					IDe = IDe + 1
 				end
 
 				local IDi = math.min(IDs + 1, 0)
 				while IDi <= math.max(IDe - 1, 0) do
-					if b.ChatBuffer[b.ChatBufferMode[1]][2].text[copyBufferIdx + IDi] then
-						copyBufferText = (' '..copyBufferText..b.ChatBuffer[b.ChatBufferMode[1]][2].text[copyBufferIdx + IDi]):trimex()
-						if b.ChatBuffer[b.ChatBufferMode[1]][2].auxText[copyBufferIdx + IDi] ~= '[link]' then
-							copyBufferText = copyBufferText..' '..b.ChatBuffer[b.ChatBufferMode[1]][2].auxText[copyBufferIdx + IDi]
+					if b.ChatBuffer[b.ChatBufferMode[src]][2].text[copyBufferIdx + IDi] then
+						copyBufferText = (' '..copyBufferText..b.ChatBuffer[b.ChatBufferMode[src]][2].text[copyBufferIdx + IDi]):trimex()
+						if b.ChatBuffer[b.ChatBufferMode[src]][2].auxText[copyBufferIdx + IDi] ~= '[link]' then
+							copyBufferText = copyBufferText..' '..b.ChatBuffer[b.ChatBufferMode[src]][2].auxText[copyBufferIdx + IDi]
 						end
 					else
 						break
@@ -219,9 +222,9 @@ function M.draw()
 			and not fcw[1].BufferBusy then
 
 			if fcw[3].ScrollDelta > 0
-				and #b.ChatBuffer[b.ChatBufferMode[1]][2].text
+				and #b.ChatBuffer[b.ChatBufferMode[src]][2].text
 					- fcw[3].ScrolledBack
-					- (b.ChatBufferN[1] - b.ChatBufferIdx[3]) > ChatLines then
+					- (b.ChatBufferN[src] - b.ChatBufferIdx[3]) > ChatLines then
 
 				if not imgui.GetIO().KeyShift or not fcw[3].Scrolling then
 					fcw[1].ScrollDelta = 0
@@ -231,7 +234,7 @@ function M.draw()
 					fcw[3].ChatShift = allSettings.fontSettings.font_height
 					fcw[3].ScrollUpRequest = true
 				elseif fcw[3].Scrolling then
-					local currentIdx = #b.ChatBuffer[b.ChatBufferMode[1]][2].text - (b.ChatBufferN[1] - b.ChatBufferIdx[3]) - 1
+					local currentIdx = #b.ChatBuffer[b.ChatBufferMode[src]][2].text - (b.ChatBufferN[src] - b.ChatBufferIdx[3]) - 1
 					GoToLine(3, math.max(currentIdx - (fcw[3].ScrolledBack + 5), ChatLines), currentIdx, ChatLines)
 				end
 
@@ -244,7 +247,7 @@ function M.draw()
 					fcw[3].ChatShift = allSettings.fontSettings.font_height
 					fcw[3].ScrollDownRequest = true
 				elseif fcw[3].Scrolling then
-					local currentIdx = #b.ChatBuffer[b.ChatBufferMode[1]][2].text - (b.ChatBufferN[1] - b.ChatBufferIdx[3]) - 1
+					local currentIdx = #b.ChatBuffer[b.ChatBufferMode[src]][2].text - (b.ChatBufferN[src] - b.ChatBufferIdx[3]) - 1
 					GoToLine(3, math.min(currentIdx - (fcw[3].ScrolledBack - 5), currentIdx - 1), currentIdx, ChatLines)
 				end
 			end
@@ -267,27 +270,27 @@ function M.draw()
 	-------------------------------------------------------------
 	if fcw[3].Scrolling and fcw[3].ScrollUpRequest and not fcw[1].BufferBusy then
 		fcw[3].ScrollUpRequest = false
-		local idx = #b.ChatBuffer[b.ChatBufferMode[1]][2].text
+		local idx = #b.ChatBuffer[b.ChatBufferMode[src]][2].text
 			- ChatLines - fcw[3].ScrolledBack
-			- (b.ChatBufferN[1] - b.ChatBufferIdx[3])
+			- (b.ChatBufferN[src] - b.ChatBufferIdx[3])
 		ScrollLines(3,
-			b.ChatBuffer[b.ChatBufferMode[1]][2].text    [idx],
-			b.ChatBuffer[b.ChatBufferMode[1]][2].color   [idx],
-			b.ChatBuffer[b.ChatBufferMode[1]][2].auxText [idx],
-			b.ChatBuffer[b.ChatBufferMode[1]][2].auxColor[idx],
+			b.ChatBuffer[b.ChatBufferMode[src]][2].text    [idx],
+			b.ChatBuffer[b.ChatBufferMode[src]][2].color   [idx],
+			b.ChatBuffer[b.ChatBufferMode[src]][2].auxText [idx],
+			b.ChatBuffer[b.ChatBufferMode[src]][2].auxColor[idx],
 			1, ChatLines)
 		fcw[3].ScrolledBack = fcw[3].ScrolledBack + 1
 
 	elseif fcw[3].Scrolling and fcw[3].ScrollDownRequest and not fcw[1].BufferBusy then
 		fcw[3].ScrollDownRequest = false
-		local idx = #b.ChatBuffer[b.ChatBufferMode[1]][2].text + 1
+		local idx = #b.ChatBuffer[b.ChatBufferMode[src]][2].text + 1
 			- fcw[3].ScrolledBack
-			- (b.ChatBufferN[1] - b.ChatBufferIdx[3])
+			- (b.ChatBufferN[src] - b.ChatBufferIdx[3])
 		ScrollLines(3,
-			b.ChatBuffer[b.ChatBufferMode[1]][2].text    [idx],
-			b.ChatBuffer[b.ChatBufferMode[1]][2].color   [idx],
-			b.ChatBuffer[b.ChatBufferMode[1]][2].auxText [idx],
-			b.ChatBuffer[b.ChatBufferMode[1]][2].auxColor[idx],
+			b.ChatBuffer[b.ChatBufferMode[src]][2].text    [idx],
+			b.ChatBuffer[b.ChatBufferMode[src]][2].color   [idx],
+			b.ChatBuffer[b.ChatBufferMode[src]][2].auxText [idx],
+			b.ChatBuffer[b.ChatBufferMode[src]][2].auxColor[idx],
 			0, ChatLines)
 		fcw[3].ScrolledBack = fcw[3].ScrolledBack - 1
 		if fcw[3].ScrolledBack == 0 then
@@ -295,14 +298,14 @@ function M.draw()
 			ResetLines(3, ChatLines)
 		end
 
-	elseif not fcw[3].BigModePrev or (not fcw[3].Scrolling and b.ChatBufferIdx[3] < b.ChatBufferN[1]) then
-		if b.ChatBufferN[1] - b.ChatBufferIdx[3] > 0 then
-			local idx = #b.ChatBuffer[b.ChatBufferMode[1]][2].text - (b.ChatBufferN[1] - b.ChatBufferIdx[3] - 1)
+	elseif not fcw[3].BigModePrev or (not fcw[3].Scrolling and b.ChatBufferIdx[3] < b.ChatBufferN[src]) then
+		if b.ChatBufferN[src] - b.ChatBufferIdx[3] > 0 then
+			local idx = #b.ChatBuffer[b.ChatBufferMode[src]][2].text - (b.ChatBufferN[src] - b.ChatBufferIdx[3] - 1)
 			UpdateLines(3,
-				b.ChatBuffer[b.ChatBufferMode[1]][2].text    [idx],
-				b.ChatBuffer[b.ChatBufferMode[1]][2].color   [idx],
-				b.ChatBuffer[b.ChatBufferMode[1]][2].auxText [idx],
-				b.ChatBuffer[b.ChatBufferMode[1]][2].auxColor[idx],
+				b.ChatBuffer[b.ChatBufferMode[src]][2].text    [idx],
+				b.ChatBuffer[b.ChatBufferMode[src]][2].color   [idx],
+				b.ChatBuffer[b.ChatBufferMode[src]][2].auxText [idx],
+				b.ChatBuffer[b.ChatBufferMode[src]][2].auxColor[idx],
 				ChatLines)
 			b.ChatBufferIdx[3] = b.ChatBufferIdx[3] + 1
 		else

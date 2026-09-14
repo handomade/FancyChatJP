@@ -1,4 +1,4 @@
--- lib/ui_helpers.lua — small ImGui helpers (style-stack push/pop,
+-- lib/ui_helpers.lua  small ImGui helpers (style-stack push/pop,
 -- AddTooltip, AddWarning, AddSetColor, DrawInfoWin, DrawInfo).
 -- All exposed as globals via _G.X = M.X.
 
@@ -64,6 +64,28 @@ _G.PopWindowStyle = M.PopWindowStyle
 -- Widgets / overlays
 -- ===================================================================
 
+-- Hover popup that keeps UTF-8 Japanese intact.  SetTooltip + byte
+-- wrapping used to split 3-byte glyphs and draw as '?'.
+function M.ShowTooltip(message)
+	if not message or message == '' then return end
+	local ok = pcall(function()
+		imgui.BeginTooltip()
+		local wrap = 360
+		pcall(function()
+			local fs = imgui.GetFontSize()
+			if type(fs) == 'number' and fs > 0 then wrap = fs * 22 end
+		end)
+		imgui.PushTextWrapPos(wrap)
+		imgui.TextWrapped(message)
+		imgui.PopTextWrapPos()
+		imgui.EndTooltip()
+	end)
+	if not ok then
+		imgui.SetTooltip(utils.breakLine(message, 40))
+	end
+end
+_G.ShowTooltip = M.ShowTooltip
+
 function M.AddTooltip(message, offset, critical)
 	if not offset then offset = 0 end
 	imgui.SameLine()
@@ -75,7 +97,7 @@ function M.AddTooltip(message, offset, critical)
 		imguiWrap.Image(fcw[1].TextureIDInfo, {15, 15}, {0, 0}, {1, 1}, {0.937, 0.349, 0.290, 1})
 	end
 	if imgui.IsItemHovered(0) then
-		imgui.SetTooltip(utils.breakLine(message, 40))
+		M.ShowTooltip(message)
 	end
 end
 _G.AddTooltip = M.AddTooltip
@@ -84,7 +106,7 @@ function M.AddWarning(message, y, flag, x, title)
 	if check == false then return end
 	local wx = x or 300
 	local wy = y or 300
-	if not title then title = 'Warning' end
+	if not title then title = '\232\173\166\229\145\138' end
 	local dsize = imgui.GetIO().DisplaySize
 
 	imgui.SetNextWindowSize({wx, wy})
@@ -287,6 +309,7 @@ function M.DrawInfo(text)
 					:replace('\xEF\x26', 'Dark')
 					:replace('%', '%%')
 					:replace('\n', ' ')
+				desc = utils.TranscodeFFXI(desc, false, false)
 
 				if item.Type == 4 or item.Type == 5 then
 					inf = inf..'['..utils.equipSlots[item.Slots]..'] '..utils.equipRaces[item.Races]..'\n'
@@ -334,6 +357,7 @@ function M.DrawInfo(text)
 					:replace('\xEF\x26', 'Dark')
 					:replace('%', '%%')
 					:replace('\n', ' ')
+				desc = utils.TranscodeFFXI(desc, false, false)
 
 				if ability.TPCost   > 0 then inf = inf..'TP: '..ability.TPCost  ..'\n' end
 				if ability.ManaCost > 0 then inf = inf..'MP: '..ability.ManaCost..'\n' end
@@ -369,6 +393,7 @@ function M.DrawInfo(text)
 					:replace('\xEF\x26', 'Dark')
 					:replace('%', '%%')
 					:replace('\n', ' ')
+				desc = utils.TranscodeFFXI(desc, false, false)
 
 				if spell.ManaCost > 0 then inf = inf..'MP: '..spell.ManaCost..'\n' end
 				inf = inf..desc

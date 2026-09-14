@@ -3,6 +3,8 @@ require('win32types');
 
 local ffi      = require('ffi');
 local d3d      = require('d3d8');
+local emojis   = require('emojis');
+local encoding = require('gdifonts.encoding');
 
 local C        = ffi.C;
 local d3d8dev  = d3d.get_device();
@@ -336,6 +338,7 @@ local utils = {
 		'^You ',
 		'^Cannot ex',
 		'^Your mo',
+		'\227\129\130\227\129\170\227\129\159\227\129\171',
 	},
 
 	-- Keyboard scancode lookups for the shortcut configuration combos.
@@ -1158,24 +1161,17 @@ end
 
 utils.ParseUrlLink = function(text)
 	local url = ''
-	if not text:find('http') and not text:find('www.') and not text:find('localhost') then
+	if not text:find('https') and not text:find('www.') and not text:find('localhost') then
 		return url
 	end
 
 	local P = '!"$%&\'()*+,./;<=>?@%[\\%]^`{|}'
 	local url_pattern = '(([/%s]?)([^%s'..P..'][^%s'..P..'][^%s'..P..']*%.)([^%s'..P..'][^%s'..P..'][^%s'..P..']*%.)([^%s][^%s][^%s]*))'
 
-	-- Normalise both https:// and http:// (with or without a leading
-	-- "www.") down to a bare "www." prefix so the three-segment url_pattern
-	-- above matches "http://foo.com/..." the same way it matches
-	-- "www.foo.com/...".  Order matters: strip https before http so that
-	-- the http substring inside https doesn't get double-replaced.
-	local normalised = text
-		:gsub('https://www%.', 'www.')
-		:gsub('https://',      'www.')
-		:gsub('http://www%.',  'www.')
-		:gsub('http://',       'www.')
-	local matched, leadingspace, part1, part2, part3 = string.match(normalised, url_pattern)
+	local matched, leadingspace, part1, part2, part3 = string.match(
+		(text:gsub('https://www.', 'www.')):gsub('https://', 'www.'),
+		url_pattern
+	)
 
 	if matched then
 		local hasletters = part1:match('[A-z]') and part2:match('[A-z]') and part3:match('[A-z]')
@@ -1404,10 +1400,10 @@ utils.FFXI_MAP = {
 	['\x81\xAA'] = utf8.char(0x2191),   -- ↑
 	['\x81\xAB'] = utf8.char(0x2193),   -- ↓
 	['\x81\x99'] = utf8.char(0x2606),   -- ☆
-	['\x81\x9A'] = utf8.char(0x2605),   -- ★
+	['\x81\x9A'] = utf8.char(0x2605),   -- ★  (CEXI custom)
 	['\x81\x9C'] = utf8.char(0x0A66),   -- ০  (FFXI: drawn as 'O' in client font)
-	['\x81\x9E'] = utf8.char(0x25C7),   -- ◇
-	['\x81\x9F'] = utf8.char(0x25C6),   -- ◆
+	['\x81\x9E'] = utf8.char(0x25C7),   -- ◇  (CEXI custom)
+	['\x81\x9F'] = utf8.char(0x25C6),   -- ◆  (CEXI custom)
 	['\x81\xAC'] = utf8.char(0x2014),   -- —
 	['\x81\xF4'] = utf8.char(0x266A),   -- ♪
 	-- ---- 0x83 lead ----
@@ -1468,10 +1464,79 @@ end
 
 -- Bytes that ALWAYS introduce a 2-byte SJIS sequence.  A pair
 -- starting with one of these but not present in FFXI_MAP is
--- silently dropped (lead+trail consumed, nothing emitted).
+-- converted with Windows CP932 → UTF-8 (hiragana / katakana / kanji).
 utils.SJIS_LEAD = {}
 for b = 0x81, 0x9F do utils.SJIS_LEAD[b] = true end
 for b = 0xE0, 0xEF do utils.SJIS_LEAD[b] = true end
+
+-- CP932 (Shift-JIS) → UTF-8.  Cached; used for unmapped FFXI pairs
+-- and halfwidth katakana (0xA1-0xDF).  Empty string means "drop".
+local _sjis_utf8_cache = {}
+local function sjis_to_utf8(bytes)
+	local cached = _sjis_utf8_cache[bytes]
+	if cached ~= nil then return cached end
+	local ok, converted = pcall(function()
+		return encoding:ShiftJIS_To_UTF8(bytes, true)
+	end)
+	if not ok or type(converted) ~= 'string' or converted == '' then
+		_sjis_utf8_cache[bytes] = ''
+		return ''
+	end
+	_sjis_utf8_cache[bytes] = converted
+	return converted
+end
+
+-- True when every byte is a well-formed UTF-8 sequence.  Raw FFXI
+-- Shift-JIS (lead 0x81-0x9F / 0xE0-0xEF) fails this check, so we can
+-- tell "Ashita already gave us UTF-8" from "classic SJIS chat".
+local function utf8_seq_len(s, i, len, sbyte)
+	local b = sbyte(s, i)
+	if b < 0x80 then return 1 end
+	if b >= 0xC2 and b <= 0xDF and i + 1 <= len then
+		local b2 = sbyte(s, i + 1)
+		if b2 >= 0x80 and b2 <= 0xBF then return 2 end
+	elseif b >= 0xE0 and b <= 0xEF and i + 2 <= len then
+		local b2, b3 = sbyte(s, i + 1), sbyte(s, i + 2)
+		if b2 >= 0x80 and b2 <= 0xBF and b3 >= 0x80 and b3 <= 0xBF then
+			if b ~= 0xE0 or b2 >= 0xA0 then return 3 end
+		end
+	elseif b >= 0xF0 and b <= 0xF4 and i + 3 <= len then
+		local b2, b3, b4 = sbyte(s, i + 1), sbyte(s, i + 2), sbyte(s, i + 3)
+		if b2 >= 0x80 and b2 <= 0xBF and b3 >= 0x80 and b3 <= 0xBF and b4 >= 0x80 and b4 <= 0xBF then
+			return 4
+		end
+	end
+	return nil
+end
+
+local function string_is_utf8(s, sbyte)
+	-- Ignore FFXI control prefixes so a UTF-8 body plus \x1E\NN colour
+	-- bytes is still recognised as UTF-8 (the walker strips those first).
+	local i, len = 1, #s
+	while i <= len do
+		local b = sbyte(s, i)
+		if b == 0x1E or b == 0x1F then
+			i = i + 2
+		elseif b == 0x7F then
+			local b2 = sbyte(s, i + 1) or 0
+			if b2 >= 0x31 and b2 <= 0x37 then
+				local b3 = sbyte(s, i + 2) or 0
+				if b3 >= 0x01 and b3 <= 0x06 then
+					i = i + 3
+				else
+					i = i + 2
+				end
+			else
+				i = i + 2
+			end
+		else
+			local adv = utf8_seq_len(s, i, len, sbyte)
+			if not adv then return false end
+			i = i + adv
+		end
+	end
+	return true
+end
 
 -- Compact-combat overrides: glyphs to drop instead of emit.  The
 -- arrow is hidden on combat lines because actor→target is conveyed
@@ -2025,9 +2090,11 @@ utils.legacycolors2 = {
 --                     them into 14-byte MC tokens (see parser.lua).
 --   0x7F            — timed-message sentinel, drop 2 or 3 bytes
 --   0x20-0x7E       — printable ASCII, emit verbatim
---   SJIS_LEAD       — try FFXI_MAP[lead..trail], drop pair if absent
---   >= 0xF0         — pre-existing UTF-8 (e.g. heart emoji); pass
---                     through with its 3 trail bytes
+--   SJIS_LEAD       — FFXI_MAP remap, else CP932 → UTF-8 (kana/kanji)
+--   0xA1-0xDF       — halfwidth katakana (single-byte SJIS)
+--   already-UTF-8   — if the whole payload is valid UTF-8 (e.g. after
+--                     an is_jp / client convert), pass sequences through
+--   >= 0xF0         — 4-byte UTF-8 (e.g. heart emoji); pass through
 --   anything else   — drop
 --
 -- We deliberately do NOT inline the MC translation here even when
@@ -2046,6 +2113,7 @@ utils.TranscodeFFXI = function(text, compactCombat, respectLegacyColors)
 
 	local out, n = {}, 0
 	local i, len = 1, #text
+	local utf8_mode = string_is_utf8(text, sbyte)
 
 	while i <= len do
 		local b = sbyte(text, i)
@@ -2075,6 +2143,12 @@ utils.TranscodeFFXI = function(text, compactCombat, respectLegacyColors)
 			out[n] = schar(b)
 			i = i + 1
 
+		elseif utf8_mode then
+			local adv = utf8_seq_len(text, i, len, sbyte) or 1
+			n = n + 1
+			out[n] = ssub(text, i, i + adv - 1)
+			i = i + adv
+
 		elseif lead_set[b] then
 			local pair = ssub(text, i, i + 1)
 			if not (drop_set and drop_set[pair]) then
@@ -2082,9 +2156,24 @@ utils.TranscodeFFXI = function(text, compactCombat, respectLegacyColors)
 				if mapped then
 					n = n + 1
 					out[n] = mapped
+				else
+					local converted = sjis_to_utf8(pair)
+					if converted ~= '' then
+						n = n + 1
+						out[n] = converted
+					end
 				end
 			end
 			i = i + 2
+
+		elseif b >= 0xA1 and b <= 0xDF then
+			-- Halfwidth katakana / other single-byte SJIS.
+			local converted = sjis_to_utf8(schar(b))
+			if converted ~= '' then
+				n = n + 1
+				out[n] = converted
+			end
+			i = i + 1
 
 		elseif b >= 0xF0 then
 			n = n + 1
@@ -2302,8 +2391,98 @@ utils.GetWalkthrough = function(str)
 end
 
 -- ================================================================
--- UTF-8 byte-counting
+-- UTF-8 byte-counting / wrap-width
 -- ================================================================
+
+-- Full-width CJK (kanji, kana, fullwidth punctuation). Used by both
+-- the leftover integer-slot counter and FindWrapCutIdx.
+local function is_wide_cjk(cp)
+	return (cp >= 0x3000 and cp <= 0x303F)  -- CJK punctuation (、。「」etc.)
+		or (cp >= 0x3040 and cp <= 0x309F)  -- Hiragana
+		or (cp >= 0x30A0 and cp <= 0x30FF)  -- Katakana
+		or (cp >= 0x3400 and cp <= 0x4DBF)  -- CJK Ext-A
+		or (cp >= 0x4E00 and cp <= 0x9FFF)  -- CJK Unified Ideographs
+		or (cp >= 0xF900 and cp <= 0xFAFF)  -- CJK Compatibility Ideographs
+		or (cp >= 0xFF00 and cp <= 0xFF60)  -- Fullwidth ASCII variants
+		or (cp >= 0xFFE0 and cp <= 0xFFE6)  -- Fullwidth signs
+end
+
+-- Returns the 1-based last byte index of the last UTF-8 character that
+-- still fits in `maxCols` visual columns. ASCII / non-CJK glyphs cost
+-- 1.0; full-width CJK costs `cjkRatio` (typically 1.7 for Meiryo, 2.0
+-- for MS Gothic). Colour escapes occupy 0 columns.
+--
+-- This replaces the old integer-slot lookup
+--   chatLineMaxL + ebTable[chatLineMaxL]
+-- which could only represent CJK as exactly 2 columns.
+utils.FindWrapCutIdx = function(s, maxCols, cjkRatio)
+	if not s or #s == 0 then return 0 end
+	maxCols = maxCols or 100
+	cjkRatio = tonumber(cjkRatio) or 1.7
+	if cjkRatio < 1 then cjkRatio = 1 end
+
+	-- Hundredths of a column, so 1.70 stays exact and we never drift.
+	local max_u = math.floor(maxCols * 100 + 0.5)
+	local cjk_u = math.floor(cjkRatio * 100 + 0.5)
+	local width_u = 0
+	local last_fit = 0
+	local i = 1
+	local len = #s
+
+	while i <= len do
+		local b = s:byte(i)
+		local char_end, char_u
+
+		if (b == 0x1E or b == 0x1F) and i + 1 <= len then
+			char_end = i + 1
+			char_u = 0
+		elseif b < 0x80 then
+			char_end = i
+			char_u = 100
+		elseif b >= 0xC2 and b <= 0xDF
+			and i + 1 <= len and bit.band(s:byte(i + 1), 0xC0) == 0x80 then
+			char_end = i + 1
+			char_u = 100
+		elseif b >= 0xE0 and b <= 0xEF
+			and i + 2 <= len
+			and bit.band(s:byte(i + 1), 0xC0) == 0x80
+			and bit.band(s:byte(i + 2), 0xC0) == 0x80 then
+			char_end = i + 2
+			char_u = 100
+			local cp = bit.bor(
+				bit.lshift(bit.band(b, 0x0F), 12),
+				bit.lshift(bit.band(s:byte(i + 1), 0x3F), 6),
+				bit.band(s:byte(i + 2), 0x3F)
+			)
+			if is_wide_cjk(cp) then
+				char_u = cjk_u
+			end
+		elseif b >= 0xF0 and b <= 0xF4
+			and i + 3 <= len
+			and bit.band(s:byte(i + 1), 0xC0) == 0x80
+			and bit.band(s:byte(i + 2), 0xC0) == 0x80
+			and bit.band(s:byte(i + 3), 0xC0) == 0x80 then
+			char_end = i + 3
+			char_u = 100
+		else
+			char_end = i
+			char_u = 100
+		end
+
+		if char_u > 0 and width_u + char_u > max_u then
+			if last_fit > 0 then return last_fit end
+			-- First glyph is wider than the line: still emit it so the
+			-- wrap loop always makes progress.
+			return char_end
+		end
+
+		width_u = width_u + char_u
+		last_fit = char_end
+		i = char_end + 1
+	end
+
+	return last_fit
+end
 
 utils.CountExtraBytesT = function(s)
 	local i = 1
@@ -2387,36 +2566,69 @@ end
 -- Line-wrapping helpers
 -- ================================================================
 
+-- Advance one UTF-8 codepoint starting at byte index i (1-based).
+-- Returns the next index (past this character), or nil at end of string.
+local function utf8_next(s, i)
+	local b = s:byte(i)
+	if not b then return nil end
+	local n = 1
+	if b >= 0xF0 then n = 4
+	elseif b >= 0xE0 then n = 3
+	elseif b >= 0xC0 then n = 2
+	end
+	local last = i + n - 1
+	if last > #s then last = #s end
+	return last + 1
+end
+
+-- Wrap `text` to about `size` UTF-8 characters per line.  Byte-based
+-- wrapping used to split 3-byte Japanese glyphs mid-character, which
+-- ImGui then drew as '?'.  Newlines already in the string are kept.
 utils.breakLine = function(text, size)
 	if not text or #text < 1 then return '' end
+	size = size or 40
 
-	local idx = 1
 	local parts = {}
+	local line_start = 1
+	local i = 1
+	local chars = 0
+	local last_space = nil
 	local guard = 0
+	local len = #text
 
-	while idx < #text and guard < 100 do
-		local chunk = text:sub(idx, idx + size)
-		local n = text:find('\n', idx, true)
-
-		if n and n + 1 < idx + size then
-			table.insert(parts, chunk:sub(1, n - idx))
-			idx = n + 1
-		elseif #chunk < size then
-			table.insert(parts, chunk)
-			idx = idx + size + 1
+	while i <= len and guard < 400 do
+		guard = guard + 1
+		if text:byte(i) == 10 then
+			table.insert(parts, text:sub(line_start, i - 1))
+			i = i + 1
+			line_start = i
+			chars = 0
+			last_space = nil
 		else
-			local last_space = utils.FindLastOf(chunk, ' ')
-			if not last_space then
-				table.insert(parts, chunk)
-				idx = idx + size + 1
+			local nxt = utf8_next(text, i)
+			if not nxt then break end
+			if text:byte(i) == 32 then last_space = i end
+			chars = chars + 1
+			if chars >= size then
+				if last_space and last_space >= line_start then
+					table.insert(parts, text:sub(line_start, last_space - 1))
+					i = last_space + 1
+				else
+					table.insert(parts, text:sub(line_start, nxt - 1))
+					i = nxt
+				end
+				line_start = i
+				chars = 0
+				last_space = nil
 			else
-				table.insert(parts, chunk:sub(1, last_space - 1))
-				idx = idx + last_space
+				i = nxt
 			end
 		end
-		guard = guard + 1
 	end
 
+	if line_start <= len then
+		table.insert(parts, text:sub(line_start))
+	end
 	return table.concat(parts, '\n')
 end
 
@@ -2603,6 +2815,76 @@ utils.stringsplit = function(input, sep)
 		table.insert(result, str)
 	end
 	return result
+end
+
+-- ================================================================
+-- Emoji-name parsing (":smile:" -> codepoint).  Rewrites the text
+-- in-place, leaving emoji-supplemental glyphs surrounded by '*' so
+-- they remain visible in fallback fonts.
+-- ================================================================
+
+utils.parseEmoji = function(text)
+	text = text:gsub(':1st_place_medal:', ':first_place_medal:')
+	text = text:gsub(':2nd_place_medal:', ':second_place_medal:')
+	text = text:gsub(':3rd_place_medal:', ':third_place_medal:')
+
+	local idx = 1
+	while idx < #text or idx < 4092 do
+		local b = text:find(':', idx, true)
+		if not b then break end
+
+		local e = text:find(':', b + 1, true)
+		if not e or e - 1 <= 0 then break end
+
+		local cp = emojis[1][text:sub(b + 1, e - 1)]
+		if cp then
+			if cp >= 0x1FA70 and cp <= 0x1FAFF then
+				text = text:sub(1, b - 1) .. '*' .. text:sub(b + 1, e - 1) .. '*' .. text:sub(e + 1, #text)
+			else
+				text = text:sub(1, b - 1) .. utf8.char(cp) .. text:sub(e + 1, #text)
+			end
+			idx = e
+		end
+		idx = b + 1
+	end
+
+	return text
+end
+
+-- ================================================================
+-- Wrap multi-byte UTF-8 characters in MC color sequences so
+-- emojis render in the highlight color used for them.
+-- ================================================================
+
+utils.emojiCols = function(text)
+	local out = {}
+	local idx = 1
+	local len = #text
+
+	while idx <= len do
+		local b = text:byte(idx)
+
+		-- 4-byte UTF-8 (U+10000..U+10FFFF) - e.g. 😀
+		if b >= 0xF0 and b <= 0xF4 and idx + 3 <= len then
+			out[#out + 1] = utils.MC(0xFFFBD043)
+			out[#out + 1] = text:sub(idx, idx + 3)
+			out[#out + 1] = utils.MC('reset')
+			idx = idx + 4
+
+		-- 3-byte UTF-8 (U+0800..U+FFFF) - e.g. ❤ ☀ ♻ ✨
+		elseif b >= 0xE0 and b <= 0xEF and idx + 2 <= len then
+			out[#out + 1] = utils.MC(0xFFFBD043)
+			out[#out + 1] = text:sub(idx, idx + 2)
+			out[#out + 1] = utils.MC('reset')
+			idx = idx + 3
+
+		else
+			out[#out + 1] = text:sub(idx, idx)
+			idx = idx + 1
+		end
+	end
+
+	return table.concat(out)
 end
 
 -- ================================================================

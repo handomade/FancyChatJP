@@ -1,22 +1,24 @@
-## You can filter NON-combat chat messages by adding, in the list below, words that
-## would appear in unwanted lines.  Combat lines (damage, healing, status effects,
-## etc.) are handled by the separate Combat Filters tab, NOT by this file.
+## 戦闘以外のチャット（シャウト、NPC、システムなど）を隠したいときは、
+## その行に含まれる単語を下のリストに書いてください。
+## 戦闘ログ（ダメージ、回復、ステータスなど）は、このファイルではなく
+## 「戦闘フィルター」タブ側のファイルで扱います。
 ##
-## Typical use cases: shout spam, repeat NPC dialog, system announcements, etc.
+## よくある用途: シャウトの宣伝、同じ NPC 会話の繰り返し、システム告知など。
 ##
-## Words must be present in the original message, not the one processed by FancyChat
-## Word matching is non case sensitive
+## 単語は FancyChat が整形する前の、ゲーム本体の原文に含まれている必要があります。
+## 大文字小文字は区別しません。
 ##
-## You can use a double # to comment lines
-## Empty lines are allowed
+## 行頭を ## にするとコメントになります。
+## 空行も使えます。
 ##
-## Experimental: support for lua pattern matching syntax ("lua regex")
-## es. %s %d ? .- .* (see https://gist.github.com/spr2-dev/46ca9f4a6f933fa266bccd87fd15d09a)
+## 実験的: Lua のパターン（いわゆる lua regex）も使えます。
+## 例: %s %d ? .- .*
+## 説明: https://gist.github.com/spr2-dev/46ca9f4a6f933fa266bccd87fd15d09a
 ##
-## !!! Very long lists could cause performance issues !!!
+## !!! リストが非常に長いと負荷が高くなります !!!
 
 
-## Examples (commented out; uncomment to enable)
+## 例（コメントのままなので効きません。使う行の ## を外してください）
 ##
 ## You are unable
 ## Apururu

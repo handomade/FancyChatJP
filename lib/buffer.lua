@@ -42,6 +42,83 @@ function M.ResetScrolling(id, ChatLines)
 end
 _G.ResetScrolling = M.ResetScrolling
 
+function M.bigmode_source()
+	local src = fcw[3].SourceWindow
+	if src ~= 2 then src = 1 end
+	if src == 2 and not (allSettings.SecondChat and allSettings.SecondChat[1]) then
+		src = 1
+		fcw[3].SourceWindow = 1
+	end
+	return src
+end
+_G.bigmode_source = M.bigmode_source
+
+function M.set_bigmode_source(src)
+	if not (allSettings.SecondChat and allSettings.SecondChat[1]) then src = 1 end
+	if src ~= 2 then src = 1 end
+	if fcw[3].SourceWindow == src and fo.Chat[3] and #fo.Chat[3] > 0 then return end
+	fcw[3].SourceWindow = src
+	fcw[3].Scrolling    = false
+	fcw[3].ScrolledBack = 0
+	b.ChatBufferIdx[3]  = b.ChatBufferN[src] or 0
+	if fcw[3].ChatLines and fo.Chat[3] and #fo.Chat[3] > 0 then
+		M.ResetScrolling(3, fcw[3].ChatLines)
+	end
+end
+_G.set_bigmode_source = M.set_bigmode_source
+
+-- Window 2 can keep the All tab selected while reading the AllAlt
+-- (no-combat) buffer.  HideCombatFromAll still hides combat from
+-- every All tab; HideCombatFromAll2 is window 2 only.
+function M.window_all_hides_combat(fo_id)
+	if fo_id == 2 then
+		return (allSettings.HideCombatFromAll2 and allSettings.HideCombatFromAll2[1])
+			or (allSettings.HideCombatFromAll and allSettings.HideCombatFromAll[1])
+	end
+	return allSettings.HideCombatFromAll and allSettings.HideCombatFromAll[1]
+end
+_G.window_all_hides_combat = M.window_all_hides_combat
+
+function M.resolved_buffer_tab(fo_id, tabName)
+	tabName = tabName or ((fo_id == 1) and allSettings.SelectedTab or allSettings.SelectedTab2)
+	if (tabName == 'All' or tabName == 'AllAlt') and M.window_all_hides_combat(fo_id) then
+		return 'AllAlt'
+	end
+	if tabName == 'AllAlt' then return 'All' end
+	return tabName
+end
+
+local function apply_tab_mode(fo_id, tabName)
+	if tabName == 'All'       then b.ChatBufferMode[fo_id] = 1;  return b.ChatBufferN_All       end
+	if tabName == 'AllAlt'    then b.ChatBufferMode[fo_id] = 2;  return b.ChatBufferN_AllAlt    end
+	if tabName == 'Combat'    then b.ChatBufferMode[fo_id] = 3;  return b.ChatBufferN_Combat    end
+	if tabName == 'Linkshell' then b.ChatBufferMode[fo_id] = 4;  return b.ChatBufferN_Linkshell end
+	if tabName == 'Party'     then b.ChatBufferMode[fo_id] = 5;  return b.ChatBufferN_Party     end
+	if tabName == 'Tell'      then b.ChatBufferMode[fo_id] = 6;  return b.ChatBufferN_Tell      end
+	if tabName == 'Shout'     then b.ChatBufferMode[fo_id] = 7;  return b.ChatBufferN_Shout     end
+	if tabName == 'Custom'    then b.ChatBufferMode[fo_id] = 8;  return b.ChatBufferN_Custom    end
+	if tabName == 'L1'        then b.ChatBufferMode[fo_id] = 9;  return b.ChatBufferN_L1        end
+	if tabName == 'L2'        then b.ChatBufferMode[fo_id] = 10; return b.ChatBufferN_L2        end
+	return b.ChatBufferIdx[fo_id]
+end
+
+function M.ApplyWindowTabBuffer(fo_id)
+	local n = apply_tab_mode(fo_id, M.resolved_buffer_tab(fo_id))
+	b.ChatBufferN[fo_id] = n
+	return n
+end
+_G.ApplyWindowTabBuffer = M.ApplyWindowTabBuffer
+
+-- Re-bind an All / AllAlt window after HideCombatFromAll* toggles.
+function M.RefreshAllTabBuffer(fo_id)
+	local sel = (fo_id == 1) and allSettings.SelectedTab or allSettings.SelectedTab2
+	if sel ~= 'All' and sel ~= 'AllAlt' then return end
+	M.ChangeTab(fo_id, sel)
+	M.ApplyWindowTabBuffer(fo_id)
+	M.ResetScrolling(fo_id)
+end
+_G.RefreshAllTabBuffer = M.RefreshAllTabBuffer
+
 -- ===================================================================
 -- Switch the active tab for chat window `fo_id`.  Updates allSettings,
 -- selects the new buffer mode, rewrites all visible chat lines with
@@ -55,22 +132,10 @@ function M.ChangeTab(fo_id, tabName)
 		allSettings.SelectedTab2 = tabName
 	end
 
-	b.ChatBufferIdx[fo_id] = (function()
-		if tabName == 'All'       then b.ChatBufferMode[fo_id] = 1; return b.ChatBufferN_All       end
-		if tabName == 'AllAlt'    then b.ChatBufferMode[fo_id] = 2; return b.ChatBufferN_AllAlt    end
-		if tabName == 'Combat'    then b.ChatBufferMode[fo_id] = 3; return b.ChatBufferN_Combat    end
-		if tabName == 'Linkshell' then b.ChatBufferMode[fo_id] = 4; return b.ChatBufferN_Linkshell end
-		if tabName == 'Party'     then b.ChatBufferMode[fo_id] = 5; return b.ChatBufferN_Party     end
-		if tabName == 'Tell'      then b.ChatBufferMode[fo_id] = 6; return b.ChatBufferN_Tell      end
-		if tabName == 'Shout'     then b.ChatBufferMode[fo_id] = 7; return b.ChatBufferN_Shout     end
-		if tabName == 'Custom'    then b.ChatBufferMode[fo_id] = 8; return b.ChatBufferN_Custom    end
-		if tabName == 'L1'        then b.ChatBufferMode[fo_id] = 9; return b.ChatBufferN_L1        end
-		if tabName == 'L2'        then b.ChatBufferMode[fo_id] = 10; return b.ChatBufferN_L2       end
-		return b.ChatBufferIdx[fo_id]
-	end)()
+	b.ChatBufferIdx[fo_id] = apply_tab_mode(fo_id, M.resolved_buffer_tab(fo_id, tabName))
 
-	if #fo.Chat[3] > 0 then
-		b.ChatBufferIdx[3] = b.ChatBufferIdx[1]
+	if #fo.Chat[3] > 0 and fo_id == M.bigmode_source() then
+		b.ChatBufferIdx[3] = b.ChatBufferIdx[fo_id]
 		ResetScrolling(3, fcw[3].ChatLines)
 		ResetLines(3, fcw[3].ChatLines)
 	end
@@ -110,7 +175,7 @@ _G.ChangeTab = M.ChangeTab
 -- ===================================================================
 function M.ResetLines(fo_id, ChatLines)
 	local mode_id = fo_id
-	if ChatLines then mode_id = 1 else ChatLines = allSettings.ChatLines end
+	if ChatLines then mode_id = M.bigmode_source() else ChatLines = allSettings.ChatLines end
 
 	-- Hoist the per-tab buffer once (#2).  All four parallel arrays
 	-- (.text/.color/.auxText/.auxColor) have the same length so we
@@ -158,7 +223,7 @@ _G.ResetLines = M.ResetLines
 -- ===================================================================
 function M.GoToLine(fo_id, line, currentIdx, ChatLines)
 	local mode_id = fo_id
-	if not ChatLines then ChatLines = allSettings.ChatLines else mode_id = 1 end
+	if not ChatLines then ChatLines = allSettings.ChatLines else mode_id = M.bigmode_source() end
 
 	-- Hoist (#2) + #t (#1).
 	local buf  = b.ChatBuffer[b.ChatBufferMode[mode_id]][2]

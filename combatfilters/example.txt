@@ -23,20 +23,25 @@
 
 ## 効果切れなど
 ##
-## 例（下はコメントのままなので効きません。使う行の ## を外してください）:
+## 例:
 ## effect wears off
 ## gains the effect of _y
 ##
 ## additional effect のように、同じチャンネルに載る文言は
 ## 個別には分けられません（自分の分だけ残す、などができないことがあります）。
 
+effect wears off _y
+gains the effect of _y
+is afflicted _y
+no effect _y
+Additional effect: .- HP
+%sRoll _y
 
+## 魔法
+
+## スパイク
+##
 ## 例:
-
 ## spikes deal
-## effect wears off _y
-## gains the effect of _y
-## is afflicted _y
-## no effect _y
-## Additional effect: .- HP
-## %sRoll _y
+
+spikes deal

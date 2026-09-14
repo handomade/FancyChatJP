@@ -211,8 +211,8 @@ function M.register()
 	-- ---------------------------------------------------------------------
 	-- FFXiMain.dll pattern scans, extracted so they can be re-run after
 	-- the game finishes initialising.  Pulled out of the load callback
-	-- because on some FFXi distributions the DLL is patched / relocated
-	-- at runtime after Ashita addons
+	-- because on some FFXi distributions (notably the CatsEyeXI client)
+	-- the DLL is patched / relocated at runtime after Ashita addons
 	-- finish loading; the scans that ran during 'load' would resolve
 	-- against a not-yet-final code layout, leaving menu-overlap
 	-- detection silently broken until /addon reload from in-game.
@@ -356,6 +356,9 @@ function M.register()
 		-- can address those slots without a NIL guard.  Idempotent.
 		while #allSettings.CustomTabModes < 7 do
 			allSettings.CustomTabModes[#allSettings.CustomTabModes + 1] = false
+		end
+		if not allSettings.HideCombatFromAll2 then
+			allSettings.HideCombatFromAll2 = T{false}
 		end
 
 		-- Mirror persisted settings into the live `set.*` working copy used
@@ -575,16 +578,6 @@ function M.register()
 		elseif e.id == 0x000A then
 			fcw[1].Zoning = false
 			uiw.DialogShown = false
-			-- Late-stage pointer re-scan: 0x000A fires when zone-in
-			-- is fully complete, which on some clients is AFTER any
-			-- client-side patches to FFXiMain.dll have settled.  The load-time scan and
-			-- the d3d_present-based rescan can fire earlier - between
-			-- character-select and zone-in - and resolve against a
-			-- not-yet-patched code layout.  Rescanning on every zone
-			-- transition guarantees the pointers match the current
-			-- code state, which is what makes menu-overlap detection
-			-- work without the user having to Restart & apply.
-			scan_memory_pointers()
 		elseif e.id == 0x00E0 and not fcw[1].HasDoneServMes and fcw[1].WaitingServMes == 0 then
 			fcw[1].WaitingServMes = os.clock()
 		end

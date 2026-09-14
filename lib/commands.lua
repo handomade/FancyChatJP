@@ -1,4 +1,4 @@
--- lib/commands.lua — /fancychat (alias /fchat) slash-command handler.
+-- lib/commands.lua  /fancychat (alias /fchat) slash-command handler.
 
 require('common')
 local utils = require('utils')
@@ -217,6 +217,23 @@ function M.register()
 				local ts_str = os.date(par.FormatTS[1], os.time())
 				if allSettings.TimeStamp12h[1] then ts_str = utils.fmt_ts_12h(ts_str) end
 				print('Current Time: '..ts_str)
+				return
+			end
+			if args[2] == 'cjkratio' then
+				if #args == 2 then
+					print(string.format('FancyChat: cjkWidthRatio = %.2f', allSettings.cjkWidthRatio or 1.70))
+					return
+				end
+				local n = tonumber(args[3])
+				if not n then
+					print('FancyChat: /fchat cjkratio [1.50-2.00]')
+					return
+				end
+				if n < 1.50 then n = 1.50 end
+				if n > 2.00 then n = 2.00 end
+				allSettings.cjkWidthRatio = n
+				SaveSettings()
+				print(string.format('FancyChat: cjkWidthRatio = %.2f (new messages only)', n))
 				return
 			end
 			-- /fchat menuname: dev-only diagnostic for capturing the
