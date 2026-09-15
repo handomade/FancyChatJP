@@ -1628,22 +1628,10 @@ function M.draw_settings_panel()
 			end
 
 			-- ----- Version + author line, centered, yellow -----
-			-- addon.version is of the form "<major>.<minor>.<YYMMDD>" or
-			-- "<major>.<minor>.<YYMMDD>-JP"; take the 6-digit date.
+			-- FancyChatJP uses its own semver (e.g. 1.0.0), not
+			-- upstream's "<major>.<minor>.<YYMMDD>R" date stamp.
 			local _winW       = imgui.GetWindowWidth()
 			local _versionStr = tostring(addon.version or '')
-			local _datePart   = _versionStr:match('(%d%d%d%d%d%d)')
-			local _dateDisplay = nil
-			if _datePart then
-				local _months = {'1\230\156\136','2\230\156\136','3\230\156\136','4\230\156\136','5\230\156\136','6\230\156\136',
-				                 '7\230\156\136','8\230\156\136','9\230\156\136','10\230\156\136','11\230\156\136','12\230\156\136'}
-				local yy = tonumber(_datePart:sub(1, 2))
-				local mm = tonumber(_datePart:sub(3, 4))
-				local dd = tonumber(_datePart:sub(5, 6))
-				if yy and mm and dd and _months[mm] then
-					_dateDisplay = string.format('%d\229\185\180%s%d\230\151\165', 2000 + yy, _months[mm], dd)
-				end
-			end
 
 			local _YELLOW = {1.0, 0.92, 0.16, 1.0}
 
@@ -1652,12 +1640,10 @@ function M.draw_settings_panel()
 			imgui.SetCursorPosX((_winW - _w1) * 0.5)
 			imgui.TextColored(_YELLOW, _line1)
 
-			if _dateDisplay then
-				local _line2 = '\228\189\156\230\136\144\232\128\133 Arielfy / Hando  '.._dateDisplay
-				local _w2    = imgui.CalcTextSize(_line2)
-				imgui.SetCursorPosX((_winW - _w2) * 0.5)
-				imgui.TextColored(_YELLOW, _line2)
-			end
+			local _line2 = '\228\189\156\230\136\144\232\128\133 Arielfy / Hando'
+			local _w2    = imgui.CalcTextSize(_line2)
+			imgui.SetCursorPosX((_winW - _w2) * 0.5)
+			imgui.TextColored(_YELLOW, _line2)
 
 			imgui.Dummy({0, 15})
 
