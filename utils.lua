@@ -654,9 +654,19 @@ end
 -- ================================================================
 local FFXIC_BASE  = 'https://ffxiclopedia.fandom.com'
 local BGWIKI_BASE = 'https://www.bg-wiki.com'
+local FFO_SEARCH  = 'https://wiki.ffo.jp/search.cgi?Command=Search&order=match&ffotype=title&type=title&qf='
 
--- Canonicalise a zone name into the slug both wikis use in their
--- article URLs:
+-- Filled by lifecycle.Init: display/JP/EN name -> English zone name.
+utils.zoneEnNames = utils.zoneEnNames or {}
+
+utils.GetZoneEnglishName = function(zoneName)
+	if not zoneName or zoneName == '' then return zoneName end
+	local map = utils.zoneEnNames
+	return (map and (map[zoneName] or map[zoneName:lower()])) or zoneName
+end
+
+-- Canonicalise a zone name into the slug both English wikis use in
+-- their article URLs:
 --   * spaces become underscores
 --   * [S] / [V] / [P1] bracketed suffixes become (S) / (V) / (P1)
 --     (both BG-Wiki AND FFXIClopedia URLs use parens, even though
@@ -670,15 +680,218 @@ local function wikiSlug(zoneName)
 		:gsub('#', '%%23'))
 end
 
+-- Do not return '%NN' from gsub: Lua treats % in the replacement as
+-- a capture escape, so '%93' becomes '3' and Japanese qf is destroyed.
+local function query_encode(s)
+	local out = {}
+	for i = 1, #s do
+		local b = s:byte(i)
+		if (b >= 48 and b <= 57) or (b >= 65 and b <= 90) or (b >= 97 and b <= 122)
+			or b == 45 or b == 46 or b == 95 or b == 126 then
+			out[#out + 1] = string.char(b)
+		elseif b == 32 then
+			out[#out + 1] = '+'
+		else
+			out[#out + 1] = string.format('%%%02X', b)
+		end
+	end
+	return table.concat(out)
+end
+
+local function percent_decode(s)
+	s = s:gsub('+', ' ')
+	s = s:gsub('%%(%x%x)', function(h)
+		return string.char(tonumber(h, 16))
+	end)
+	return s
+end
+
+-- True when every byte is a well-formed UTF-8 sequence.  FFXI/Ashita
+-- command text may already be CP932; those leads fail this check.
+local function ffo_is_utf8(s)
+	local i, n = 1, #s
+	while i <= n do
+		local b = s:byte(i)
+		if b < 0x80 then
+			i = i + 1
+		elseif b >= 0xC2 and b <= 0xDF and i + 1 <= n then
+			local b2 = s:byte(i + 1)
+			if b2 < 0x80 or b2 > 0xBF then return false end
+			i = i + 2
+		elseif b >= 0xE0 and b <= 0xEF and i + 2 <= n then
+			local b2, b3 = s:byte(i + 1), s:byte(i + 2)
+			if b2 < 0x80 or b2 > 0xBF or b3 < 0x80 or b3 > 0xBF then return false end
+			if b == 0xE0 and b2 < 0xA0 then return false end
+			i = i + 3
+		elseif b >= 0xF0 and b <= 0xF4 and i + 3 <= n then
+			local b2, b3, b4 = s:byte(i + 1), s:byte(i + 2), s:byte(i + 3)
+			if b2 < 0x80 or b2 > 0xBF or b3 < 0x80 or b3 > 0xBF or b4 < 0x80 or b4 > 0xBF then
+				return false
+			end
+			i = i + 4
+		else
+			return false
+		end
+	end
+	return true
+end
+
+-- wiki.ffo.jp search.cgi only matches CP932 qf.  Leave ASCII and
+-- already-SJIS alone; convert only well-formed UTF-8.
+local function ffo_query_cp932(query)
+	if not query:find('[\128-\255]') then return query end
+	if not ffo_is_utf8(query) then return query end
+	local ok, sj = pcall(function()
+		return encoding:UTF8_To_ShiftJIS(query)
+	end)
+	if ok and type(sj) == 'string' and sj ~= '' then return sj end
+	return query
+end
+
+utils.FfoHtmlToUtf8 = function(html)
+	if not html or html == '' then return html end
+	local cs = html:match('[Cc][Hh][Aa][Rr][Ss][Ee][Tt]%s*=%s*["\']?([%w%-]+)')
+	cs = cs and cs:lower() or ''
+	if cs == 'utf-8' or cs == 'utf8' then return html end
+	if cs == '' and ffo_is_utf8(html) then return html end
+	local ok, u = pcall(function()
+		return encoding:ShiftJIS_To_UTF8(html)
+	end)
+	if ok and type(u) == 'string' and u ~= '' then return u end
+	return html
+end
+
+-- ASCII RS/US sentinels around href + label so later tag-stripping
+-- leaves wiki hyperlinks intact for GuideMe.
+local LINK_RS, LINK_US = string.char(30), string.char(31)
+
+utils.MakeGuideMeLink = function(label, url)
+	if not url or url == '' then return label or '' end
+	return LINK_RS..(url or '')..LINK_US..(label or url)..LINK_RS
+end
+
 utils.GetZoneWikiUrl = function(zoneName)
 	if not zoneName then return nil end
-	return FFXIC_BASE..'/wiki/'..wikiSlug(zoneName)
+	return FFXIC_BASE..'/wiki/'..wikiSlug(utils.GetZoneEnglishName(zoneName))
 end
 
 utils.GetBgWikiZoneUrl = function(zoneName)
 	if not zoneName then return nil end
 	-- BG-Wiki article paths live under /ffxi/, not /wiki/.
-	return BGWIKI_BASE..'/ffxi/'..wikiSlug(zoneName)
+	return BGWIKI_BASE..'/ffxi/'..wikiSlug(utils.GetZoneEnglishName(zoneName))
+end
+
+-- wiki.ffo.jp (FF11 glossary).  Articles are numeric /html/NNNN.html
+-- pages, so we open the title search with the English name (that
+-- query is what the site's search.cgi actually matches).
+utils.GetFfoWikiUrl = function(zoneName)
+	if not zoneName then return nil end
+	return FFO_SEARCH..query_encode(utils.GetZoneEnglishName(zoneName))
+end
+
+-- Same search.cgi the site's header form uses (title match).  Japanese
+-- queries must be CP932; UTF-8 qf returns zero hits.
+utils.GetFfoSearchUrl = function(query)
+	if not query or query == '' then return nil end
+	return FFO_SEARCH..query_encode(ffo_query_cp932(query))
+end
+
+utils.ParseFfoSearchHits = function(html)
+	local hits, seen = {}, {}
+	if not html or html == '' then return hits end
+	local function add(href, title)
+		if not href or seen[href] then return end
+		seen[href] = true
+		title = (title or ''):gsub('<.->', '')
+			:gsub('&amp;', '&'):gsub('&lt;', '<'):gsub('&gt;', '>')
+			:gsub('&quot;', '"'):gsub('^%s+', ''):gsub('%s+$', '')
+		hits[#hits + 1] = { url = href, title = title }
+	end
+	for href, title in html:gmatch('href="(https://wiki%.ffo%.jp/html/%d+%.html)"[^>]*>(.-)</a>') do
+		add(href, title)
+	end
+	if #hits == 0 then
+		for href, title in html:gmatch("href='(https://wiki%.ffo%.jp/html/%d+%.html)'[^>]*>(.-)</a>") do
+			add(href, title)
+		end
+	end
+	if #hits == 0 then
+		for path, title in html:gmatch('href="(/html/%d+%.html)"[^>]*>(.-)</a>') do
+			add('https://wiki.ffo.jp'..path, title)
+		end
+	end
+	return hits
+end
+
+utils.FormatFfoSearchPage = function(query, html)
+	local hits = utils.ParseFfoSearchHits(html)
+	local n = html and tonumber((html:match('(%d+)\228\187\182\227\131\146\227\131\131\227\131\136')))
+	n = n or #hits
+	local lines = {
+		'[\231\148\168\232\170\158\232\190\158\229\133\184] '..(query or ''),
+		string.format('%d \228\187\182\227\131\146\227\131\131\227\131\136', n),
+		'',
+	}
+	if #hits == 0 then
+		lines[#lines + 1] = '\232\166\139\227\129\164\227\129\139\227\130\138\227\129\190\227\129\155\227\130\147\227\129\167\227\129\151\227\129\159\227\128\130'
+		return table.concat(lines, '\n')
+	end
+	for _, h in ipairs(hits) do
+		local label = (h.title ~= '' and h.title) or h.url
+		lines[#lines + 1] = utils.MakeGuideMeLink(label, h.url)
+	end
+	return table.concat(lines, '\n')
+end
+
+utils.FfoSearchQueryFromUrl = function(url)
+	if not url then return '' end
+	local qf = url:match('[?&]qf=([^&]*)')
+	if not qf or qf == '' then return '' end
+	local raw = percent_decode(qf)
+	if not raw:find('[\128-\255]') then return raw end
+	if ffo_is_utf8(raw) then return raw end
+	local ok, u = pcall(function()
+		return encoding:ShiftJIS_To_UTF8(raw)
+	end)
+	if ok and type(u) == 'string' and u ~= '' then return u end
+	return raw
+end
+
+-- Strip a wiki.ffo.jp article down to plain text for GuideMe.
+utils.GetFfoWikiBody = function(html, url, http_get)
+	if not html or html == '' then return nil end
+	local start = html:find('<h1 class="title">', 1, true)
+	if not start then start = html:find('<h1', 1, true) end
+	if not start then return nil end
+	local stop = html:find('<footer', start, true)
+		or html:find('id="footer"', start, true)
+		or html:find('class="footer"', start, true)
+		or html:find('</body>', start, true)
+	local chunk = html:sub(start, stop and (stop - 1) or #html)
+	chunk = chunk:gsub('<div class="offcanvas.-</div>%s*</div>', '')
+	local text = utils.GetWalkthrough(chunk)
+	if not text or not text:match('%S') then return nil end
+	return text
+end
+
+-- English wiki fallback when there is no Walkthrough / How to Obtain
+-- section (zone, NPC, item pages).  Uses the article body so GuideMe
+-- can follow in-panel links instead of only quest walkthroughs.
+utils.GetWikiArticleBody = function(html)
+	if not html or html == '' then return nil end
+	local start = html:find('class="mw-parser-output"', 1, true)
+		or html:find("class='mw-parser-output'", 1, true)
+		or html:find('id="mw-content-text"', 1, true)
+		or html:find('<h1', 1, true)
+	if not start then return nil end
+	local stop = html:find('<div class="printfooter">', start, true)
+		or html:find('<div class="page-footer">', start, true)
+		or html:find('id="footer"', start, true)
+		or html:find('</body>', start, true)
+	local chunk = html:sub(start, stop and (stop - 1) or #html)
+	local text = utils.GetWalkthrough(chunk)
+	if not text or not text:match('%S') then return nil end
+	return text
 end
 
 -- Underscores/hyphens -> spaces; split CamelCase + letter|digit boundaries.
@@ -771,7 +984,7 @@ end
 --   }
 utils.GetLocalZoneMaps = function(zoneName)
 	if not zoneName or zoneName == '' then return nil end
-	local folder  = localMapFolderName(zoneName)
+	local folder  = localMapFolderName(utils.GetZoneEnglishName(zoneName) or zoneName)
 	local zoneDir = addon.path..'/maps/'..folder
 
 	-- Enumerate immediate subdirectories.  /b = bare names, /ad =
@@ -2332,6 +2545,23 @@ local function processTable(tableContent)
 end
 
 utils.GetWalkthrough = function(str)
+	str = str:gsub('<[Aa](%s+[^>]*)>(.-)</[Aa]>', function(attrs, inner)
+		local href = attrs:match('[Hh][Rr][Ee][Ff]%s*=%s*"([^"]*)"')
+			or attrs:match("[Hh][Rr][Ee][Ff]%s*=%s*'([^']*)'")
+		inner = inner:gsub('<.->', '')
+		if not href or href == '' or href:sub(1, 1) == '#' then
+			return inner
+		end
+		if href:find('action=edit', 1, true) or href:find('redlink=1', 1, true) then
+			return inner
+		end
+		if href:find('javascript:', 1, true) or href:find('mailto:', 1, true) then
+			return inner
+		end
+		if inner:match('^%s*$') then return inner end
+		return LINK_RS..href..LINK_US..inner..LINK_RS
+	end)
+
 	str = str:gsub('<h1>(.-)</h1>', function(text)
 		return '\n['..text:upper()..']\n'
 	end)
@@ -2371,10 +2601,6 @@ utils.GetWalkthrough = function(str)
 	str = str:gsub('%[citation needed%]', '')
 	str = str:gsub('%[edit%]', '')
 
-	str = str:gsub('<a[^>]->(.-)</a>', function(linkText)
-		return linkText:gsub('%[.-%]', '')
-	end)
-
 	str = str:gsub('<span class="mw-editsection.-</span>', '')
 	str = str:gsub('<table.->(.-)</table>', processTable)
 
@@ -2388,6 +2614,54 @@ utils.GetWalkthrough = function(str)
 	str = str:gsub('\n\n+', '\n\n')
 
 	return str
+end
+
+utils.ParseGuideMeRuns = function(str)
+	local runs = {}
+	if not str or str == '' then return runs end
+	local i, n = 1, #str
+	while i <= n do
+		local s = str:find(LINK_RS, i, true)
+		if not s then
+			runs[#runs + 1] = { t = 'text', s = str:sub(i) }
+			break
+		end
+		if s > i then
+			runs[#runs + 1] = { t = 'text', s = str:sub(i, s - 1) }
+		end
+		local sep = str:find(LINK_US, s + 1, true)
+		local close = sep and str:find(LINK_RS, sep + 1, true)
+		if not sep or not close then
+			runs[#runs + 1] = { t = 'text', s = str:sub(s) }
+			break
+		end
+		runs[#runs + 1] = {
+			t = 'link',
+			u = str:sub(s + 1, sep - 1),
+			s = str:sub(sep + 1, close - 1),
+		}
+		i = close + 1
+	end
+	return runs
+end
+
+-- Turn a wiki href into an absolute http(s) URL, or nil if it should
+-- stay as plain text (in-page #anchors, javascript, missing base).
+utils.ResolveWikiHref = function(href, base)
+	if not href or href == '' then return nil end
+	href = href:gsub('&amp;', '&'):gsub('^%s+', ''):gsub('%s+$', '')
+	if href:sub(1, 1) == '#' then return nil end
+	if href:find('^javascript:') or href:find('^mailto:') or href:find('^data:') then
+		return nil
+	end
+	if href:find('^https?://') then return href end
+	if href:sub(1, 2) == '//' then return 'https:'..href end
+	if not base or base == '' then return nil end
+	local origin = base:match('^(https?://[^/]+)')
+	if not origin then return nil end
+	if href:sub(1, 1) == '/' then return origin..href end
+	local dir = base:match('^(https?://.*/)')
+	return (dir or (origin..'/'))..href
 end
 
 -- ================================================================

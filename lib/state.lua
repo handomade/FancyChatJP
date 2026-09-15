@@ -82,6 +82,9 @@ M.set = {
 	},
 	-- Lowercased zone-name -> canonical zone-name lookup; populated at init.
 	zoneNames           = {},
+	-- Canonical / English / Japanese names -> English name, for wiki
+	-- slugs, wiki.ffo.jp search, and maps/ folder lookup.
+	zoneEnNames         = {},
 	-- CL Filters tab: tracks "active filter file no longer exists on
 	-- disk" so the tab can show the red warning banner and the auto-
 	-- disable transition only fires once per state-change (not every

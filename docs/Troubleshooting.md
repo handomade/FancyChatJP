@@ -70,7 +70,7 @@ If conflicts continue, unload the other chat addon:
 If the URL is from `ffxiclopedia.fandom.com` and the page fails to load with a Cloudflare error:
 
 - Some VPN providers trigger Cloudflare's bot challenge. Try disabling your VPN.
-- Or use the equivalent article on `bg-wiki.com`.
+- Or use the equivalent article on `bg-wiki.com`, or `wiki.ffo.jp` for Japanese pages.
 
 GuideMe is marked **experimental** — if a specific page renders strangely (broken tables, missing sections), it's a parser limitation rather than a fetch problem.
 

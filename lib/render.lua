@@ -2088,8 +2088,13 @@ function M.register()
 					end
 
 					-- Visual separator between the /sea command and the
-					-- two browser-link entries below.
+					-- browser-link entries below.
 					imgui.Separator()
+
+					if imgui.Selectable(zone..' \227\130\146 \231\148\168\232\170\158\232\190\158\229\133\184 \227\129\167\233\150\139\227\129\143') then
+						ashita.misc.open_url(utils.GetFfoWikiUrl(zone))
+						set.zoneTip.visible = false
+					end
 
 					-- Open the FFXIclopedia wiki page in the user's
 					-- default browser.  ashita.misc.open_url is a

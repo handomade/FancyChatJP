@@ -86,6 +86,8 @@ function M.default_fcw()
 			GuideMeURL            = T{''},
 			Note                  = T{''},
 			GuideMeWalkthrough    = nil,
+			GuideMeHistory        = {},
+			GuideMePendingUrl     = nil,
 			PrevKeyptr            = T{0, 0, 0, 0},
 			DraggingScroll        = false,
 			ScrollPos             = 0,

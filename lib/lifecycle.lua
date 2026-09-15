@@ -190,18 +190,50 @@ function M.Init()
 	fcw[1].BKWBaseX    = ((allSettings.fontSettings.font_height * 1.5) / allSettings.fontSettings.font_height)
 
 	-- Build a lowercased zone-name lookup once at init time so the
-	-- right-click /sea tooltip in render.lua can scan chat lines
+	-- Ctrl+click zone popup in render.lua can scan chat lines
 	-- without repeatedly hitting the resource manager.  IDs run
 	-- 0..~340 with gaps; skip the empty / "none" rows.  Stored on
 	-- set.zoneNames as { [lowercased_name] = canonical_name }.
+	-- Also index English (lang 2) and Japanese (lang 1) so a JP
+	-- client still matches English chat and vice versa, and keep
+	-- English names for wiki URLs / maps/ folders (those are EN).
 	if not next(set.zoneNames) then
 		local rm = AshitaCore:GetResourceManager()
+		local function zone_str(id, lang)
+			local ok, s
+			if lang then
+				ok, s = pcall(function()
+					return rm:GetString('zones.names', id, lang)
+				end)
+				if ok and type(s) == 'string' and s ~= '' then return s end
+			end
+			s = rm:GetString('zones.names', id)
+			if type(s) == 'string' and s ~= '' then return s end
+			return nil
+		end
+		local function usable(n)
+			return n and n ~= '' and n:lower() ~= 'none'
+		end
 		for id = 0, 350 do
-			local name = rm:GetString('zones.names', id)
-			if name and name ~= '' and name:lower() ~= 'none' then
-				set.zoneNames[name:lower()] = name
+			local native = zone_str(id)
+			if usable(native) then
+				local en = zone_str(id, 2)
+				if not usable(en) then en = native end
+				local jp = zone_str(id, 1)
+				set.zoneEnNames[native] = en
+				set.zoneEnNames[native:lower()] = en
+				set.zoneEnNames[en] = en
+				set.zoneEnNames[en:lower()] = en
+				set.zoneNames[native:lower()] = native
+				set.zoneNames[en:lower()] = native
+				if usable(jp) then
+					set.zoneNames[jp:lower()] = native
+					set.zoneEnNames[jp] = en
+					set.zoneEnNames[jp:lower()] = en
+				end
 			end
 		end
+		utils.zoneEnNames = set.zoneEnNames
 	end
 end
 _G.Init = M.Init

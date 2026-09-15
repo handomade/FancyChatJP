@@ -13,9 +13,13 @@ GuideMe is a built-in wiki-page viewer. Useful for keeping a quest walkthrough, 
 
 ### Loading a wiki page
 
-1. Paste a URL from `ffxiclopedia.fandom.com` or `bg-wiki.com` into the URL field at the top of the panel.
+1. Paste a URL from `ffxiclopedia.fandom.com`, `bg-wiki.com`, or `wiki.ffo.jp` into the URL field at the top of the panel.
 2. Press the **Load** button.
-3. GuideMe fetches the page, extracts its **Walkthrough** section, and displays it as plain wrapped text.
+3. For English wikis, GuideMe extracts the **Walkthrough** section. For wiki.ffo.jp, it shows the article body (those pages have no Walkthrough heading). Blue links load the next page **inside GuideMe**. Use **Back** to return. Undock the panel first if clicks do not register (same as the URL field). Wide lines show a horizontal scrollbar instead of wrapping.
+
+### Search wiki.ffo.jp
+
+`/fchat ffo <query>` opens GuideMe and runs the site's title search (`search.cgi`). Click a result to load that article in the panel.
 
 ### Cloudflare blocks
 

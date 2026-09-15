@@ -1,9 +1,10 @@
 -- lib/commands.lua  /fancychat (alias /fchat) slash-command handler.
 
 require('common')
-local utils = require('utils')
-local help  = require('help')
-local state = require('lib.state')
+local utils     = require('utils')
+local help      = require('help')
+local state     = require('lib.state')
+local ui_panels = require('lib.ui_panels')
 
 local fcw         = state.fcw
 local dw          = state.dw
@@ -234,6 +235,29 @@ function M.register()
 				allSettings.cjkWidthRatio = n
 				SaveSettings()
 				print(string.format('FancyChat: cjkWidthRatio = %.2f (new messages only)', n))
+				return
+			end
+			if args[2] and args[2]:lower() == 'ffo' then
+				local q = (e.command or ''):match('^/%S+%s+[Ff][Ff][Oo]%s+(.+)$')
+				if q then q = q:gsub('%s+$', '') end
+				if not q or q == '' then
+					local parts = {}
+					for i = 3, #args do parts[#parts + 1] = args[i] end
+					q = table.concat(parts, ' ')
+				end
+				if q == '' then
+					print('FancyChat: /fchat ffo <query>')
+					return
+				end
+				local url = utils.GetFfoSearchUrl(q)
+				if not url then
+					print('FancyChat: /fchat ffo <query>')
+					return
+				end
+				fcw[1].GuideMeOpened[1] = true
+				fcw[1].NotepadOpened[1] = false
+				fcw[1].GuideMeClosedTmp = false
+				ui_panels.load_url(url, true)
 				return
 			end
 			-- /fchat menuname: dev-only diagnostic for capturing the

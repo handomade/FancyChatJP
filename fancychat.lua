@@ -4,7 +4,7 @@ addon.author    = 'Arielfy, Hando';
 addon.desc      = 'Fancy Chat! (JP fork)';
 addon.link      = 'https://github.com/handomade/FancyChatJP';
 
-local ver = '0.9.260914-JP'
+local ver = '0.9.260915-JP'
 addon.version = ver
 
 --[[
