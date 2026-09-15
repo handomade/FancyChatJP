@@ -96,6 +96,7 @@ local utils_FindInStringTable      = utils.FindInStringTable
 local utils_FindInStringTableFilters = utils.FindInStringTableFilters
 local utils_IsInTable              = utils.IsInTable
 local utils_FindWrapCutIdx         = utils.FindWrapCutIdx
+local utils_AlignUtf8Cut           = utils.AlignUtf8Cut
 local utils_utf8split              = utils.utf8split
 local utils_ParseUrlLink           = utils.ParseUrlLink
 local utils_parseEmoji             = utils.parseEmoji
@@ -294,6 +295,22 @@ _G.HandleSpecial = M.HandleSpecial
 --   * Item obtain / key-item / bazaar / use
 --   * Exp / limit gain (with icons.EXP)
 -- ===================================================================
+-- JP obtain: "Nameは、Itemを手に入れた！" — colour the item AND 手に入れた
+-- (English colours "You obtain Item.").  いれた is a hiragana variant.
+local JP_HA        = '\227\129\175'
+local JP_COMMA     = '\227\128\129'
+local JP_BANG      = '\239\188\129'
+local JP_GET_KANJI = '\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159'
+local JP_GET_HIRA  = '\227\130\146\230\137\139\227\129\171\227\129\132\227\130\140\227\129\159'
+
+local function handle_obtain_jp(newText, category, cutIdx)
+	local pref = newText:find(JP_HA..JP_COMMA, 1, true) and (JP_HA..JP_COMMA)
+		or (newText:find(JP_HA, 1, true) and JP_HA)
+		or nil
+	local suf = newText:find(JP_BANG, 1, true) and JP_BANG or JP_GET_KANJI
+	return HandleSpecial(newText, category, pref, suf, cutIdx, allSettings.colors.obtained[1])
+end
+
 function M.CheckSpecial(newText, col, cutIdx)
 
 	
@@ -387,8 +404,8 @@ function M.CheckSpecial(newText, col, cutIdx)
 			return HandleSpecial(newText, 'fshm', nil, 'Something', cutIdx,  0xFFFF391F)
 		elseif newText:find('Obtained key item: ') or par.checkAgain[2] == 'KI' then
 			return HandleSpecial(newText, 'KI', 'Obtained key item: ', '%.', cutIdx, allSettings.colors.keyitem[1])
-		elseif newText:find('\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159') or par.checkAgain[2] == 'obtain1jp' then
-			return HandleSpecial(newText, 'obtain1jp', nil, '\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find(JP_GET_KANJI, 1, true) or newText:find(JP_GET_HIRA, 1, true) or par.checkAgain[2] == 'obtain1jp' then
+			return handle_obtain_jp(newText, 'obtain1jp', cutIdx)
 		elseif newText:find('\227\130\146\229\133\165\230\137\139\227\129\151\227\129\159') or par.checkAgain[2] == 'obtain2jp' then
 			return HandleSpecial(newText, 'obtain2jp', nil, '\227\130\146\229\133\165\230\137\139\227\129\151\227\129\159', cutIdx, allSettings.colors.obtained[1])
 		elseif newText:find('\227\130\173\227\131\188\227\130\162\227\130\164\227\131\134\227\131\160') or par.checkAgain[2] == 'KIjp' then
@@ -413,8 +430,8 @@ function M.CheckSpecial(newText, col, cutIdx)
 			return HandleSpecial(newText, 'roe', 'Records of Eminence: ', '%.', cutIdx, allSettings.colors.roe[1])
 		elseif newText:find('Progress: [0-9]*/[0-9]*') or par.checkAgain[2] == 'roep' then
 			return HandleSpecial(newText, 'roep', 'Progress: ', '%.', cutIdx, allSettings.colors.roe[1])
-		elseif newText:find('\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159') or par.checkAgain[2] == 'obtain5jp' then
-			return HandleSpecial(newText, 'obtain5jp', nil, '\227\130\146\230\137\139\227\129\171\229\133\165\227\130\140\227\129\159', cutIdx, allSettings.colors.obtained[1])
+		elseif newText:find(JP_GET_KANJI, 1, true) or newText:find(JP_GET_HIRA, 1, true) or par.checkAgain[2] == 'obtain5jp' then
+			return handle_obtain_jp(newText, 'obtain5jp', cutIdx)
 		end
 	end
 
@@ -542,6 +559,26 @@ function M.SetTargetPosX(x, y, positionStartX)
 end
 _G.SetTargetPosX = M.SetTargetPosX
 
+-- English wrap-at-space uses a byte budget of 12.  JP spell names
+-- encoded in UTF-8 are 3 bytes per kana, so "\エアロ/" is 11 bytes
+-- and was treated as a short English word — wrapping a short combat
+-- line before the spell.  Only pull back to a space for ASCII tails.
+local function ascii_bytes(s, i, j)
+	for k = i, j do
+		local b = s:byte(k)
+		if not b or b >= 0x80 then return false end
+	end
+	return true
+end
+
+local function wrap_back_to_space(s, cutIdx, limit)
+	local last_space = utils_FindLastOf(string_sub(s, 1, cutIdx), ' ')
+	if not last_space then return cutIdx, false end
+	if (cutIdx - last_space) >= limit then return cutIdx, false end
+	if not ascii_bytes(s, last_space + 1, cutIdx) then return cutIdx, false end
+	return last_space - 1, true
+end
+
 -- ===================================================================
 -- HandleActors: takes a chat line that has already had its non-actor
 -- spans coloured, and wraps actor1 / actorP / actor2 / actorE /
@@ -560,60 +597,136 @@ function M.HandleActors(text, scol)
 	local colors_ability = allSettings.colors.ability[1]
 	local player_name    = fcw[1].PlayerName
 
-	if #par.actor1 > 0 then
-		par.handled_actors = true
-		-- (#11) Cache the escaped pattern: it's used 2 (gsub + find).
-		local act1     = par.actor1
-		local act1_esc = act1:escape()
-		local color    = (act1 == player_name) and colors_you or colors_actor1
-		text = text:gsub(act1_esc..'([^%a-])',
-			(utils_MC(color)..act1..utils_MC('reset')):gsub('%%', '%%%%')..'%1', 1)
-		if not text:find(utils_MC(color), 1, true) then
-			text = text:replace(act1, utils_MC(color)..act1..utils_MC('reset'), 1)
+	-- ASCII letter/hyphen only: Japanese particles (は / の / に)
+	-- must not count as "still inside the name".  Capturing one
+	-- byte of a UTF-8 particle used to split the glyph and skip colour.
+	local function ident_byte(b)
+		return b and ((b >= 65 and b <= 90) or (b >= 97 and b <= 122) or b == 45)
+	end
+	local function already_painted(s, at)
+		return at > 3 and s:sub(at - 3, at - 1) == '\195\167\\'
+	end
+	local function paint(s, name, color)
+		if not name or name == '' then return s, false end
+		local nlen, i = #name, 1
+		while true do
+			local at = s:find(name, i, true)
+			if not at then break end
+			local after = at + nlen
+			local prev_b = at > 1 and s:byte(at - 1) or nil
+			local next_b = s:byte(after)
+			if not ident_byte(prev_b) and not ident_byte(next_b) and not already_painted(s, at) then
+				return s:sub(1, at - 1)..utils_MC(color)..name..utils_MC('reset')..s:sub(after), true
+			end
+			i = after
 		end
-		_, a1 = text:find(act1_esc, 1, false)
-		par.actor1 = ''
+		return s, false
+	end
+
+	if #par.actor1 > 0 then
+		local act1  = par.actor1
+		local color = (act1 == player_name) and colors_you or colors_actor1
+		local found
+		text, found = paint(text, act1, color)
+		if found then
+			par.handled_actors = true
+			_, a1 = text:find(act1, 1, true)
+			a1 = a1 or 1
+			par.actor1 = ''
+		end
 	end
 
 	if #par.actorP > 0 then
-		par.handled_actors = true
 		local color = (par.actorP == player_name) and colors_you or colors_actor1
-		text = text:sub(1, a1)..text:sub(a1 + 1, #text):replace(par.actorP,
-			utils_MC(color)..par.actorP..utils_MC('reset'), 1)
-		par.actorP = ''
+		local found
+		local tail
+		tail, found = paint(text:sub(a1 + 1), par.actorP, color)
+		if found then
+			par.handled_actors = true
+			text = text:sub(1, a1)..tail
+			par.actorP = ''
+		end
 	end
 
 	if #par.actor2 > 0 then
-		par.handled_actors = true
-		-- (#11) Cache the escaped pattern: used 2.
-		local act2     = par.actor2
-		local act2_esc = act2:escape()
-		text = text:gsub(act2_esc..'([^%a-])',
-			(utils_MC(colors_actor2)..act2..utils_MC('reset')):gsub('%%', '%%%%')..'%1', 1)
-		if not text:find(utils_MC(colors_actor2), 1, true) then
-			text = text:replace(act2, utils_MC(colors_actor2)..act2..utils_MC('reset'), 1)
+		local act2 = par.actor2
+		local found
+		text, found = paint(text, act2, colors_actor2)
+		if found then
+			par.handled_actors = true
+			_, a2 = text:find(act2, 1, true)
+			a2 = a2 or 1
+			par.actor2 = ''
 		end
-		_, a2 = text:find(act2_esc, 1, false)
-		par.actor2 = ''
 	end
 
 	if #par.actorE > 0 then
-		par.handled_actors = true
-		text = text:sub(1, a2)..text:sub(a2 + 1, #text):replace(par.actorE,
-			utils_MC(colors_actor2)..par.actorE..utils_MC('reset'), 1)
-		par.actorE = ''
+		local found
+		local tail
+		tail, found = paint(text:sub(a2 + 1), par.actorE, colors_actor2)
+		if found then
+			par.handled_actors = true
+			text = text:sub(1, a2)..tail
+			par.actorE = ''
+		end
 	end
 
+	-- Compact combat wraps "\spell/" as a unit onto the next line.
+	-- Clearing action1 when this line does not contain it left the
+	-- continuation looking like \エアロ/ instead of [エアロ].
 	if #par.action1 > 0 then
-		par.handled_actors = true
-		text = text:replace(par.action1,
-			utils_MC(colors_ability)..par.action1:gsub('\\', '['):gsub('/', ']')..utils_MC(scol), 1)
-		par.action1 = ''
+		local act = par.action1
+		local at = text:find(act, 1, true)
+		if at then
+			local pretty = act:gsub('\\', '['):gsub('/', ']')
+			text = text:sub(1, at - 1)
+				..utils_MC(colors_ability)..pretty..utils_MC(scol)
+				..text:sub(at + #act)
+			par.handled_actors = true
+			par.action1 = ''
+		end
 	end
 
 	return text
 end
 _G.HandleActors = M.HandleActors
+
+-- Colour player/party names on combat lines that CompactCombat did
+-- not parse (e.g. 発動 / レジスト).  Skips names already wrapped by
+-- HandleActors.  Japanese has no space after the name, so this must
+-- not require an ASCII delimiter.
+function M.ColorPartyNames(text)
+	local player_name   = fcw[1].PlayerName
+	local colors_you    = allSettings.colors.you[1]
+	local colors_actor1 = allSettings.colors.actor1[1]
+	local function ident_byte(b)
+		return b and ((b >= 65 and b <= 90) or (b >= 97 and b <= 122) or b == 45)
+	end
+	local names = {}
+	for i = 1, #par.party_names do
+		local n = par.party_names[i]
+		if n and n ~= '' then names[#names + 1] = n end
+	end
+	table.sort(names, function(a, b) return #a > #b end)
+	for _, name in ipairs(names) do
+		local color = (name == player_name) and colors_you or colors_actor1
+		local nlen, i = #name, 1
+		while true do
+			local at = text:find(name, i, true)
+			if not at then break end
+			local after = at + nlen
+			local prev_b = at > 1 and text:byte(at - 1) or nil
+			local next_b = text:byte(after)
+			local painted = at > 3 and text:sub(at - 3, at - 1) == '\195\167\\'
+			if not ident_byte(prev_b) and not ident_byte(next_b) and not painted then
+				text = text:sub(1, at - 1)..utils_MC(color)..name..utils_MC('reset')..text:sub(after)
+				break
+			end
+			i = after
+		end
+	end
+	return text
+end
 
 -- ===================================================================
 -- HELMtext: given a {opening, closing} delimiter pair from FindHELM
@@ -1209,6 +1322,7 @@ parseThis = function(e, e_message)
 		while L_i <= n_lines do
 			newText = newText:trimex()
 			if newText:match('^%s$') or newText == '' then n_lines = L_i - 1; break end
+			if #newText < textLeft then textLeft = #newText end
 
 			local special_idx   = nil
 			local special_text  = ''
@@ -1253,18 +1367,26 @@ parseThis = function(e, e_message)
 						lineBreak = '-'
 					end
 				else
-					cutIdx = cutIdx + 1
+					-- Combat/URL path used to do cutIdx+1 always, which
+					-- took the first byte of the next UTF-8 glyph.
+					local nb = string_byte(newText, cutIdx + 1)
+					if nb == 32 or (nb and nb < 0x80 and string_byte(newText, cutIdx) < 0x80) then
+						cutIdx = cutIdx + 1
+					end
 				end
 				if isCombatMsg and #newText - cutIdx < 3 then
-					local last_space = utils_FindLastOf(string_sub(newText, 1, cutIdx), ' ')
-					if last_space ~= nil and last_space > par.CombatCutIdx then
-						if (cutIdx - last_space) < 15 then cutIdx = last_space - 1; lineBreak = '' end
+					local ns, pulled = wrap_back_to_space(newText, cutIdx, 15)
+					-- Original compared last_space, which is ns+1.
+					if pulled and (ns + 1) > par.CombatCutIdx then
+						cutIdx = ns
+						lineBreak = ''
 					end
 				end
 				if textLeft > cutIdx and string_byte(newText, cutIdx) ~= 32 and string_byte(newText, cutIdx + 1) ~= 32 then
-					local last_space = utils_FindLastOf(string_sub(newText, 1, cutIdx), ' ')
-					if last_space ~= nil then
-						if (cutIdx - last_space) < 12 then cutIdx = last_space - 1; lineBreak = '' end
+					local ns, pulled = wrap_back_to_space(newText, cutIdx, 12)
+					if pulled then
+						cutIdx = ns
+						lineBreak = ''
 					end
 				end
 			end
@@ -1300,7 +1422,14 @@ parseThis = function(e, e_message)
 				end
 			end
 
-			if L_i == n_lines then
+			-- Byte-length n_lines / English last_space / CompactCombat
+			-- action splits can pull the cut back even when the whole
+			-- remaining line still fits visually (Aero vs Blizzard).
+			local visual_end = utils_FindWrapCutIdx(newText, allSettings.chatLineMaxL, allSettings.cjkWidthRatio)
+			if visual_end >= #newText then
+				cutIdx = #newText
+				lineBreak = ''
+			elseif L_i == n_lines then
 				if string_byte(newText, cutIdx) ~= 32 and cutIdx < textLeft then
 					if not isCombatMsg and urlText == '' and string_byte(newText, cutIdx) ~= 32 and cutIdx < #newText and string_byte(newText, cutIdx + 1) ~= 32 then
 						-- JP fork: same ASCII-only hyphen as above.
@@ -1312,11 +1441,15 @@ parseThis = function(e, e_message)
 							lineBreak = '-'
 						end
 					else
-						cutIdx = cutIdx + 1
+						local nb = string_byte(newText, cutIdx + 1)
+						if nb == 32 or (nb and nb < 0x80 and string_byte(newText, cutIdx) < 0x80) then
+							cutIdx = cutIdx + 1
+						end
 					end
-					local last_space = utils_FindLastOf(string_sub(newText, 1, cutIdx), ' ')
-					if last_space ~= nil then
-						if (cutIdx - last_space) < 12 then cutIdx = last_space - 1; lineBreak = '' end
+					local ns, pulled = wrap_back_to_space(newText, cutIdx, 12)
+					if pulled then
+						cutIdx = ns
+						lineBreak = ''
 					end
 					n_lines = n_lines + 1
 				end
@@ -1326,14 +1459,18 @@ parseThis = function(e, e_message)
 						auxURL_text = '[link]'
 					else
 						cutIdx = math_min(cutIdx, textLeft - 1)
-						local last_space = utils_FindLastOf(string_sub(newText, 1, cutIdx), ' ')
-						if last_space ~= nil then
-							if (cutIdx - last_space) < 12 then cutIdx = last_space - 1; lineBreak = '' end
+						local ns, pulled = wrap_back_to_space(newText, cutIdx, 12)
+						if pulled then
+							cutIdx = ns
+							lineBreak = ''
 						end
 						n_lines = n_lines + 1
 					end
 				end
 			end
+
+			cutIdx = utils_AlignUtf8Cut(newText, cutIdx)
+			if cutIdx < 1 then cutIdx = math_min(textLeft, #newText) end
 
 			-- MCList accumulates {start, end, color} tuples that
 			-- HandleSpecial / FindHELM / CheckSpecial / actor handling
@@ -1461,7 +1598,8 @@ parseThis = function(e, e_message)
 			-- text where 2-byte \x1E\NN / \x1F\NN escapes are still
 			-- present.  If we expanded those to 14-byte MC tokens
 			-- first, the MCList offsets would be wrong.
-			if fcMarkingActive and (#MCList > 0 or par.handled_actors) then
+			if fcMarkingActive and (#MCList > 0 or par.handled_actors
+				or (allSettings.CompactCombat[1] and isCombatMsg)) then
 				local mctext = buf1.text[#buf1.text]
 				table.sort(MCList, function(a, b) return a[1] < b[1] end)
 				for i = 1, #MCList do
@@ -1475,6 +1613,9 @@ parseThis = function(e, e_message)
 
 				if allSettings.CompactCombat[1] then
 					mctext = HandleActors(mctext, special_color)
+					if isCombatMsg then
+						mctext = M.ColorPartyNames(mctext)
+					end
 				end
 
 				buf1.text[#buf1.text] = utils_MCCheck(mctext)

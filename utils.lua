@@ -40,6 +40,7 @@ ffi.cdef[[
     void memcpy(void* dest, const void* src, size_t n);
 
     static const unsigned int CF_TEXT = 1;
+    static const unsigned int CF_UNICODETEXT = 13;
     static const unsigned int GMEM_MOVEABLE = 0x0002;
     static const unsigned int GMEM_ZEROINIT = 0x0040;
 
@@ -567,36 +568,60 @@ end
 -- Win32 clipboard
 -- ================================================================
 
+-- Japanese Windows treats CF_TEXT as CP932.  Putting UTF-8 there
+-- pastes as mojibake (e.g. エミネンス → 繧ｨ繝溘ロ繝ｳ繧ｹ).  Offer
+-- CF_UNICODETEXT plus a CP932 CF_TEXT for FFXI / older apps.
+local function clipboard_give(format, bytes, nbytes)
+	local h = kernel32.GlobalAlloc(ffi.C.GMEM_MOVEABLE, nbytes)
+	if h == nil then return false end
+	local p = kernel32.GlobalLock(h)
+	if p == nil then return false end
+	ffi.C.memcpy(p, bytes, nbytes)
+	kernel32.GlobalUnlock(h)
+	return user32.SetClipboardData(format, h) ~= nil
+end
+
 utils.SetClipboardText = function(text)
+	text = tostring(text or '')
 	if user32.OpenClipboard(nil) == 0 then return end
 	if user32.EmptyClipboard() == 0 then
 		user32.CloseClipboard()
 		return
 	end
 
-	local size = ffi.C.strlen(text) + 1
-	local hGlobal = kernel32.GlobalAlloc(ffi.C.GMEM_MOVEABLE, size)
-	if hGlobal == nil then
-		user32.CloseClipboard()
-		return
+	local src = ffi.new('char[?]', #text + 1)
+	ffi.copy(src, text)
+	local wlen = ffi.C.MultiByteToWideChar(65001, 0, src, -1, nil, 0)
+	if wlen and wlen > 0 then
+		local wbuf = ffi.new('wchar_t[?]', wlen)
+		ffi.C.MultiByteToWideChar(65001, 0, src, -1, wbuf, wlen)
+		clipboard_give(ffi.C.CF_UNICODETEXT, wbuf, wlen * 2)
 	end
 
-	local pGlobal = kernel32.GlobalLock(hGlobal)
-	if pGlobal == nil then
-		kernel32.GlobalUnlock(hGlobal)
-		user32.CloseClipboard()
-		return
+	local ansi = text
+	if text:find('[\128-\255]') then
+		local ok, sj = pcall(function()
+			return encoding:UTF8_To_ShiftJIS(text)
+		end)
+		if ok and type(sj) == 'string' and sj ~= '' then ansi = sj end
 	end
-
-	ffi.C.memcpy(pGlobal, text, size)
-	kernel32.GlobalUnlock(hGlobal)
-
-	if user32.SetClipboardData(ffi.C.CF_TEXT, hGlobal) == nil then
-		user32.CloseClipboard()
-		return
-	end
+	local abuf = ffi.new('char[?]', #ansi + 1)
+	ffi.copy(abuf, ansi)
+	clipboard_give(ffi.C.CF_TEXT, abuf, #ansi + 1)
 
 	user32.CloseClipboard()
+end
+
+-- FFXI /echo is CP932.  UTF-8 Japanese here shows as mojibake in-game.
+utils.GameEcho = function(utf8text)
+	local msg = tostring(utf8text or '')
+	if msg:find('[\128-\255]') then
+		local ok, sj = pcall(function()
+			return encoding:UTF8_To_ShiftJIS(msg)
+		end)
+		if ok and type(sj) == 'string' and sj ~= '' then msg = sj end
+	end
+	AshitaCore:GetChatManager():QueueCommand(1, '/echo '..msg)
 end
 
 -- ----------------------------------------------------------------
@@ -2821,6 +2846,46 @@ utils.FindWrapCutIdx = function(s, maxCols, cjkRatio)
 	end
 
 	return last_fit
+end
+
+-- If cutIdx lands inside a UTF-8 glyph, move it to the last complete
+-- character so a wrap cannot emit a dangling lead/continuation byte
+-- (ImGui then shows U+FFFD / tofu at the break).
+utils.AlignUtf8Cut = function(s, cutIdx)
+	if not s or cutIdx == nil then return 0 end
+	local n = #s
+	if cutIdx < 1 then return 0 end
+	if cutIdx >= n then return n end
+	local b = s:byte(cutIdx)
+	local prev = cutIdx > 1 and s:byte(cutIdx - 1) or nil
+	if prev == 0x1E or prev == 0x1F then
+		return cutIdx
+	end
+	if b == 0x1E or b == 0x1F then
+		return cutIdx + 1
+	end
+	local i = cutIdx
+	if b >= 0x80 and b < 0xC0 then
+		while i > 1 do
+			local pb = s:byte(i)
+			if not (pb >= 0x80 and pb < 0xC0) then break end
+			i = i - 1
+		end
+	end
+	b = s:byte(i)
+	if b == 0x1E or b == 0x1F then
+		return math.min(i + 1, n)
+	end
+	local need = 1
+	if b >= 0xF0 then need = 4
+	elseif b >= 0xE0 then need = 3
+	elseif b >= 0xC0 then need = 2
+	end
+	local last = i + need - 1
+	if last > cutIdx then
+		return i - 1
+	end
+	return last
 end
 
 utils.CountExtraBytesT = function(s)

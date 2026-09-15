@@ -17,7 +17,17 @@ local allSettings = state.allSettings
 -- FC pipeline for combat-with-compact lines (so HandleActors WILL
 -- run and convert "\ /" to "[ ]"), so we can unconditionally emit
 -- the "\ /" delimiters here.
+-- FFXI JP combat lines use は、 (topic + ideographic comma).  Captures
+-- after は otherwise keep the comma on the next name or spell.
+local JP_IDEO_COMMA = '\227\128\129'
+local function jp_trim(s)
+	if type(s) ~= 'string' or s == '' then return s end
+	if s:sub(1, 3) == JP_IDEO_COMMA then s = s:sub(4) end
+	return (s:gsub('^%s+', ''))
+end
+
 local function wrap_action(s)
+	s = jp_trim(s)
 	return '\\'..s..'/'
 end
 
@@ -78,6 +88,7 @@ local LEN_CAST  = string_len(combatCP.CAST)
 -- in message rebuilding.
 -- ===================================================================
 local function classifyA(A)
+	A = jp_trim(A)
 	if utils_StringFindTable(A, par.party_names, nil, true) then
 		par.actor1 = A
 		return A
@@ -88,6 +99,7 @@ local function classifyA(A)
 end
 
 local function classifyB(B)
+	B = jp_trim(B)
 	if utils_StringFindTable(B, par.party_names, nil, true) then
 		if #par.actor1 > 0 then par.actorP = B else par.actor1 = B end
 		return B
