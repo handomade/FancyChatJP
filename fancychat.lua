@@ -5,7 +5,7 @@ addon.desc      = 'Fancy Chat! (JP fork)';
 addon.link      = 'https://github.com/handomade/FancyChatJP';
 
 -- FancyChatJP versions independently of upstream (Arielfy 1.0.YYMMDDR).
-local ver = '1.0.0'
+local ver = '1.0.1'
 addon.version = ver
 
 --[[

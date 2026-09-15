@@ -857,20 +857,82 @@ utils.FfoSearchQueryFromUrl = function(url)
 	return raw
 end
 
+-- Drop a <div ...needle...> ... </div> including nested divs.
+local function strip_div_containing(html, needle)
+	local i = 1
+	while true do
+		local s = html:find('<div[^>]*'..needle, i)
+		if not s then break end
+		local gt = html:find('>', s, true)
+		if not gt then break end
+		local depth, p = 1, gt + 1
+		local close
+		while p <= #html and depth > 0 do
+			local nopen = html:find('<div', p, true)
+			local nclose = html:find('</div>', p, true)
+			if not nclose then break end
+			if nopen and nopen < nclose then
+				depth = depth + 1
+				p = (html:find('>', nopen, true) or nopen) + 1
+			else
+				depth = depth - 1
+				if depth == 0 then
+					close = nclose + 5
+					break
+				end
+				p = nclose + 6
+			end
+		end
+		if not close then
+			html = html:sub(1, s - 1)
+			break
+		end
+		html = html:sub(1, s - 1)..html:sub(close + 1)
+		i = s
+	end
+	return html
+end
+
 -- Strip a wiki.ffo.jp article down to plain text for GuideMe.
+-- Those pages use Bootstrap <div> for layout and <br> for lines;
+-- treating every div as a paragraph left huge gaps vs the browser.
 utils.GetFfoWikiBody = function(html, url, http_get)
 	if not html or html == '' then return nil end
 	local start = html:find('<h1 class="title">', 1, true)
 	if not start then start = html:find('<h1', 1, true) end
 	if not start then return nil end
-	local stop = html:find('<footer', start, true)
+	local stop = html:find('<hr class="comment"', start, true)
+		or html:find('<footer', start, true)
 		or html:find('id="footer"', start, true)
 		or html:find('class="footer"', start, true)
 		or html:find('</body>', start, true)
 	local chunk = html:sub(start, stop and (stop - 1) or #html)
-	chunk = chunk:gsub('<div class="offcanvas.-</div>%s*</div>', '')
+	chunk = chunk:gsub('<script.-</script>', '')
+	chunk = strip_div_containing(chunk, 'offcanvas')
+	-- Section bars: <div class="row h2/h3">title ... pencil</div>
+	chunk = chunk:gsub(
+		'<div class="row h([23])">%s*<div class="col%-auto me%-auto">(.-)</div>%s*<div class="col%-auto">.-</div>%s*</div>',
+		function(level, title)
+			title = title:gsub('<.->', ''):gsub('^%s+', ''):gsub('%s+$', '')
+			if level == '2' then return '<h2>'..title..'</h2>' end
+			return '<h3>'..title..'</h3>'
+		end)
+	chunk = chunk:gsub('<h1[^>]*>(.-)</h1>', function(t)
+		t = t:gsub('<.->', ''):gsub('^%s+', ''):gsub('%s+$', '')
+		return t..'\n'
+	end)
+	-- Layout wrappers only; do not turn them into blank lines.
+	chunk = chunk:gsub('</?[Dd][Ii][Vv][^>]*>', '')
+	chunk = chunk:gsub('>%s+<', '><')
 	local text = utils.GetWalkthrough(chunk)
 	if not text or not text:match('%S') then return nil end
+	text = text:gsub('\r\n', '\n'):gsub('\r', '\n')
+	text = text:gsub('[ \t]+\n', '\n')
+	text = text:gsub('\n[ \t]+', '\n')
+	-- <br> plus leftover source newlines became a blank line per sentence.
+	text = text:gsub('\n\n\n+', '\n\n')
+	text = text:gsub('^\n+', ''):gsub('\n+$', '')
+	if not text:match('%S') then return nil end
 	return text
 end
 
@@ -2553,6 +2615,9 @@ utils.GetWalkthrough = function(str)
 			return inner
 		end
 		if href:find('action=edit', 1, true) or href:find('redlink=1', 1, true) then
+			return inner
+		end
+		if href:find('Command=Write', 1, true) or href:find('Command=CommentPage', 1, true) then
 			return inner
 		end
 		if href:find('javascript:', 1, true) or href:find('mailto:', 1, true) then

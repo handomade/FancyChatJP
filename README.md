@@ -9,7 +9,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 | オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
 | 作者 | Arielfy（本家）、Hando（JP） |
-| バージョン | `1.0.0`（FancyChatJP 独自採番。本家の `1.0.260721R` とは別） |
+| バージョン | `1.0.1`（FancyChatJP 独自採番。本家の `1.0.260721R` とは別） |
 
 動作確認は CatsEyeXI（Ashita）上の日本語クライアントを想定しています。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -60,7 +60,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 
 GamepadNav をオンにし、修飾ボタン（初期値は LB。DirectInput では自分のパッドに取り直してください）を押しながら操作します。
 
-### 用語辞典と Wiki（1.0.0）
+### 用語辞典と Wiki（1.0.1）
 
 ゾーン検索と GuideMe から、日本語の **用語辞典（wiki.ffo.jp）** を使えます。
 

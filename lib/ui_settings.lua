@@ -1628,7 +1628,7 @@ function M.draw_settings_panel()
 			end
 
 			-- ----- Version + author line, centered, yellow -----
-			-- FancyChatJP uses its own semver (e.g. 1.0.0), not
+			-- FancyChatJP uses its own semver (e.g. 1.0.1), not
 			-- upstream's "<major>.<minor>.<YYMMDD>R" date stamp.
 			local _winW       = imgui.GetWindowWidth()
 			local _versionStr = tostring(addon.version or '')
