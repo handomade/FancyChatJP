@@ -179,6 +179,7 @@ function M.register()
 		end
 		if binding_release(GB.modifier, api, e, hat) then
 			gamepadButtons.enabled = false
+			gamepadButtons.bigScroll = 0
 			return
 		end
 
@@ -327,22 +328,50 @@ function M.register()
 			end
 		end
 
-		-- BigMode: modifier + left/right switches window 1 / 2
-		-- (only when the second chat window is enabled and the FFXI
-		-- input box is closed — otherwise left/right keep cycling
-		-- preset commands).
-		if fcw[3].BigMode and allSettings.SecondChat[1]
-			and AshitaCore:GetChatManager():IsInputOpen() == 0x00
-			and gamepadButtons.buttonsCDready then
-			if press_left then
-				set_bigmode_source(1)
-				gamepadButtons.buttonsCD = os.clock()
+		-- BigMode: modifier + D-pad.  Up/down scroll the overlay
+		-- (same as the mouse wheel).  Left/right still switch
+		-- window 1 / 2 when the second chat is enabled.  Only
+		-- while the FFXI input box is closed — otherwise the
+		-- same directions keep cycling typed / preset commands.
+		if fcw[3].BigMode
+			and AshitaCore:GetChatManager():IsInputOpen() == 0x00 then
+			if gamepadButtons.bigScroll and gamepadButtons.bigScroll ~= 0 then
+				local rel_up = binding_release(GB.historyPrev, api, e, hat)
+					or (api == 'dinput' and e.button == DINPUT_HAT_BUTTON and hat ~= 'up')
+				local rel_down = binding_release(GB.historyNext, api, e, hat)
+					or (api == 'dinput' and e.button == DINPUT_HAT_BUTTON and hat ~= 'down')
+				if (gamepadButtons.bigScroll > 0 and rel_up)
+					or (gamepadButtons.bigScroll < 0 and rel_down) then
+					gamepadButtons.bigScroll = 0
+				end
+			end
+			if press_up then
+				if gamepadButtons.bigScroll ~= 1 then
+					gamepadButtons.bigScroll = 1
+					fcw[3].ScrollDelta = 1
+					gamepadButtons.analogCD = os.clock()
+				end
 				return
 			end
-			if press_right then
-				set_bigmode_source(2)
-				gamepadButtons.buttonsCD = os.clock()
+			if press_down then
+				if gamepadButtons.bigScroll ~= -1 then
+					gamepadButtons.bigScroll = -1
+					fcw[3].ScrollDelta = -1
+					gamepadButtons.analogCD = os.clock()
+				end
 				return
+			end
+			if allSettings.SecondChat[1] and gamepadButtons.buttonsCDready then
+				if press_left then
+					set_bigmode_source(1)
+					gamepadButtons.buttonsCD = os.clock()
+					return
+				end
+				if press_right then
+					set_bigmode_source(2)
+					gamepadButtons.buttonsCD = os.clock()
+					return
+				end
 			end
 		end
 

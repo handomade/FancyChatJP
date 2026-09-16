@@ -1,13 +1,15 @@
 # Settings Reference
 
-Open the Settings panel with `/fchat settings`. It has six tabs:
+Open the Settings panel with `/fchat settings`. FancyChatJP has these tabs:
 
 1. [Chat Window](#chat-window) — visual layout, plate dimensions, second chat
 2. [Font Colors](#font-colors) — per-message-mode colors, import / export
 3. [Shortcuts](#shortcuts) — keyboard combos
 4. [Extra](#extra) — block legacy chat, filtering toggles, timestamps, alerts, hover preview, etc.
 5. [CL Filters](#cl-filters) — combat-log filter file picker
-6. [Tools](#tools) — save logs, open folders, restore legacy chat
+6. [Translate](#translate) — ASCII English chat to Japanese
+7. [Tools](#tools) — save logs, open folders, restore legacy chat
+8. Credits — original vs JP version and authors
 
 ## Chat Window
 
@@ -95,6 +97,18 @@ Combat-log filter file picker. See [Combat Filters](Combat-Filters.md) for the f
 - **Open Folder** — opens `combatfilters/` in Explorer.
 - **Enable Combat Log chat filters** — master switch.
 - A live table shows every active filter and its scope (All / All but you / All but party).
+
+## Translate
+
+FancyChatJP only. Turns all-ASCII chat (Say / Tell / Party / Linkshell, and some system English) into Japanese.
+
+- Master enable checkbox
+- Provider: MyMemory (free), DeepL, ChatGPT, Gemini. Paid providers need an API key
+- Optional protection for party names, your name, and English zone names
+- Dictionary file: `config/addons/fancychat/translate/dict.txt` (see [Data Storage](Data-Storage.md#translate-dictionary))
+- Slash toggle: `/fchat translate`
+
+`{Name}` / speaker prefixes stay on the `[翻訳]` line as original text. Other-addon tags such as `[PartyFinder]` are skipped.
 
 ## Tools
 

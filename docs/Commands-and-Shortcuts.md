@@ -13,6 +13,7 @@ All commands accept either `/fancychat` or the shorter `/fchat` as the prefix.
 | `/fchat compact` | Toggle the tab bar between expanded and compact (single-button-cycle) form |
 | `/fchat tod` | Toggle Precise Time-of-Death timestamps for combat-kill lines |
 | `/fchat ts` | Print the current time once to chat (formatted as the long-format timestamp) |
+| `/fchat translate` | Toggle ASCII chat translation to Japanese |
 | `/fchat savelogs` | Save every chat tab's current contents to `config/addons/fancychat/logs/<character>/ChatLogs_<timestamp>/` |
 | `/fchat bigmode` | Toggle the [BigMode](BigMode.md) full-screen overlay |
 

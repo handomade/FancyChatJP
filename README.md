@@ -6,10 +6,10 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 
 | | |
 | --- | --- |
-| オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) |
+| オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) `1.0.260721R` |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
-| 作者 | Arielfy（本家）、Hando（JP） |
-| バージョン | `1.0.2`（FancyChatJP 独自採番。本家の `1.0.260721R` とは別） |
+| 作者 | オリジナル: Arielfy　／　JP: Hando |
+| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.0`（FancyChatJP 独自採番） |
 
 動作確認は CatsEyeXI（Ashita）上の日本語クライアントを想定しています。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -53,7 +53,8 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 
 ### BigMode とゲームパッド
 
-- BigMode 中、第2ウィンドウが有効なら、**修飾ボタン＋左右**でウィンドウ1 / ウィンドウ2の履歴を切り替えます（タイトルに `W1` / `W2`）
+- BigMode 中、**修飾ボタン＋上下**でマウスホイールと同じ履歴スクロールです（押しっぱなし可）
+- 第2ウィンドウが有効なら、**修飾ボタン＋左右**でウィンドウ1 / ウィンドウ2の履歴を切り替えます（タイトルに `W1` / `W2`）
 - チャット入力を開いている間の左右は、本家どおりプリセットコマンドの巡回です
 - **DirectInput**（DualShock など）では、十字キーはデジタルボタンではなく **ボタン32のハット（角度）** です。左 27000 / 右 9000 / 離すと -1。Xbox の D-pad 番号（2 / 3）には割り当て直しても反応しません。ハットは自動で左右として使います
 - L2 などハット以外のボタンは、これまでどおり番号で取れます（例: L2 が 54）。割り当て待ちで十字キーを押すと `ハット 左` のように表示されます
@@ -70,6 +71,16 @@ GamepadNav をオンにし、修飾ボタン（初期値は LB。DirectInput で
 - **`/fchat ffo <検索語>`** で、用語辞典本体と同じ `search.cgi` のタイトル検索を行い、ヒット一覧を GuideMe に出します。行をクリックするとその記事をパネル内で開きます。日本語は CP932、英語名はそのまま送るので、`東ロンフォール` でも `East Ronfaure` でも検索できます
 - GuideMe の行が横に入り切らないときは折り返さず、**横スクロールバー**で読めます
 
+### チャット翻訳（1.1.0）
+
+Say / Tell / PT / LS など、**本文がすべて半角英数**の行を日本語にします。設定の **翻訳** タブでオンにし、サイト（MyMemory 無料、DeepL、ChatGPT、Gemini）を選びます。有料 API はキーを入れるとそのサイトを使います。
+
+- `{Name}` / `｛Name｝` と、コロンより前の話者名は原文のまま残します（スペース入りの名前も文字数で大凡判定）
+- `[PartyFinder]` など他アドオンの `[名前]` 付き行は訳しません
+- 同じ原文は辞書に残し、次からはネットに問い合わせません。連続ログは数件まとめて投げます
+- パーティ名・自分の名前・英語ゾーン名は訳さないようにできます。知らない人名までは自動では判別できません
+- `/fchat translate` でオン／オフ
+
 ### 日本語ログとクリップボード（1.0.2）
 
 - チャット行のコピーは Unicode と CP932 の両方をクリップボードへ入れる。貼り付けと `/echo` の確認メッセージが UTF-8 のまま CP932 扱いされて文字化けしないようにした
@@ -83,6 +94,7 @@ GamepadNav をオンにし、修飾ボタン（初期値は LB。DirectInput で
 | --- | --- |
 | `/fchat cjkratio [1.50-2.00]` | 全角 / 半角の折り返し比率 |
 | `/fchat ffo <検索語>` | 用語辞典タイトル検索（GuideMe） |
+| `/fchat translate` | チャット翻訳のオン／オフ |
 
 ---
 
@@ -155,6 +167,7 @@ font0.is_jp=true
 | `/fchat ts` | 現在時刻をチャットに出す |
 | `/fchat cjkratio [1.50-2.00]` | 日本語折り返し比率（JP） |
 | `/fchat ffo <検索語>` | 用語辞典を検索し、結果を GuideMe に表示 |
+| `/fchat translate` | チャット翻訳のオン / オフ |
 
 ---
 
@@ -191,6 +204,7 @@ Xbox パッドでの初期割り当て（本家と同じ）:
 | 送信 | A | 入力欄が開いている |
 | 入力履歴 | 十字 上 / 下 | 入力欄が開いている |
 | プリセット（`!mog` など） | 十字 左 / 右 | 入力欄が開いている |
+| BigMode で履歴スクロール | 十字 上 / 下 | BigMode 中、入力欄が閉じている（JP） |
 | BigMode でウィンドウ1 / 2 | 十字 左 / 右 | BigMode 中、第2ウィンドウあり、入力欄が閉じている（JP） |
 
 DirectInput では初期の Xbox 番号と物理ボタンが一致しません。設定画面の「最後に受けた入力」を見ながら、修飾や BigMode などを取り直してください。十字キーはハットとして自動認識するので、左右をボタン番号に割り当てる必要はありません。
@@ -206,7 +220,9 @@ DirectInput では初期の Xbox 番号と物理ボタンが一致しません�
 3. **ショートカット** — 非表示 / BigMode / タブ送り（初期はオフ）
 4. **その他** — 旧チャット遮断、戦闘フィルタ、コンパクト戦闘、タイムスタンプ、通知音 など
 5. **CL フィルタ** — `combatfilters/*.txt`
-6. **ツール** — ログ保存、マニュアル、旧チャット復元
+6. **翻訳** — ASCII チャットの日本語化、サイトと API キー、辞書
+7. **ツール** — ログ保存、マニュアル、旧チャット復元
+8. **クレジット** — オリジナル版と JP 版のバージョン・作者
 
 ---
 
@@ -216,6 +232,7 @@ DirectInput では初期の Xbox 番号と物理ボタンが一致しません�
 - **色セット** — `addons/fancychat/chatcolors/`
 - **戦闘フィルタ** — `addons/fancychat/combatfilters/*.txt`
 - **保存ログ** — `Ashita/config/addons/fancychat/logs/<キャラ名>/ChatLogs_<日時>/`
+- **翻訳辞書** — `Ashita/config/addons/fancychat/translate/dict.txt`
 - **通知音** — `addons/fancychat/notifications/*.wav`
 - **マップ** — `addons/fancychat/maps/<ゾーン>/<分類>/`
 
@@ -237,7 +254,8 @@ Lua ソースに日本語を直書きすると、Shift-JIS な環境で壊れま
 
 ## クレジット
 
-- **Arielfy** — [FancyChat](https://github.com/ariel-logos/Fancychat)
+- **Arielfy** — [FancyChat](https://github.com/ariel-logos/Fancychat)（オリジナル `1.0.260721R`）
+- **Hando** — FancyChatJP `1.1.0`
 - **[Ashita](https://www.ashitaxi.com/)** — フレームワーク
 - **atom0s** — `targets.lua` とエンティティ解決
 - **Thorny** — gdifonts

@@ -22,6 +22,17 @@ BigMode is a full-screen, large-text overlay of your chat history. Useful for re
 
 While BigMode is active the regular chat window is hidden. Toggle BigMode again to dismiss it and return to the normal layout.
 
+## Gamepad (FancyChatJP)
+
+Hold the navigation modifier (default LB) while BigMode is open and the FFXI input box is closed:
+
+- **D-pad up / down** — scroll history, same as the mouse wheel. Hold to keep scrolling.
+- **D-pad left / right** — switch the overlay between chat window 1 and window 2 when the second window is enabled (title shows `W1` / `W2`).
+
+With the input box open, up/down still cycle typed history and left/right still cycle preset commands.
+
+The analog sticks still scroll while the modifier is held (left stick = window 1 / BigMode, right stick = window 2).
+
 ## See also
 
 - [The Chat Window](The-Chat-Window.md) — the regular plate that BigMode overlays

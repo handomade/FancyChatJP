@@ -220,6 +220,15 @@ function M.register()
 				print('Current Time: '..ts_str)
 				return
 			end
+			if args[2] == 'translate' then
+				if not allSettings.TranslateEnabled then
+					allSettings.TranslateEnabled = T{false}
+				end
+				allSettings.TranslateEnabled[1] = not allSettings.TranslateEnabled[1]
+				SaveSettings()
+				print('FancyChat: translate '..(allSettings.TranslateEnabled[1] and 'on' or 'off'))
+				return
+			end
 			if args[2] == 'cjkratio' then
 				if #args == 2 then
 					print(string.format('FancyChat: cjkWidthRatio = %.2f', allSettings.cjkWidthRatio or 1.70))

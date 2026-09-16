@@ -1,11 +1,15 @@
 addon.name      = 'fancychat';
-addon.author    = 'Arielfy, Hando';
---addon.version   = '0.9';
+addon.author    = 'Hando';
 addon.desc      = 'Fancy Chat! (JP fork)';
 addon.link      = 'https://github.com/handomade/FancyChatJP';
 
--- FancyChatJP versions independently of upstream (Arielfy 1.0.YYMMDDR).
-local ver = '1.0.2'
+-- Original FancyChat (Arielfy) uses a date stamp.  FancyChatJP uses
+-- its own semver and does not track upstream's 1.0.YYMMDDR.
+addon.orig_author  = 'Arielfy'
+addon.orig_version = '1.0.260721R'
+addon.orig_link    = 'https://github.com/ariel-logos/Fancychat'
+
+local ver = '1.1.0'
 addon.version = ver
 
 --[[

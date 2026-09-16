@@ -14,6 +14,7 @@ Fancychat is an add-on for the Ashita FFXI loader that replaces the native chat 
 - [Zone Search & Maps](Zone-Search-and-Maps.md) — Ctrl-click a zone name in chat for `/sea`, wiki links, and bundled FFXI zone maps
 - [BigMode](BigMode.md) — full-screen chat history overlay
 - [Companion Panels](Companion-Panels.md) — GuideMe (wiki viewer) + Notepad
+- ASCII chat translation to Japanese (Settings → Translate; `/fchat translate`)
 
 ## Configuration
 

@@ -436,6 +436,11 @@ function M.default_settings()
 		boostAlert           = T{false},
 		Alert                = T{false},
 		alertOptions         = {false, true, true, true, true},
+		-- ASCII chat -> Japanese.  Provider names are English keys.
+		TranslateEnabled     = T{false},
+		TranslateProvider    = 'MyMemory',
+		TranslateApiKey      = T{''},
+		TranslateProtectNames = T{true},
 		firstLoadMessage     = T{false},
 		settingsOpened       = T{false},
 		fontSettings = {
@@ -585,6 +590,7 @@ function M.default_gamepad()
 		enabled         = false,
 		scroll1         = 0,
 		scroll2         = 0,
+		bigScroll       = 0,
 		buttonsCD       = 0,
 		buttonsCDready  = false,
 		analogCD        = 0,

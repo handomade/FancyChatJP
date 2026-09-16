@@ -191,6 +191,7 @@ M.par = {
 	isDamage        = false,
 	handled_actors  = false,
 	party_names     = {},
+	skipTranslate   = false,
 }
 
 -- Chat-buffer state.

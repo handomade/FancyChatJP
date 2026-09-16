@@ -16,6 +16,7 @@ local state          = require('lib.state')
 local ui_panels      = require('lib.ui_panels')
 local ui_settings    = require('lib.ui_settings')
 local combat_packets = require('lib.combat_packets')
+local translate      = require('lib.translate')
 local ffi            = require('ffi')
 
 -- UDP loopback broadcast of the chat anchor for the Compass addon.
@@ -172,6 +173,7 @@ function M.register()
 		if allSettings.PacketFilterEnabled2[1] then
 			pcall(combat_packets.refresh_snapshot)
 		end
+		pcall(translate.poll)
 		-- Per-frame caches (avoids repeated lookups).
 		local fcw1, fcw2, fcw3 = fcw[1], fcw[2], fcw[3]
 		local _fh  = allSettings.fontSettings.font_height

@@ -392,6 +392,21 @@ function M.register()
 		if not allSettings.HideCombatFromAll2 then
 			allSettings.HideCombatFromAll2 = T{false}
 		end
+		if not allSettings.TranslateEnabled then
+			allSettings.TranslateEnabled = T{false}
+		end
+		if not allSettings.TranslateProvider then
+			allSettings.TranslateProvider = 'MyMemory'
+		end
+		if not allSettings.TranslateApiKey then
+			allSettings.TranslateApiKey = T{''}
+		elseif type(allSettings.TranslateApiKey) ~= 'table' then
+			allSettings.TranslateApiKey = T{tostring(allSettings.TranslateApiKey)}
+		end
+		if not allSettings.TranslateProtectNames then
+			allSettings.TranslateProtectNames = T{true}
+		end
+		pcall(function() require('lib.translate').load_dict() end)
 
 		-- Mirror persisted settings into the live `set.*` working copy used
 		-- by the Settings UI's pending-edit fields.

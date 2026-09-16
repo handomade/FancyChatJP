@@ -1,5 +1,5 @@
--- lib/ui_settings.lua  Settings tabbed window.  Six tabs: Chat
--- Window, Font Colors, Shortcuts, Extra, CL Filters, Tools.
+-- lib/ui_settings.lua  Settings tabbed window.  Tabs: Chat
+-- Window, Font Colors, Shortcuts, Extra, Filters, Translate, Tools, Credits.
 
 require('common')
 local imgui     = require('imgui')
@@ -7,6 +7,7 @@ local imguiWrap = require('imguiWrap')
 local utils     = require('utils')
 local help      = require('help')
 local state     = require('lib.state')
+local translate = require('lib.translate')
 
 local fcw            = state.fcw
 local tab            = state.tab
@@ -899,7 +900,7 @@ function M.draw_settings_panel()
 			draw_gp_row('\227\130\191\227\131\150\229\136\135\230\155\191\239\188\136\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1662\239\188\137',     'cycleSecondaryTab')
 			draw_gp_row('\230\156\128\230\150\176\232\161\140\227\129\184\227\130\184\227\131\163\227\131\179\227\131\151',           'snapToBottom')
 			draw_gp_row('BigMode \227\130\146\229\136\135\230\155\191',             'toggleBigMode',
-				'BigMode \228\184\173\227\129\175\227\128\129\228\191\174\233\163\190\227\131\156\227\130\191\227\131\179\239\188\139\229\183\166\229\143\179\227\129\167\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1661\227\128\129\229\143\179\227\129\167\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1662\227\129\171\229\136\135\227\130\138\230\155\191\227\129\136\227\129\190\227\129\153\227\128\130\231\172\1722\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\140\230\156\137\229\138\185\227\129\174\227\129\168\227\129\141\227\129\171\228\189\191\227\129\136\227\129\190\227\129\153\227\128\130')
+				'BigMode \228\184\173\227\129\175\227\128\129\228\191\174\233\163\190\227\131\156\227\130\191\227\131\179\239\188\139\228\184\138\228\184\139\227\129\167\229\177\165\230\173\180\227\130\146\227\130\185\227\130\175\227\131\173\227\131\188\227\131\171\227\129\151\227\128\129\229\183\166\229\143\179\227\129\167\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1661\227\128\129\229\143\179\227\129\167\227\130\166\227\130\163\227\131\179\227\131\137\227\130\1662\227\129\171\229\136\135\227\130\138\230\155\191\227\129\136\227\129\190\227\129\153\227\128\130\231\172\1722\227\130\166\227\130\163\227\131\179\227\131\137\227\130\166\227\129\140\230\156\137\229\138\185\227\129\174\227\129\168\227\129\141\227\129\171\228\189\191\227\129\136\227\129\190\227\129\153\227\128\130')
 			draw_gp_row('FFXI\227\131\129\227\131\163\227\131\131\227\131\136\229\133\165\229\138\155\227\130\146\233\150\139\227\129\143',     'openChatInput')
 			draw_gp_row('\229\133\165\229\138\155\227\130\146\227\130\179\227\131\158\227\131\179\227\131\137\227\129\168\227\129\151\227\129\166\233\128\129\228\191\161',   'submitInput',
 				'\227\129\132\227\129\190 FFXI \227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\229\133\165\229\138\155\230\172\132\227\129\171\227\129\130\227\130\139\232\161\140\227\130\146\233\128\129\228\191\161\227\129\151\227\129\190\227\129\153\227\128\130')
@@ -1517,6 +1518,107 @@ function M.draw_settings_panel()
 		end
 
 		----------------------------------------------------------------
+		-- Tab: Translate
+		----------------------------------------------------------------
+		if imgui.BeginTabItem('\231\191\187\232\168\179', nil) then
+			imguiWrap.BeginChild('##Translate Child',
+				{(setsizex * 3.8 / 3.9) - (12 * (1 - (setsizex * 3.8 / 1920))) - 3, setsizey * 2.7 / 2.8 - 60}, true)
+
+			imgui.Dummy({0, 5})
+			imgui.Dummy({5, 0}) imgui.SameLine()
+			if imgui.Checkbox('\231\191\187\232\168\179\227\129\153\227\130\139', {allSettings.TranslateEnabled[1]}) then
+				allSettings.TranslateEnabled[1] = not allSettings.TranslateEnabled[1]
+				SaveSettings()
+			end
+			AddTooltip('\229\141\138\232\167\146\232\139\177\230\149\176\227\129\160\227\129\145\227\129\174\227\131\129\227\131\163\227\131\131\227\131\136\227\130\146\230\151\165\230\156\172\232\170\158\227\129\171\227\129\151\227\129\190\227\129\153\227\128\130\232\190\158\230\155\184\227\129\171\227\129\130\227\130\140\227\129\176\227\129\157\227\130\140\227\130\146\228\189\191\227\129\132\227\128\129\227\129\170\227\129\145\227\130\140\227\129\176\227\131\141\227\131\131\227\131\136\227\129\139\227\130\137\229\143\150\227\130\138\227\129\190\227\129\153\227\128\130', 4, 1)
+
+			imgui.Dummy({0, 12})
+			imgui.Dummy({5, 0}) imgui.SameLine()
+			imgui.AlignTextToFramePadding()
+			imgui.Text('\231\191\187\232\168\179\227\130\181\227\130\164\227\131\136:')
+			imgui.SameLine()
+			local prov = allSettings.TranslateProvider or 'MyMemory'
+			local prov_names = {
+				MyMemory = 'MyMemory\239\188\136\231\132\161\230\150\153\239\188\137',
+				DeepL    = 'DeepL',
+				ChatGPT  = 'ChatGPT',
+				Gemini   = 'Gemini',
+			}
+			local prov_label = prov_names[prov] or prov
+			imgui.SetNextItemWidth(220)
+			if imgui.BeginCombo('##TranslateProvider', prov_label, ImGuiComboFlags_None) then
+				local order = translate.PROVIDERS
+				for i = 1, #order do
+					local id = order[i]
+					local lab = prov_names[id] or id
+					if imgui.Selectable(lab, prov == id) then
+						allSettings.TranslateProvider = id
+						SaveSettings()
+					end
+				end
+				imgui.EndCombo()
+			end
+			AddTooltip('MyMemory \227\129\175\227\130\173\227\131\188\228\184\141\232\166\129\227\129\167\227\129\153\227\128\130ChatGPT / Gemini / DeepL \227\129\175\228\184\139\227\129\174 API \227\130\173\227\131\188\227\129\140\229\191\133\232\166\129\227\129\167\227\129\153\227\128\130', 4, 1)
+
+			imgui.Dummy({0, 8})
+			imgui.Dummy({5, 0}) imgui.SameLine()
+			imgui.AlignTextToFramePadding()
+			imgui.Text('API\227\130\173\227\131\188:')
+			imgui.SameLine()
+			if not allSettings.TranslateApiKey or type(allSettings.TranslateApiKey) ~= 'table' then
+				allSettings.TranslateApiKey = T{''}
+			end
+			imgui.SetNextItemWidth(math.max(180, setsizex - 180))
+			local keyFlags = ImGuiInputTextFlags_AutoSelectAll
+			if ImGuiInputTextFlags_Password then
+				keyFlags = bit.bor(keyFlags, ImGuiInputTextFlags_Password)
+			end
+			if imgui.InputText('##TranslateApiKey', allSettings.TranslateApiKey, 256, keyFlags) then
+				SaveSettings()
+			end
+			AddTooltip('\227\129\147\227\129\174\227\130\173\227\131\163\227\131\169\227\129\174 settings.json \227\129\171\228\191\157\229\173\152\227\129\149\227\130\140\227\129\190\227\129\153\227\128\130\231\169\186\230\172\132\227\129\174\227\129\168\227\129\141\227\129\175 MyMemory \227\130\146\228\189\191\227\129\163\227\129\166\227\129\143\227\129\160\227\129\149\227\129\132\227\128\130', 4, 1)
+
+			if prov ~= 'MyMemory' and (not allSettings.TranslateApiKey[1] or allSettings.TranslateApiKey[1] == '') then
+				imgui.Dummy({5, 0}) imgui.SameLine()
+				imgui.TextColored({1.0, 0.55, 0.35, 1.0}, '\227\129\147\227\129\174\227\130\181\227\130\164\227\131\136\227\129\171\227\129\175 API \227\130\173\227\131\188\227\129\140\229\191\133\232\166\129\227\129\167\227\129\153\227\128\130')
+			end
+
+			imgui.Dummy({0, 10})
+			imgui.Dummy({5, 0}) imgui.SameLine()
+			if imgui.Checkbox('\227\131\145\227\131\188\227\131\134\227\130\163\229\144\141\227\131\187\232\135\170\229\136\134\227\129\174\229\144\141\229\137\141\227\131\187\227\130\190\227\131\188\227\131\179\229\144\141\227\129\175\232\168\179\227\129\149\227\129\170\227\129\132', {allSettings.TranslateProtectNames[1]}) then
+				allSettings.TranslateProtectNames[1] = not allSettings.TranslateProtectNames[1]
+				SaveSettings()
+			end
+			AddTooltip('\227\131\129\227\131\163\227\131\131\227\131\136\227\129\171\229\135\186\227\129\166\227\129\141\227\129\159\230\151\162\231\159\165\227\129\174\229\144\141\229\137\141\227\130\146\227\131\136\227\131\188\227\130\175\227\131\179\227\129\171\231\189\174\227\129\141\230\143\155\227\129\136\227\129\166\227\129\139\227\130\137\232\168\179\227\129\151\227\129\190\227\129\153\227\128\130\231\159\165\227\130\137\227\129\170\227\129\132\228\186\186\229\144\141\227\129\190\227\129\167\227\129\175\229\136\164\229\136\165\227\129\167\227\129\141\227\129\190\227\129\155\227\130\147\227\128\130', 4, 1)
+
+			imgui.Dummy({0, 14})
+			imgui.Dummy({5, 0}) imgui.SameLine()
+			imgui.TextWrapped('\229\175\190\232\177\161\227\129\175 Say / Shout / Tell / PT / LS / Emote / Unity \227\129\170\227\129\169\227\128\129\230\156\172\230\150\135\227\129\140\227\129\153\227\129\185\227\129\166 ASCII \227\129\174\232\161\140\227\129\167\227\129\153\227\128\130\229\133\136\233\160\173\227\129\174\239\189\155\226\128\166\239\189\157\227\129\175\233\163\155\227\129\176\227\129\151\227\128\129\239\188\154\227\130\136\227\130\138\229\137\141\239\188\136\232\169\177\232\128\133\229\144\141\239\188\137\227\130\130\232\168\179\227\129\151\227\129\190\227\129\155\227\130\147\227\128\130')
+
+			imgui.Dummy({0, 8})
+			imgui.Dummy({5, 0}) imgui.SameLine()
+			imgui.Text('\232\190\158\230\155\184: '..tostring(translate.dict_count())..' \228\187\182')
+			imgui.SameLine()
+			if imgui.Button('\232\190\158\230\155\184\227\131\149\227\130\169\227\131\171\227\131\128\227\130\146\233\150\139\227\129\143##tr_open') then
+				translate.open_dict_folder()
+			end
+			imgui.SameLine()
+			if imgui.Button('\232\190\158\230\155\184\227\130\146\231\169\186\227\129\171\227\129\153\227\130\139##tr_clear') then
+				translate.clear_dict()
+			end
+
+			local err = translate.last_error()
+			if err and err ~= '' then
+				imgui.Dummy({0, 8})
+				imgui.Dummy({5, 0}) imgui.SameLine()
+				imgui.TextColored({1.0, 0.4, 0.4, 1.0}, err)
+			end
+
+			imgui.EndChild()
+			imgui.EndTabItem()
+		end
+
+		----------------------------------------------------------------
 		-- Tab: Tools
 		----------------------------------------------------------------
 		if imgui.BeginTabItem('\227\131\132\227\131\188\227\131\171', nil) then
@@ -1627,23 +1729,32 @@ function M.draw_settings_panel()
 				imgui.Dummy({0, 2})
 			end
 
-			-- ----- Version + author line, centered, yellow -----
-			-- FancyChatJP uses its own semver (e.g. 1.0.2), not
-			-- upstream's "<major>.<minor>.<YYMMDD>R" date stamp.
+			-- ----- Version + author: original vs JP, centered -----
 			local _winW       = imgui.GetWindowWidth()
-			local _versionStr = tostring(addon.version or '')
+			local _YELLOW     = {1.0, 0.92, 0.16, 1.0}
+			local _HEAD       = {0.50, 0.78, 0.95, 1.0}
+			local _origVer    = tostring(addon.orig_version or '1.0.260721R')
+			local _origAuthor = tostring(addon.orig_author or 'Arielfy')
+			local _jpVer      = tostring(addon.version or '')
+			local _jpAuthor   = tostring(addon.author or 'Hando')
 
-			local _YELLOW = {1.0, 0.92, 0.16, 1.0}
+			local function _credit_center(color, text)
+				local w = imgui.CalcTextSize(text)
+				imgui.SetCursorPosX((_winW - w) * 0.5)
+				imgui.TextColored(color, text)
+			end
 
-			local _line1 = '\227\131\144\227\131\188\227\130\184\227\131\167\227\131\179: '..(_versionStr ~= '' and _versionStr or '?')
-			local _w1    = imgui.CalcTextSize(_line1)
-			imgui.SetCursorPosX((_winW - _w1) * 0.5)
-			imgui.TextColored(_YELLOW, _line1)
+			-- オリジナル版
+			_credit_center(_HEAD, '\227\130\170\227\131\170\227\130\184\227\131\138\227\131\171\231\137\136')
+			_credit_center(_YELLOW, '\227\131\144\227\131\188\227\130\184\227\131\167\227\131\179: '.._origVer)
+			_credit_center(_YELLOW, '\228\189\156\230\136\144\232\128\133 '.._origAuthor)
 
-			local _line2 = '\228\189\156\230\136\144\232\128\133 Arielfy / Hando'
-			local _w2    = imgui.CalcTextSize(_line2)
-			imgui.SetCursorPosX((_winW - _w2) * 0.5)
-			imgui.TextColored(_YELLOW, _line2)
+			imgui.Dummy({0, 10})
+
+			-- JP版
+			_credit_center(_HEAD, 'JP\231\137\136')
+			_credit_center(_YELLOW, '\227\131\144\227\131\188\227\130\184\227\131\167\227\131\179: '..(_jpVer ~= '' and _jpVer or '?'))
+			_credit_center(_YELLOW, '\228\189\156\230\136\144\232\128\133 '.._jpAuthor)
 
 			imgui.Dummy({0, 15})
 

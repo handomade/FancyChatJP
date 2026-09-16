@@ -217,7 +217,16 @@ function M.draw()
 		-------------------------------------------------------------
 		-- Mouse-wheel scroll.  Shift held lets one wheel tick jump
 		-- 5 lines via GoToLine instead of one-by-one ScrollLines.
+		-- Held D-pad up/down (lib/input.lua) repeats here so a
+		-- press-and-hold keeps scrolling without extra pad events.
 		-------------------------------------------------------------
+		if gamepadButtons.enabled and (gamepadButtons.bigScroll or 0) ~= 0 then
+			if os.clock() - (gamepadButtons.analogCD or 0) > 0.10 then
+				fcw[3].ScrollDelta = gamepadButtons.bigScroll
+				gamepadButtons.analogCD = os.clock()
+			end
+		end
+
 		if (imguiWrap.IsWindowHovered(ImGuiHoveredFlags_RectOnly) or gamepadButtons.enabled)
 			and not fcw[1].BufferBusy then
 

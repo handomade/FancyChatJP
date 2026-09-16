@@ -52,9 +52,10 @@
 ]]
 
 require('common')
-local utils   = require('utils')
-local targets = require('targets')
-local state   = require('lib.state')
+local utils      = require('utils')
+local targets    = require('targets')
+local state      = require('lib.state')
+local translate  = require('lib.translate')
 
 local fcw         = state.fcw
 local uiw         = state.uiw
@@ -577,6 +578,24 @@ local function wrap_back_to_space(s, cutIdx, limit)
 	if (cutIdx - last_space) >= limit then return cutIdx, false end
 	if not ascii_bytes(s, last_space + 1, cutIdx) then return cutIdx, false end
 	return last_space - 1, true
+end
+
+-- NPC JP lines often contain vanilla halfwidth spaces as wrap
+-- hints.  Treat those as break points instead of overflowing.
+local function text_has_cjk(s)
+	for i = 1, #s do
+		local b = s:byte(i)
+		if b and b >= 0xE0 then return true end
+	end
+	return false
+end
+
+local function wrap_cjk_at_space(s, cutIdx)
+	local last_space = utils_FindLastOf(string_sub(s, 1, cutIdx), ' ')
+	if not last_space or last_space < 8 or last_space >= cutIdx then
+		return cutIdx, false
+	end
+	return last_space, true
 end
 
 -- ===================================================================
@@ -1328,10 +1347,20 @@ parseThis = function(e, e_message)
 			local special_text  = ''
 			local special_color = ''
 
+			local cjk_line = text_has_cjk(newText)
+			local wrap_max = allSettings.chatLineMaxL
+			-- Estimate vs GDI: CJK+spaces glued from vanilla wraps
+			-- overflow if we use the full column budget.
+			if cjk_line and newText:find(' ', 1, true) then
+				wrap_max = math_max(24, math_floor(wrap_max * 0.78 + 0.5))
+			elseif cjk_line then
+				wrap_max = math_max(24, wrap_max - 8)
+			end
+
 			local cutIdx = math_min(
-				utils_FindWrapCutIdx(newText, allSettings.chatLineMaxL, allSettings.cjkWidthRatio),
+				utils_FindWrapCutIdx(newText, wrap_max, allSettings.cjkWidthRatio),
 				textLeft, #newText)
-			if cutIdx < 1 then cutIdx = math_min(textLeft, #newText) end
+			if cutIdx < 1 then cutIdx = 1 end
 
 			-- Atomicity for legacy colour escapes: never let a slice
 			-- end on the lead byte of \x1E\NN or \x1F\NN with the
@@ -1425,10 +1454,16 @@ parseThis = function(e, e_message)
 			-- Byte-length n_lines / English last_space / CompactCombat
 			-- action splits can pull the cut back even when the whole
 			-- remaining line still fits visually (Aero vs Blizzard).
-			local visual_end = utils_FindWrapCutIdx(newText, allSettings.chatLineMaxL, allSettings.cjkWidthRatio)
+			-- Do not expand CJK lines that still contain ASCII spaces:
+			-- those spaces are vanilla wrap points and expanding past
+			-- them overflows the window.
+			local visual_end = utils_FindWrapCutIdx(newText, wrap_max, allSettings.cjkWidthRatio)
+			local cjk_spaces = cjk_line and newText:find(' ', 1, true)
 			if visual_end >= #newText then
-				cutIdx = #newText
-				lineBreak = ''
+				if not cjk_spaces then
+					cutIdx = #newText
+					lineBreak = ''
+				end
 			elseif L_i == n_lines then
 				if string_byte(newText, cutIdx) ~= 32 and cutIdx < textLeft then
 					if not isCombatMsg and urlText == '' and string_byte(newText, cutIdx) ~= 32 and cutIdx < #newText and string_byte(newText, cutIdx + 1) ~= 32 then
@@ -1469,8 +1504,16 @@ parseThis = function(e, e_message)
 				end
 			end
 
+			if cjk_spaces and cutIdx < #newText then
+				local ns, pulled = wrap_cjk_at_space(newText, cutIdx)
+				if pulled then
+					cutIdx = ns
+					lineBreak = ''
+				end
+			end
+
 			cutIdx = utils_AlignUtf8Cut(newText, cutIdx)
-			if cutIdx < 1 then cutIdx = math_min(textLeft, #newText) end
+			if cutIdx < 1 then cutIdx = 1 end
 
 			-- MCList accumulates {start, end, color} tuples that
 			-- HandleSpecial / FindHELM / CheckSpecial / actor handling
@@ -1843,6 +1886,10 @@ parseThis = function(e, e_message)
 			b.ChatBufferN_Custom = b.ChatBufferN_Custom + n_lines
 			if allSettings.SelectedTab == 'Custom' or allSettings.SelectedTab2 == 'Custom' then ResetAutoHideTimer() end
 		end
+		if not par.skipTranslate then
+			translate.consider(e, original_msg, par.MessageMode, par.LastMode)
+		end
+		par.skipTranslate = false
 	end
 	par.LastMessageMode = par.MessageMode
 end

@@ -19,6 +19,7 @@ TARGETS = [
     'lib/commands.lua',
     'lib/parser.lua',
     'lib/combat.lua',
+    'lib/translate.lua',
     'help.lua',
 ]
 

@@ -32,6 +32,8 @@ Ashita/
 └── config/addons/fancychat/
     ├── <character>/
     │   └── settings.json                   ← persisted user settings (per character)
+    ├── translate/
+    │   └── dict.txt                        ← shared ASCII → Japanese dictionary
     └── logs/
         └── <character>/
             └── ChatLogs_YYYY_MM_DD-HH_MM_SS/
@@ -58,8 +60,16 @@ Settings are saved automatically every time you change anything in the Settings 
 - Your Notepad notes
 - The currently selected combat-filter file, notification sound, and alert sound
 - The on/off state of every checkbox in the Settings panel
+- Translation provider and API key (Settings → Translate)
 
 If your settings get into a bad state, deleting this file makes Fancychat fall back to defaults on next load. You will not lose any chat history — that lives in memory only — but you will lose your Notepad notes.
+
+## Translate dictionary
+
+Path: `Ashita/config/addons/fancychat/translate/dict.txt`
+
+Tab-separated source → Japanese pairs written when ASCII chat is translated. Shared across characters. API keys for ChatGPT / Gemini / DeepL live in per-character `settings.json`, not in this file.
+
 
 ## Color sets
 
