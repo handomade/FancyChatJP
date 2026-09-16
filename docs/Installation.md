@@ -7,14 +7,19 @@
 
 ## Steps
 
-1. Grab the latest archive from the [Releases page](https://github.com/ariel-logos/Fancychat/releases).
-2. Extract the contents into your Ashita install's `Ashita/addons/` folder. After extraction you should see a `fancychat/` subfolder next to your other addons.
-3. Launch FFXI through Ashita as you normally would.
-4. In game, type:
+1. Grab the latest archive from the [FancyChatJP Releases](https://github.com/handomade/FancyChatJP/releases) page (not the original Arielfy FancyChat).
+2. **Delete** any existing `Ashita/addons/fancychat` folder first (CatsEyeXI ships an older Arielfy build). Mixing files causes `ApplyWindowTabBuffer` nil errors.
+3. Extract so that `fancychat.lua` sits directly in `Ashita/addons/fancychat/` (not one folder deeper, e.g. `fancychat/FancyChatJP-main/`).
+4. Launch FFXI through Ashita as you normally would.
+5. In game, type:
    ```
    /addon load fancychat
    ```
-   The Fancychat plate will appear in the top-left of the screen. From there, type `/fchat manual` to open the in-game manual or `/fchat settings` to configure.
+   The load line must read **`fancychat version: 1.1.0 - by: Hando`**. If it still says `0.9.xxxxxx - by: Arielfy`, the original addon is still the one being loaded.
+
+On **CatsEyeXI**, open the launcher **ADDONS** tab and tick **Ignore Updates** for FancyChat. Otherwise the next addon update restores the bundled Arielfy build over FancyChatJP. That writes `fancychat` into `IgnoreUpdatesAddons` in `cexi_settings.json` (same folder as the launcher). Leaving the box unchecked is not a guarantee the files stay; tick it whenever you run JP.
+
+The Fancychat plate will appear in the top-left of the screen. From there, type `/fchat manual` to open the in-game manual or `/fchat settings` to configure.
 
 ## Auto-loading on every launch
 

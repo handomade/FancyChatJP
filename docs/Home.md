@@ -36,4 +36,4 @@ Fancychat is an add-on for the Ashita FFXI loader that replaces the native chat 
 
 ---
 
-[Repo root](../README.md) · [Releases](https://github.com/ariel-logos/Fancychat/releases) · [Issues](https://github.com/ariel-logos/Fancychat/issues)
+[Repo root](../README.md) · [Releases](https://github.com/handomade/FancyChatJP/releases) · [Issues](https://github.com/handomade/FancyChatJP/issues)

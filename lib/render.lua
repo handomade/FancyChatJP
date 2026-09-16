@@ -17,6 +17,7 @@ local ui_panels      = require('lib.ui_panels')
 local ui_settings    = require('lib.ui_settings')
 local combat_packets = require('lib.combat_packets')
 local translate      = require('lib.translate')
+local buffer         = require('lib.buffer')
 local ffi            = require('ffi')
 
 -- UDP loopback broadcast of the chat anchor for the Compass addon.
@@ -110,6 +111,17 @@ local fo             = state.fo
 local ro             = state.ro
 local allSettings    = state.allSettings
 local gamepadButtons = state.gamepadButtons
+
+local ApplyWindowTabBuffer = buffer.ApplyWindowTabBuffer
+local ChangeTab            = buffer.ChangeTab
+local ResetScrolling       = buffer.ResetScrolling
+local ResetLines           = buffer.ResetLines
+local ScrollLines          = buffer.ScrollLines
+local GoToLine             = buffer.GoToLine
+-- Mixed install: CatsEye 0.9 buffer cached without ApplyWindowTabBuffer.
+if not ApplyWindowTabBuffer then
+	ApplyWindowTabBuffer = function() end
+end
 
 -- Hot stdlib + ImGui locals (upvalue caching for the per-frame loop).
 local math_floor   = math.floor

@@ -5,8 +5,9 @@
 -- preferably via io.Fonts:GetGlyphRangesJapanese(), and merge into
 -- the default font so Settings/tabs pick them up without PushFont.
 --
--- CatsEye's launcher rewrites boot ini unless ResetIniFiles is false;
--- the boot [ashita.imgui.fonts] is_jp=true path needs that.
+-- CatsEye's launcher rewrites boot.ini on each play.  Do not tell
+-- users to set ResetIniFiles=false; that can freeze a broken boot
+-- profile.  Runtime merge from Windows Fonts is the supported path.
 
 require('common')
 local imgui     = require('imgui')

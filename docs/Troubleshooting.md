@@ -1,5 +1,23 @@
 # Troubleshooting
 
+## CatsEyeXI launcher will not start after changing ResetIniFiles
+
+Do **not** set `"ResetIniFiles"` to false in `cexi_settings.json` (same folder as the CatsEyeXI launcher) for FancyChatJP fonts. That flag tells the launcher to stop rewriting `Ashita/config/boot/catseyexi.ini` (there is no `boot.ini`). The launcher needs that rewrite for resolution, server command, and sandbox paths. A broken or incomplete ini then stays broken across restarts.
+
+1. In `cexi_settings.json`, set `"ResetIniFiles"` back to **true**.
+2. If the launcher still fails, rename `Ashita/config/boot/catseyexi.ini` (keep a backup) and start the launcher so it can generate a fresh file. You may need to sign in again.
+3. Leave boot fonts alone. FancyChatJP already tries to load Meiryo / MS Gothic / Yu Gothic from Windows for the Settings UI.
+
+## `ApplyWindowTabBuffer` is a nil value / load says `0.9.xxxxxx` by Arielfy
+
+That load banner is the **original** FancyChat bundled with CatsEyeXI, not FancyChatJP. JP must show `1.1.0 - by: Hando`.
+
+1. Fully quit FFXI.
+2. Delete `Ashita/addons/fancychat` (do not merge into the old folder).
+3. Copy FancyChatJP so `fancychat.lua` is directly inside that folder.
+4. In the CatsEyeXI launcher **ADDONS** tab, tick **Ignore Updates** for FancyChat. If this is off, the next addon update restores Arielfy Lua.
+5. Load again. The banner must be `1.1.0 - by: Hando`.
+
 ## The chat plate has disappeared
 
 If the chat plate is gone after loading the addon:

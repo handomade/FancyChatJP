@@ -42,6 +42,22 @@ addon.version = ver
 
 require('common')
 
+-- Drop cached lib.* from a previous FancyChat (CatsEye ships 0.9 /
+-- Arielfy).  Otherwise require() keeps the old lib.buffer that has
+-- no ApplyWindowTabBuffer and d3d_present crashes on the first frame.
+do
+	local drop = {
+		'lib.buffer', 'lib.render', 'lib.state', 'lib.defaults',
+		'lib.translate', 'lib.parser', 'lib.lifecycle', 'lib.input',
+		'lib.bigmode', 'lib.commands', 'lib.ui_settings', 'lib.ui_panels',
+		'lib.ui_helpers', 'lib.combat', 'lib.combat_packets', 'lib.i18n',
+		'lib.imgui_font', 'utils', 'help', 'targets', 'emojis', 'imguiWrap',
+	}
+	for i = 1, #drop do
+		package.loaded[drop[i]] = nil
+	end
+end
+
 require('lib.defaults')
 require('lib.state')
 require('lib.ui_helpers')

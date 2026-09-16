@@ -100,26 +100,46 @@ Say / Tell / PT / LS など、**本文がすべて半角英数**の行を日本�
 
 ## インストール
 
-1. このリポジトリを Ashita の `addons/fancychat` に置く（既存の FancyChat がある場合は差し替え）
-2. ゲーム内で:
+CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っていることがあります。**フォルダごと消してから** FancyChatJP を置いてください。途中のファイルだけ上書きすると、本家の `fancychat.lua` と JP の `lib/` が混ざって `ApplyWindowTabBuffer` などのエラーになります。
+
+1. ゲームを終了する
+2. `Ashita/addons/fancychat` をフォルダごと削除する
+3. [FancyChatJP の Releases](https://github.com/handomade/FancyChatJP/releases) かリポジトリ一式を、`Ashita/addons/fancychat` に置く（ZIP なら中の `fancychat.lua` がこのフォルダの直下にあること。`FancyChatJP-main/fancychat.lua` のまま一段深いと読みません）
+4. ゲーム内で:
 
 ```
 /addon load fancychat
 ```
 
-3. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に同じ行を追加する。ほかのチャット系アドオンより後が安全です
+正しく入っていれば、読み込み行は **`fancychat version: 1.1.0 - by: Hando`** です。`0.9.xxxxxx - by: Arielfy` のままなら、まだ本家が残っています。
+
+5. ランチャーの **ADDONS** で FancyChat の **Ignore Updates** にチェックを付ける
+6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
 
 起動後は `/fchat settings` で設定、`/fchat manual` でゲーム内説明です。
 
+### CatsEyeXI の Ignore Updates（必須）
+
+ランチャーは公式アドオンとして本家 FancyChat を配っています。**Ignore Updates が外れていると、アドオン更新のたびに JP の Lua が本家（`0.9` / Arielfy）で上書き**されます。混ざると `ApplyWindowTabBuffer` が無い、といったエラーになります。
+
+1. ランチャーの **ADDONS** タブを開く
+2. FancyChat の **Ignore Updates** にチェックを付ける
+3. 保存先はランチャーと同じフォルダの `cexi_settings.json` で、`"IgnoreUpdatesAddons"` に `fancychat` が入ります
+
+チェックを付けなくても上書きされないことがあります（フォルダが FancyChatJP の別 git になっている、まだ FancyChat の更新が来ていない、など）。**保証ではない**ので、JP を使うならチェックは付けてください。JP をやめて本家に戻すときだけ外します。
+
 ---
 
-## ImGui を日本語にする（アドオン外の設定）
+## ImGui を日本語にする（任意）
 
-設定ウィンドウを日本語で出すには、Ashita 側で日本語フォントが必要です。
+チャット本文の日本語は FancyChatJP だけで出ます。設定画面などの ImGui が `?` になるときだけ、この節を見てください。
 
-1. 日本語フォントを `Ashita/resources/fonts/` に置く  
-   例: Windows の `C:\Windows\Fonts\meiryo.ttc` をコピーする。**Meiryo は再配布できない**ので、このリポジトリには入れていません。Noto Sans CJK などでも構いません
-2. 起動に使う boot プロファイル（`.ini`）に次を追加する:
+**CatsEyeXI では、まず何もしなくて構いません。** アドオンが起動時に Windows の Meiryo / MS Gothic / Yu Gothic を探して ImGui に足します。設定画面が日本語なら、boot ini はいじらないでください。
+
+どうしても Ashita 本体の boot フォントにしたい場合だけ、次です。
+
+1. `meiryo.ttc` を `Ashita/resources/fonts/` に置く（Windows の `C:\Windows\Fonts\meiryo.ttc` をコピー。Meiryo は再配布できないのでリポジトリには入れていません）
+2. 起動に使う boot プロファイル（CatsEyeXI なら `Ashita/config/boot/catseyexi.ini`）の**末尾**に次を足す:
 
 ```ini
 [ashita.imgui.fonts]
@@ -129,12 +149,35 @@ font0.is_jp=true
 ```
 
 3. **FFXI を完全に終了してから**起動し直す（`/addon reload` では足りません）
+4. 起動ログに `Loaded Font: meiryo.ttc, 18px - is_jp: 1` と出ていれば成功です
 
-起動ログに `Loaded Font: meiryo.ttc, 18px - is_jp: 1` と出ていれば成功です。
+フォントファイルが無いのにこの節を足すと、Ashita が起動に失敗することがあります。そのときは節を消すか、`meiryo.ttc` を置いてください。
 
-### CatsEyeXI ランチャーを使う場合
+### CatsEyeXI ランチャーと boot ini（ResetIniFiles は使わない）
 
-ランチャーが起動のたびに boot ini を作り直すことがあります。その場合はランチャー設定の `ResetIniFiles` を `false` にしてから、上記の `[ashita.imgui.fonts]` を ini に書き直してください。
+ランチャーはゲームを出すたびに `Ashita/config/boot/catseyexi.ini`（boot プロファイル。`boot.ini` というファイル名ではない）を作り直します。解像度・サーバー接続・入力設定などを、ランチャー側の値で上書きするためです。だから `catseyexi.ini` に書いた `[ashita.imgui.fonts]` は、次の起動で消えることがあります。これは想定どおりの動作です。
+
+`ResetIniFiles` は **boot プロファイルではなく**、ランチャー本体の設定ファイルにあります。
+
+- ファイル名: `cexi_settings.json`
+- 場所: CatsEyeXI ランチャーと同じフォルダ（例: `...\catseyexi-launcher\cexi_settings.json`）
+- 項目: `"ResetIniFiles": true` が既定。`false` にすると boot プロファイルを作り直さない
+
+**ここを `false` にしないでください。** フォント用に切ると、次のような事故が起きます。
+
+- ランチャーが解像度や接続コマンドを ini に書けなくなる
+- 編集で ini が壊れたとき、自動修復されない
+- `meiryo.ttc` が無い `[ashita.imgui.fonts]` が残ったままになり、Ashita / ランチャーが起動エラーのまま固まる
+- ランチャーを再起動しても、壊れた ini を使い続ける
+
+すでに `false` にして起動できなくなった場合:
+
+1. `cexi_settings.json`（ランチャーと同じフォルダ）の `"ResetIniFiles"` を **`true` に戻す**（またはその項目を消して既定に戻す）
+2. ランチャーを起動し、`Ashita/config/boot/catseyexi.ini` が作り直されるのを待つ
+3. それでも起動しないときは、`catseyexi.ini` を別の名前に退避してからランチャーを起動する（新しい ini が作られます。ログイン情報はランチャーに入れ直すことがあります）
+4. 日本語 UI は FancyChatJP の自動フォント読み込みに任せる
+
+フォントを boot ini に残したい場合でも、**ResetIniFiles は true のまま**、ゲームを出したあと毎回 `[ashita.imgui.fonts]` を足すか、アドオン側の自動読み込みを使ってください。
 
 ---
 

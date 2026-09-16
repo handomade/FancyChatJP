@@ -307,6 +307,12 @@ function M.register()
 	-- settings, instantiate GDI font / rect objects for both chat windows.
 	-- =====================================================================
 	ashita.events.register('load', 'load_cb', function ()
+		print(string.format(
+			'FancyChatJP %s by %s (original FancyChat %s by %s)',
+			tostring(addon.version or '?'),
+			tostring(addon.author or 'Hando'),
+			tostring(addon.orig_version or '?'),
+			tostring(addon.orig_author or 'Arielfy')))
 
 		-- Initial scan; may resolve against a not-yet-final code layout
 		-- if Ashita brought the addon up before FFXi's runtime patches
