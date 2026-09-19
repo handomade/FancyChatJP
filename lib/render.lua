@@ -237,6 +237,8 @@ function M.register()
 			fcw1.PlayerName = ''
 			fcw1.LoggedLobby = 1
 			fcw1.WaitingServMes = 0
+			fcw1.HasDoneServMes = false
+			fcw1.SeenCatsEyeWelcome = false
 			par.LoginTime = 0
 			if _jpPushed then imgui_font.pop() end
 			return
@@ -247,8 +249,10 @@ function M.register()
 		if fcw1.LoggedIn and not fcw1.Closing and not fcw1.Zoning then
 			
 
-			if fcw1.WaitingServMes > 0 and _now - fcw1.WaitingServMes > 2 and os.time() - par.LoginTime < 30 then
-				
+			if fcw1.WaitingServMes > 0
+				and not fcw1.HasDoneServMes
+				and _now - fcw1.WaitingServMes > 2
+				and os.time() - par.LoginTime < 30 then
 				AshitaCore:GetChatManager():QueueCommand(1, "/servmes")
 				fcw1.WaitingServMes = -1
 				fcw1.HasDoneServMes = true
@@ -1334,19 +1338,18 @@ function M.register()
 				--font.FontSize = prevFontSize;
 				if IWwindowfont then imgui.PopFont(); end
 				imgui.End();
-			
+			end
+
+			-- GuideMe / Notes are independent of chat auto-hide fade.
+			-- Keep the other visibility gates (legacy chat, HideChat, BigMode).
+			if ((not uiw.LegacyChatOpen or allSettings.ShowWithLegacy[1]) and not fcw1.HideChat and not fcw1.Closing and not fcw3.BigMode) then
 				fcw1.isHiddenGUI = not AshitaCore:GetGuiManager():GetVisible()
 				ui_panels.draw_guideme()
 				ui_panels.draw_notepad()
-			
-		
 			end
-		
-		
-		
-		
+
 			-- Setting up the Settings window elements --
-		
+
 			ui_settings.draw_settings_panel()
 		
 			if not fcw1.HideChat and not fcw1.Closing and not fcw1.ProcessingText and fcw1.autoHideFade < 1 then 

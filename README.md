@@ -9,7 +9,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 | オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) `1.0.260721R` |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
 | 作者 | オリジナル: Arielfy　／　JP: Hando |
-| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.0`（FancyChatJP 独自採番） |
+| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.1`（FancyChatJP 独自採番） |
 
 動作確認は CatsEyeXI（Ashita）上の日本語クライアントを想定しています。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -67,7 +67,7 @@ GamepadNav をオンにし、修飾ボタン（初期値は LB。DirectInput で
 
 - **ゾーン検索**（ゾーン名のある行を Ctrl+クリック）の先頭に「用語辞典で開く」があります。記事が `/html/数字.html` なので、英語ゾーン名でサイトのタイトル検索を開きます
 - 日本語クライアントでも、FFXIclopedia / bg-wiki / 同梱 `maps/` は英語名で引きます（日本語名のままだと届きません）
-- **GuideMe** に `wiki.ffo.jp` の URL を貼ると、Walkthrough 節が無いので本文を出します。本文の青いリンクはこのパネル内で次のページを開きます。**戻る** で履歴を辿れます（固定中は先に解除しないとクリックできません）
+- **GuideMe** に `wiki.ffo.jp` の URL を貼ると、Walkthrough 節が無いので本文を出します。本文の青いリンクはこのパネル内で次のページを開きます。**戻る** で履歴を辿れます。固定中でも URL 入力とリンク操作ができます。自動非表示は GuideMe / メモ上の操作中は止まります。
 - **`/fchat ffo <検索語>`** で、用語辞典本体と同じ `search.cgi` のタイトル検索を行い、ヒット一覧を GuideMe に出します。行をクリックするとその記事をパネル内で開きます。日本語は CP932、英語名はそのまま送るので、`東ロンフォール` でも `East Ronfaure` でも検索できます
 - GuideMe の行が横に入り切らないときは折り返さず、**横スクロールバー**で読めます
 
@@ -111,7 +111,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 /addon load fancychat
 ```
 
-正しく入っていれば、読み込み行は **`fancychat version: 1.1.0 - by: Hando`** です。`0.9.xxxxxx - by: Arielfy` のままなら、まだ本家が残っています。
+正しく入っていれば、読み込み行は **`fancychat version: 1.1.1 - by: Hando`** です。`0.9.xxxxxx - by: Arielfy` のままなら、まだ本家が残っています。
 
 5. ランチャーの **ADDONS** で FancyChat の **Ignore Updates** にチェックを付ける
 6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
@@ -298,7 +298,7 @@ Lua ソースに日本語を直書きすると、Shift-JIS な環境で壊れま
 ## クレジット
 
 - **Arielfy** — [FancyChat](https://github.com/ariel-logos/Fancychat)（オリジナル `1.0.260721R`）
-- **Hando** — FancyChatJP `1.1.0`
+- **Hando** — FancyChatJP `1.1.1`
 - **[Ashita](https://www.ashitaxi.com/)** — フレームワーク
 - **atom0s** — `targets.lua` とエンティティ解決
 - **Thorny** — gdifonts

@@ -855,7 +855,6 @@ utils.FormatFfoSearchPage = function(query, html)
 	local lines = {
 		'[\231\148\168\232\170\158\232\190\158\229\133\184] '..(query or ''),
 		string.format('%d \228\187\182\227\131\146\227\131\131\227\131\136', n),
-		'',
 	}
 	if #hits == 0 then
 		lines[#lines + 1] = '\232\166\139\227\129\164\227\129\139\227\130\138\227\129\190\227\129\155\227\130\147\227\129\167\227\129\151\227\129\159\227\128\130'
@@ -951,12 +950,13 @@ utils.GetFfoWikiBody = function(html, url, http_get)
 	chunk = chunk:gsub('>%s+<', '><')
 	local text = utils.GetWalkthrough(chunk)
 	if not text or not text:match('%S') then return nil end
-	text = text:gsub('\r\n', '\n'):gsub('\r', '\n')
-	text = text:gsub('[ \t]+\n', '\n')
-	text = text:gsub('\n[ \t]+', '\n')
-	-- <br> plus leftover source newlines became a blank line per sentence.
-	text = text:gsub('\n\n\n+', '\n\n')
-	text = text:gsub('^\n+', ''):gsub('\n+$', '')
+			text = text:gsub('\r\n', '\n'):gsub('\r', '\n')
+			text = text:gsub('[ \t]+\n', '\n')
+			text = text:gsub('\n[ \t]+', '\n')
+			-- Dictionary pages are line-based; keep a single newline
+			-- (no blank row between every sentence / <br>).
+			text = text:gsub('\n[ \t]*\n+', '\n')
+			text = text:gsub('^\n+', ''):gsub('\n+$', '')
 	if not text:match('%S') then return nil end
 	return text
 end

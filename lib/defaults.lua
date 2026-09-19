@@ -64,6 +64,7 @@ function M.default_fcw()
 				1
 			},
 			HasDoneServMes		  = false,
+			SeenCatsEyeWelcome	  = false,
 			WaitingServMes 		  = 0,
 			BufferBusy            = false,
 			WasRendered           = false,
@@ -88,6 +89,8 @@ function M.default_fcw()
 			GuideMeWalkthrough    = nil,
 			GuideMeHistory        = {},
 			GuideMePendingUrl     = nil,
+			GuideMeForceSize      = true,
+			GuideMeScrollTop      = 0,
 			PrevKeyptr            = T{0, 0, 0, 0},
 			DraggingScroll        = false,
 			ScrollPos             = 0,
@@ -172,17 +175,14 @@ function M.default_fcw()
 				ImGuiWindowFlags_NoBackground
 			),
 			windowFlagsGuideMeDocked = bit.bor(
-				ImGuiWindowFlags_NoResize,
 				ImGuiWindowFlags_NoBringToFrontOnFocus,
 				ImGuiWindowFlags_NoCollapse,
 				ImGuiWindowFlags_NoMove,
-				ImGuiWindowFlags_NoSavedSettings,
-				ImGuiWindowFlags_NoNav
+				ImGuiWindowFlags_NoSavedSettings
 			),
 			windowFlagsGuideMe = bit.bor(
 				ImGuiWindowFlags_NoBringToFrontOnFocus,
-				ImGuiWindowFlags_NoSavedSettings,
-				ImGuiWindowFlags_NoNav
+				ImGuiWindowFlags_NoSavedSettings
 			),
 		},
 		T{
@@ -323,6 +323,9 @@ function M.default_settings()
 		CombatSplitChar      = {'Greater >', 0x003E},  -- alternatives: 0x7E ~, 0x2022 , 0x2043 
 		GuideMeSecondWindow  = T{false},
 		GuideMeFontScale     = 1,
+		-- 0 = use the chat-plate default until the user resizes.
+		GuideMeWinW          = 0,
+		GuideMeWinH          = 0,
 		EnableFastScroll     = T{true},
 		EnabledChatMove      = T{false},
 		LockWindowPos        = T{false},

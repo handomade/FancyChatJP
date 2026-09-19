@@ -15,6 +15,33 @@ local allSettings = state.allSettings
 
 local M = {}
 
+-- SetNextWindowPos/Size every frame while docked kills InputText focus.
+-- Skip those calls while a widget (URL / note field) is active.
+local function apply_docked_rect(px, py, w, h)
+	if not imgui.IsAnyItemActive() then
+		imgui.SetNextWindowPos({px, py})
+		imgui.SetNextWindowSize({w, h})
+	end
+	imgui.SetNextWindowSizeConstraints({w, h}, {FLT_MAX, FLT_MAX})
+end
+
+-- imguiWrap.IsWindowHovered drops flags on Ashita 4.3+, so hovering the
+-- walkthrough child never counts as hovering the parent. Use the window
+-- rect plus IsAnyItemActive so typing / scrolling / clicking keep chat visible.
+local function poke_panel_autohide()
+	if imgui.IsAnyItemActive() then
+		ResetAutoHideTimer()
+		return
+	end
+	local pos_x, pos_y = imgui.GetWindowPos()
+	local size_x, size_y = imgui.GetWindowSize()
+	local mouse_x, mouse_y = imgui.GetMousePos()
+	if mouse_x >= pos_x and mouse_x < pos_x + size_x
+		and mouse_y >= pos_y and mouse_y < pos_y + size_y then
+		ResetAutoHideTimer()
+	end
+end
+
 -- Detect Cloudflare anti-bot interstitials by ANY of several markers.
 -- Each is independently sufficient, so a future change to one still
 -- leaves the others tripping the check.
@@ -134,6 +161,7 @@ local function load_guideme(url, push_hist)
 	fcw[1].GuideMeURL[1] = url
 	fcw[1].GuideMeWalkthrough = text
 	fcw[1].ErrorMsg = ''
+	fcw[1].GuideMeScrollTop = 4
 	return true
 end
 
@@ -207,28 +235,33 @@ function M.draw_guideme()
 
 	if fcw[1].isHiddenGUI then utils.ImguiVis(true) end
 
-	local GuideMeW = allSettings.UseHalfLength[1] and fcw[1].BG_W / 2 or fcw[1].BG_W
-	local GuideMeH = fcw[1].BG_H + 100
+	local defW = allSettings.UseHalfLength[1] and fcw[1].BG_W / 2 or fcw[1].BG_W
+	local defH = fcw[1].BG_H + 100
+	local GuideMeW = tonumber(allSettings.GuideMeWinW) or 0
+	local GuideMeH = tonumber(allSettings.GuideMeWinH) or 0
+	if GuideMeW < 200 then GuideMeW = defW end
+	if GuideMeH < 150 then GuideMeH = defH end
 	local windowFlags
 
 	if fcw[1].GuideMeDocked then
 		windowFlags = fcw[1].windowFlagsGuideMeDocked
-		if allSettings.GuideMeSecondWindow[1] then
-			imgui.SetNextWindowPos({ro.RectBG[2].settings.position_x, ro.RectBG[2].settings.position_y - GuideMeH})
-		else
-			imgui.SetNextWindowPos({ro.RectBG[1].settings.position_x, ro.RectBG[1].settings.position_y - GuideMeH})
+		local dock = allSettings.GuideMeSecondWindow[1] and ro.RectBG[2] or ro.RectBG[1]
+		if not imgui.IsAnyItemActive() then
+			imgui.SetNextWindowPos({dock.settings.position_x, dock.settings.position_y - GuideMeH})
 		end
-		imgui.SetNextWindowSize({GuideMeW, GuideMeH})
-		imgui.SetNextWindowSizeConstraints({GuideMeW, GuideMeH}, {FLT_MAX, FLT_MAX})
 	else
-		imgui.SetNextWindowSizeConstraints({400, 200}, {FLT_MAX, FLT_MAX})
 		windowFlags = fcw[1].windowFlagsGuideMe
 	end
+	if fcw[1].GuideMeForceSize then
+		imgui.SetNextWindowSize({GuideMeW, GuideMeH})
+		fcw[1].GuideMeForceSize = false
+	end
+	imgui.SetNextWindowSizeConstraints({200, 150}, {FLT_MAX, FLT_MAX})
 
 	PushWindowStyle()
 
 	if imgui.Begin('FancyChat - GuideMe\239\188\136\229\174\159\233\168\147\231\154\132\239\188\137', fcw[1].GuideMeOpened, windowFlags) then
-		if imguiWrap.IsWindowHovered(ImGuiHoveredFlags_RectOnly) then ResetAutoHideTimer() end
+		poke_panel_autohide()
 
 		imgui.PushItemWidth(imgui.GetWindowWidth() / 2 - 130)
 		imgui.InputText('URL', fcw[1].GuideMeURL, 200,
@@ -255,6 +288,7 @@ function M.draw_guideme()
 				fcw[1].GuideMeURL[1] = prev.url or ''
 				fcw[1].GuideMeWalkthrough = prev.body
 				fcw[1].ErrorMsg = ''
+				fcw[1].GuideMeScrollTop = 4
 			end
 		end
 
@@ -286,11 +320,14 @@ function M.draw_guideme()
 			{imgui.GetWindowWidth() * 0.983, (imgui.GetWindowHeight() - 70) * 0.983},
 			true,
 			ImGuiWindowFlags_HorizontalScrollbar,
-			ImGuiChildFlags_HorizontalScrollbar or 0)
+			0)
 
 		local IWwindowfontG = imguiWrap.SetWindowFontScale(allSettings.GuideMeFontScale)
 		-- Negative wrap pos = do not wrap, so wide lines can h-scroll.
 		imgui.PushTextWrapPos(-1)
+		if (fcw[1].GuideMeScrollTop or 0) > 0 then
+			imgui.SetScrollY(0)
+		end
 		if fcw[1].GuideMeWalkthrough then
 			if string.find(fcw[1].GuideMeWalkthrough, '\30', 1, true) then
 				draw_guideme_rich(fcw[1].GuideMeWalkthrough, fcw[1].GuideMeURL[1])
@@ -300,9 +337,26 @@ function M.draw_guideme()
 		elseif fcw[1].ErrorMsg then
 			imgui.TextUnformatted(fcw[1].ErrorMsg)
 		end
+		if (fcw[1].GuideMeScrollTop or 0) > 0 then
+			imgui.SetScrollY(0)
+			fcw[1].GuideMeScrollTop = fcw[1].GuideMeScrollTop - 1
+		end
 		imgui.PopTextWrapPos()
 		if IWwindowfontG then imgui.PopFont() end
 		imgui.EndChild()
+		do
+			local wx, wy = imgui.GetWindowSize()
+			if wx and wy and wx >= 200 and wy >= 150 then
+				if allSettings.GuideMeWinW ~= wx or allSettings.GuideMeWinH ~= wy then
+					allSettings.GuideMeWinW = wx
+					allSettings.GuideMeWinH = wy
+					if not imgui.IsMouseDown(0) then
+						SaveSettings()
+					end
+				end
+			end
+		end
+		poke_panel_autohide()
 		imgui.End()
 	end
 	if fcw[1].GuideMePendingUrl then
@@ -326,14 +380,9 @@ function M.draw_notepad()
 	local windowFlags
 
 	if fcw[1].NotepadDocked then
-		windowFlags = fcw[1].windowFlagsGuideMeDocked
-		if allSettings.GuideMeSecondWindow[1] then
-			imgui.SetNextWindowPos({ro.RectBG[2].settings.position_x, ro.RectBG[2].settings.position_y - GuideMeH})
-		else
-			imgui.SetNextWindowPos({ro.RectBG[1].settings.position_x, ro.RectBG[1].settings.position_y - GuideMeH})
-		end
-		imgui.SetNextWindowSize({GuideMeW, GuideMeH})
-		imgui.SetNextWindowSizeConstraints({GuideMeW, GuideMeH}, {FLT_MAX, FLT_MAX})
+		windowFlags = bit.bor(fcw[1].windowFlagsGuideMeDocked, ImGuiWindowFlags_NoResize)
+		local dock = allSettings.GuideMeSecondWindow[1] and ro.RectBG[2] or ro.RectBG[1]
+		apply_docked_rect(dock.settings.position_x, dock.settings.position_y - GuideMeH, GuideMeW, GuideMeH)
 	else
 		imgui.SetNextWindowSizeConstraints({550, 200}, {FLT_MAX, FLT_MAX})
 		windowFlags = fcw[1].windowFlagsGuideMe
@@ -342,7 +391,7 @@ function M.draw_notepad()
 	PushWindowStyle()
 
 	if imgui.Begin('FancyChat - \227\131\161\227\131\162\229\184\179\239\188\136\229\174\159\233\168\147\231\154\132\239\188\137', fcw[1].NotepadOpened, windowFlags) then
-		if imguiWrap.IsWindowHovered(ImGuiHoveredFlags_RectOnly) then ResetAutoHideTimer() end
+		poke_panel_autohide()
 
 		AddTooltip('\227\131\161\227\131\162\227\129\175\230\156\128\229\164\16710\228\187\182\227\129\167\227\129\153\227\128\130\n- \227\131\134\227\130\173\227\130\185\227\131\136\230\172\132\227\129\139\227\130\137\230\137\139\229\139\149\232\191\189\229\138\160\227\129\167\227\129\141\227\129\190\227\129\153\227\128\130\n- \227\131\129\227\131\163\227\131\131\227\131\136\232\161\140\227\130\146 Shift+\227\130\175\227\131\170\227\131\131\227\130\175\227\129\153\227\130\139\227\129\168\227\128\129\227\129\157\227\129\174\232\161\140\227\130\146\227\131\161\227\131\162\227\129\168\227\129\151\227\129\166\228\191\157\229\173\152\227\129\151\227\129\190\227\129\153\227\128\130', 0)
 		imgui.SameLine() imgui.SetCursorPosY(imgui.GetCursorPosY() - 4)
@@ -406,6 +455,7 @@ function M.draw_notepad()
 
 		imgui.PopItemWidth()
 		imgui.SameLine()
+		poke_panel_autohide()
 		imgui.End()
 	end
 	PopWindowStyle()

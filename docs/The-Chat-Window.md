@@ -64,7 +64,9 @@ The faded-out window still receives messages — it just isn't drawn until activ
 - You press one of Fancychat's configured **keyboard shortcuts**
 - You **open the chat input box** (start typing `/`)
 - An NPC dialog event begins
-- You hover over the **GuideMe** or **Notepad** companion panels
+- You hover, click, type, or scroll inside **GuideMe** or **Notepad**
+
+GuideMe and Notepad stay on screen even if the chat plate has already faded. Docked URL / note fields can be typed into without undocking.
 
 > **Mouse hover over the chat plate does NOT wake the auto-hidden window.** Scrolling is the simplest "wake" gesture if you want to peek without typing.
 

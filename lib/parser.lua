@@ -1895,6 +1895,30 @@ parseThis = function(e, e_message)
 end
 _G.parseThis = parseThis
 
+-- Ashita's addon/plugin manager lines (and JP equivalents).  They are
+-- console traffic, not game chat.  Re-injecting them as mode 0 made
+-- every "Loaded addon:" line appear on the FancyChat plate at boot.
+local function is_ashita_boot_line(msg)
+	if type(msg) ~= 'string' or msg == '' then return false end
+	local l = string_lower(msg)
+	if string_find(l, 'loaded addon', 1, true)
+		or string_find(l, 'unloaded addon', 1, true)
+		or string_find(l, 'reloaded addon', 1, true)
+		or string_find(l, 'loading addon', 1, true)
+		or string_find(l, 'loaded plugin', 1, true)
+		or string_find(l, 'unloaded plugin', 1, true) then
+		return true
+	end
+	-- UTF-8 アドオン + 読み込 / 解除
+	if string_find(msg, '\227\130\162\227\131\137\227\130\170\227\131\179', 1, true) then
+		if string_find(msg, '\232\170\173\227\129\191\232\190\188', 1, true)
+			or string_find(msg, '\232\167\163\233\153\164', 1, true) then
+			return true
+		end
+	end
+	return false
+end
+
 function M.register()
 	-- =====================================================================
 	-- text_in: chat-message intercept.  Filters by mode (suppresses 152
@@ -1920,19 +1944,29 @@ function M.register()
 			end
 			return
 		end
-		if mode_pre == 191 and string_find(e.message, 'version') then
-			-- /servmes injection used to live here, gated on the
-			-- "Loaded addon: fancychat" message arriving via mode 191.
-			-- Moved to render.lua because the message is too early 
-			-- it lands the moment Ashita finishes loading us, while
-			-- the server may still be wrapping up its session
-			-- handshake and silently drops the command.  render.lua's
-			-- gate now waits for 30 non-injected packets (counted by
-			-- lifecycle.lua's packet_in handler) PLUS a settle timer
-			-- before firing, which is a much more reliable "the
-			-- server is ready" signal than this single console line.
-			AshitaCore:GetChatManager():AddChatMessage(0, false, e.message)
+		-- Ashita boot banners (Loaded addon / version lines).  Do not
+		-- parse them, and do not AddChatMessage them back as mode 0 —
+		-- that was putting the whole addon-load list onto the plate.
+		if is_ashita_boot_line(e.message) then
 			return
+		end
+		if mode_pre == 191 and string_find(e.message, 'version') then
+			return
+		end
+		-- MOTD already arrived: cancel the delayed /servmes so CatsEye's
+		-- "Welcome to CatsEyeXI" is not fetched a second time.
+		if mode_pre == 200
+			or string_find(e.message, 'Welcome to CatsEye', 1, true) then
+			fcw[1].HasDoneServMes = true
+			if fcw[1].WaitingServMes > 0 then
+				fcw[1].WaitingServMes = -1
+			end
+			if string_find(e.message, 'Welcome to CatsEye', 1, true) then
+				if fcw[1].SeenCatsEyeWelcome then
+					return
+				end
+				fcw[1].SeenCatsEyeWelcome = true
+			end
 		end
 
 		table_insert(b.OriginalBuffer,
