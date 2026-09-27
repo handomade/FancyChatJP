@@ -1608,31 +1608,28 @@ end
 -- ----------------------------------------------------------------
 -- asciiKey: canonicalise a chat line for duplicate detection.
 --
--- Returns a string containing ONLY printable-ASCII bytes (0x20-0x7E)
--- from `text`, with a leading "[HH:MM:SS] " / "[HH:MM] " timestamp
--- prefix removed first (if the parser added one).  Every other byte
--- is stripped: FFXI legacy colour escapes (\x1E\NN, \x1F\NN), MC
--- marker pairs (\\§........ç\\), SJIS multibyte runs, control bytes,
--- auto-translate sentinels, etc.
---
--- Two messages whose asciiKey results are equal are treated as
--- duplicates regardless of cosmetic byte-level differences that
--- would otherwise defeat a raw byte-compare.
+-- Drops a leading "[HH:MM:SS] " / "[HH:MM] " timestamp, FFXI colour
+-- escapes (\x1E\NN, \x1F\NN) and the 0x7F timed-message sentinel.
+-- Printable ASCII and high bytes are kept.  High bytes are the
+-- Japanese text on this client; stripping them made
+-- "モグワードローブ: パイローブ" and "モグワードローブ: ウールローブ"
+-- the same key (": ") and the second line was discarded.
 -- ----------------------------------------------------------------
 utils.asciiKey = function(text)
 	if not text or text == '' then return '' end
-	-- Drop a leading bracketed time of the form "[digits-and-colons]"
-	-- followed by optional whitespace.  Covers both the FormatTS[1]
-	-- (%H:%M:%S) and FormatTS[2] (%H:%M) shapes from state.lua.
 	text = text:gsub('^%[[%d:]+%]%s*', '', 1)
-	-- Keep only 0x20-0x7E.  Anything else - including 0x00-0x1F
-	-- control bytes, 0x7F DEL, and 0x80-0xFF high bytes - is dropped.
 	local out, n = {}, 0
-	for i = 1, #text do
+	local i, len = 1, #text
+	while i <= len do
 		local b = string.byte(text, i)
-		if b >= 0x20 and b <= 0x7E then
+		if b == 0x1E or b == 0x1F or b == 0x7F then
+			i = i + 2
+		elseif b >= 0x20 then
 			n = n + 1
 			out[n] = string.char(b)
+			i = i + 1
+		else
+			i = i + 1
 		end
 	end
 	return table.concat(out)
