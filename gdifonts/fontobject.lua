@@ -103,6 +103,25 @@ end
 
 local object = {};
 
+-- Meiryo Bold is the JP default.  On a PC where that face does not
+-- produce a texture, every line (English included) is skipped and no
+-- error is printed.  Upstream FancyChat uses Consolas Bold, which is
+-- why the original addon still draws there.
+local FONT_FALLBACKS = {
+    -- Japanese Windows registers Meiryo as メイリオ, not "Meiryo".
+    { family = '\227\131\161\227\130\164\227\131\170\227\130\170', flags = 0, label = 'Meiryo' },
+    -- ＭＳ Ｐゴシック
+    { family = '\239\188\173\239\188\179 \239\188\176\227\130\180\227\130\183\227\131\131\227\130\175', flags = 0, label = 'MS PGothic' },
+    { family = 'MS PGothic', flags = 0, label = 'MS PGothic' },
+    { family = 'Yu Gothic', flags = 0, label = 'Yu Gothic' },
+    { family = 'Consolas', flags = 1, label = 'Consolas' },
+};
+local noted_fallback = false;
+
+local function texture_ok(tx)
+    return tx ~= nil and tx.Texture ~= nil and tx.Width ~= nil and tx.Width > 0 and tx.Height ~= nil and tx.Height > 0;
+end
+
 function object:get_texture()
     if (self.is_dirty == true) then
         self.is_dirty = false;
@@ -112,7 +131,26 @@ function object:get_texture()
             return;
         end
         local tx = self.renderer.CreateTextureColor(self.interface, CreateFontData(self.settings));
-        if (tx.Texture == nil) or (tx.Width == 0) or (tx.Height == 0) then
+        if not texture_ok(tx) then
+            local step = self._font_fallback or 0;
+            if step == 0 and (self.settings.font_flags or 0) ~= 0 then
+                self._font_fallback = 1;
+                self.settings.font_flags = 0;
+                self.is_dirty = true;
+                return self:get_texture();
+            end
+            local alt = FONT_FALLBACKS[step == 0 and 1 or step];
+            if alt ~= nil and self.settings.font_family ~= alt.family then
+                self._font_fallback = (step == 0 and 1 or step) + 1;
+                self.settings.font_family = alt.family;
+                self.settings.font_flags = alt.flags;
+                if not noted_fallback then
+                    noted_fallback = true;
+                    print(string.format('FancyChat: chat font produced no glyphs, using %s', alt.label));
+                end
+                self.is_dirty = true;
+                return self:get_texture();
+            end
             return;
         else
             self.texture = d3d.gc_safe_release(tx.Texture);

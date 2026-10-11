@@ -15,7 +15,7 @@
    ```
    /addon load fancychat
    ```
-   The load line must read **`fancychat version: 1.1.3 - by: Hando`**. If it still says `0.9.xxxxxx - by: Arielfy`, the original addon is still the one being loaded.
+   The load line must read **`fancychat version: 1.1.4 - by: Hando`**. If it still says `0.9.xxxxxx - by: Arielfy`, the original addon is still the one being loaded.
 
 On **CatsEyeXI**, open the launcher **ADDONS** tab and tick **Ignore Updates** for FancyChat. Otherwise the next addon update restores the bundled Arielfy build over FancyChatJP. That writes `fancychat` into `IgnoreUpdatesAddons` in `cexi_settings.json` (same folder as the launcher). Leaving the box unchecked is not a guarantee the files stay; tick it whenever you run JP.
 
@@ -25,13 +25,13 @@ The Fancychat plate will appear in the top-left of the screen. From there, type 
 
 CatsEyeXI does not use this package. On VanaCore, ImGui (settings, tabs, and XIUI) needs a separate setup zip. It is not the addon itself. It overlays the VanaCore Japanese files onto an existing FancyChatJP and XIUIJP install.
 
-Download: [VanaCore.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.3/VanaCore.zip). Unzipping it produces the `VanaCore日本語セットアップ` folder.
+Download: [VanaCore.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.4/VanaCore.zip). Unzipping it produces the `VanaCore日本語セットアップ` folder.
 
 1. Close VanaCore and Ashita.
 2. Unzip and place that folder beside the `Ashita` and `Vanacore` folders.
 3. Run `適用.bat`.
 
-It sets `ashita.interface=4.30`, copies FancyChat window positions from the Ashita `imgui.ini`, overlays the VanaCore font files, copies Meiryo into VanaCore when Windows has it and VanaCore does not, and places `gameicons.ttf` where VanaCore loads combat icons. Previous files are kept under that folder's `backup`. Start VanaCore again afterward. Chat lines stay on the GDI font.
+It sets `ashita.interface=4.30`, copies FancyChat window positions from the Ashita `imgui.ini`, overlays the VanaCore font files, copies Meiryo into VanaCore when Windows has it and VanaCore does not, and places `gameicons.ttf` where VanaCore loads combat icons. Previous files are kept under that folder's `backup`. Start VanaCore again afterward. Chat lines stay on the GDI font. On Japanese Windows, if the face name `Meiryo` produces no glyphs, the same face is requested as `メイリオ`.
 
 ## Auto-loading on every launch
 
