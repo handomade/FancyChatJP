@@ -132,7 +132,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 CatsEyeXI 用の導入とは別に、VanaCore で設定画面などの ImGui を日本語にする一式を配っています。アドオン本体ではありません。すでに入っている FancyChatJP と XIUIJP の上へ、必要なファイルだけ重ねます。
 
-ダウンロード: [VanaCore日本語セットアップ.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.3/VanaCore日本語セットアップ.zip)（[Releases](https://github.com/handomade/FancyChatJP/releases) にも同じファイルがあります）
+ダウンロード: [VanaCore.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.3/VanaCore.zip)（[Releases](https://github.com/handomade/FancyChatJP/releases)）。解凍すると `VanaCore日本語セットアップ` フォルダになります。
 
 1. VanaCore と Ashita を終了する
 2. zip を解凍し、そのフォルダを **Ashita フォルダと Vanacore フォルダが並んでいる場所**に置く

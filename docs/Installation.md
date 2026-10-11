@@ -25,7 +25,7 @@ The Fancychat plate will appear in the top-left of the screen. From there, type 
 
 CatsEyeXI does not use this package. On VanaCore, ImGui (settings, tabs, and XIUI) needs a separate setup zip. It is not the addon itself. It overlays the VanaCore Japanese files onto an existing FancyChatJP and XIUIJP install.
 
-Download: [VanaCore日本語セットアップ.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.3/VanaCore日本語セットアップ.zip)
+Download: [VanaCore.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.3/VanaCore.zip). Unzipping it produces the `VanaCore日本語セットアップ` folder.
 
 1. Close VanaCore and Ashita.
 2. Unzip and place that folder beside the `Ashita` and `Vanacore` folders.
