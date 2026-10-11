@@ -128,13 +128,33 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 チェックを付けなくても上書きされないことがあります（フォルダが FancyChatJP の別 git になっている、まだ FancyChat の更新が来ていない、など）。**保証ではない**ので、JP を使うならチェックは付けてください。JP をやめて本家に戻すときだけ外します。
 
+### VanaCore
+
+CatsEyeXI 用の導入とは別に、VanaCore で設定画面などの ImGui を日本語にする一式を配っています。アドオン本体ではありません。すでに入っている FancyChatJP と XIUIJP の上へ、必要なファイルだけ重ねます。
+
+ダウンロード: [VanaCore日本語セットアップ.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.3/VanaCore日本語セットアップ.zip)（[Releases](https://github.com/handomade/FancyChatJP/releases) にも同じファイルがあります）
+
+1. VanaCore と Ashita を終了する
+2. zip を解凍し、そのフォルダを **Ashita フォルダと Vanacore フォルダが並んでいる場所**に置く
+3. `適用.bat` を実行する
+
+行うことは次のとおりです。
+
+- `Vanacore\vanacore.ini` に `ashita.interface=4.30` を書く
+- その人の Ashita の `imgui.ini` から、FancyChat のウィンドウ位置を VanaCore 側へ写す
+- FancyChat と XIUI の VanaCore 向けファイルを、Ashita と VanaCore の両方のアドオンフォルダへ入れる
+- PC に Meiryo があり VanaCore 側に無いときだけ、`resources\fonts\meiryo.ttc` へコピーする
+- 戦闘ログの魔法アイコン用 `gameicons.ttf` を、VanaCore が読む場所へコピーする
+
+変える前のファイルは、そのフォルダの `backup` に残ります。終わったら VanaCore を起動し直してください。チャット本文はこれまでどおり GDI です。この bat が日本語にするのは ImGui（設定・タブ、および XIUI）です。CatsEyeXI ではこの bat は使いません。
+
 ---
 
 ## ImGui を日本語にする（任意）
 
 チャット本文の日本語は FancyChatJP だけで出ます。設定画面などの ImGui が `?` になるときだけ、この節を見てください。
 
-**CatsEyeXI では、まず何もしなくて構いません。** アドオンが起動時に Windows の Meiryo / MS Gothic / Yu Gothic を探して ImGui に足します。設定画面が日本語なら、boot ini はいじらないでください。
+**CatsEyeXI では、まず何もしなくて構いません。** アドオンが起動時に Windows の Meiryo / MS Gothic / Yu Gothic を探して ImGui に足します。設定画面が日本語なら、boot ini はいじらないでください。VanaCore では、上の「VanaCore」の zip を使ってください。
 
 どうしても Ashita 本体の boot フォントにしたい場合だけ、次です。
 

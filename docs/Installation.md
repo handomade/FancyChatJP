@@ -21,6 +21,18 @@ On **CatsEyeXI**, open the launcher **ADDONS** tab and tick **Ignore Updates** f
 
 The Fancychat plate will appear in the top-left of the screen. From there, type `/fchat manual` to open the in-game manual or `/fchat settings` to configure.
 
+## VanaCore
+
+CatsEyeXI does not use this package. On VanaCore, ImGui (settings, tabs, and XIUI) needs a separate setup zip. It is not the addon itself. It overlays the VanaCore Japanese files onto an existing FancyChatJP and XIUIJP install.
+
+Download: [VanaCore日本語セットアップ.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.3/VanaCore日本語セットアップ.zip)
+
+1. Close VanaCore and Ashita.
+2. Unzip and place that folder beside the `Ashita` and `Vanacore` folders.
+3. Run `適用.bat`.
+
+It sets `ashita.interface=4.30`, copies FancyChat window positions from the Ashita `imgui.ini`, overlays the VanaCore font files, copies Meiryo into VanaCore when Windows has it and VanaCore does not, and places `gameicons.ttf` where VanaCore loads combat icons. Previous files are kept under that folder's `backup`. Start VanaCore again afterward. Chat lines stay on the GDI font.
+
 ## Auto-loading on every launch
 
 If you want Fancychat to load automatically at every game launch, add `/addon load fancychat` to your Ashita default script. In Ashita Boot's profile editor, that's the **Default Script** field.
