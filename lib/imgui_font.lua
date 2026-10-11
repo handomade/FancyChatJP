@@ -139,6 +139,13 @@ local function try_add(path, size, ranges)
 	for _, fn in ipairs(attempts) do
 		local ok, font = pcall(fn)
 		if ok and font then
+			-- ImGui 1.80 builds the atlas immediately.  1.92 loads
+			-- glyphs on demand and its Build() is gone.
+			if not imguiWrap.isNewVer then
+				pcall(function()
+					if fonts and fonts.Build then fonts:Build() end
+				end)
+			end
 			return font
 		end
 	end
@@ -204,6 +211,17 @@ function M.push()
 		M.merged = true
 		M.font   = nil
 		return false
+	end
+	-- VanaCore's ImGui is Agave only (no boot is_jp).  Load Meiryo once.
+	if not M.font and not M.bake_tried then
+		M.bake_tried = true
+		M.bake()
+		-- 1.92 rasterises the new face on use.  A same-frame width
+		-- probe still sees '?' and would throw the font away.
+		if M.font and imguiWrap.isNewVer then
+			M.verified = true
+			M.usable   = true
+		end
 	end
 	if not M.font then return false end
 

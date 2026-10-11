@@ -189,6 +189,9 @@ function M.register()
 		-- Per-frame caches (avoids repeated lookups).
 		local fcw1, fcw2, fcw3 = fcw[1], fcw[2], fcw[3]
 		local _fh  = allSettings.fontSettings.font_height
+		-- Tab labels were _fh/25 (~0.80 at the default 20px). A bit
+		-- larger stays inside the existing tab-button height.
+		local _tabFontScale = _fh / 21
 		local _now = os.clock()
 		-- Reset per-frame flag for the compass anchor broadcast.
 		-- DrawInfo() sets this back to true if it renders item previews.
@@ -1154,7 +1157,7 @@ function M.register()
 					-- function() end
 					-- )
 			
-				local IWwindowfont = imguiWrap.SetWindowFontScale(_fh/25)
+				local IWwindowfont = imguiWrap.SetWindowFontScale(_tabFontScale)
 				PushColorStyles(tab.ButtonColorStylesNormal);
 			
 			
@@ -1788,7 +1791,7 @@ function M.register()
 					imgui.Begin('FancyChat_ChatTabs2_'+fcw1.PlayerName, true, windowFlags);
 					--font.FontSize = 450/_fh;
 				
-					local IWwindowfont2 = imguiWrap.SetWindowFontScale(_fh/25)
+					local IWwindowfont2 = imguiWrap.SetWindowFontScale(_tabFontScale)
 					PushColorStyles(tab.ButtonColorStylesNormal);
 
 					if not allSettings.CompactTabs then
