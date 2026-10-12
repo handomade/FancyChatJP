@@ -544,7 +544,16 @@ _G.SetBufferN = M.SetBufferN
 -- ===================================================================
 function M.SetTargetPosX(x, y, positionStartX)
 	if mvc.Menu1 or uiw.DialogShown then
-		mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * 128) / uiw.UISizeY)
+		-- 128 is the retail 3-row NPC menu. Extra rows grow upward.
+		-- Inventory shares this branch and does not follow menu.rows,
+		-- so only a dialog with no inventory menu scales the test.
+		local menuH = 128
+		if uiw.DialogShown and not mvc.Menu1 then
+			local rows = tonumber(allSettings.MenuAvoidRows) or 3
+			if rows < 3 then rows = 3 elseif rows > 12 then rows = 12 end
+			menuH = 128 * (rows / 3)
+		end
+		mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * menuH) / uiw.UISizeY)
 		return fcw[1].MoveChatPos1
 	end
 	if mvc.Menu2 then mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * 250) / uiw.UISizeY); return fcw[1].MoveChatPos2 end

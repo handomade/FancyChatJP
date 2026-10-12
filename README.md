@@ -9,7 +9,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 | オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) `1.0.260721R` |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
 | 作者 | オリジナル: Arielfy　／　JP: Hando |
-| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.4`（FancyChatJP 独自採番） |
+| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.5`（FancyChatJP 独自採番） |
 
 動作確認は CatsEyeXI（Ashita）上の日本語クライアントを想定しています。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -111,7 +111,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 /addon load fancychat
 ```
 
-正しく入っていれば、読み込み行は **`fancychat version: 1.1.4 - by: Hando`** です。`0.9.xxxxxx - by: Arielfy` のままなら、まだ本家が残っています。
+正しく入っていれば、読み込み行は **`fancychat version: 1.1.5 - by: Hando`** です。`0.9.xxxxxx - by: Arielfy` のままなら、まだ本家が残っています。
 
 5. ランチャーの **ADDONS** で FancyChat の **Ignore Updates** にチェックを付ける
 6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
@@ -147,6 +147,8 @@ CatsEyeXI 用の導入とは別に、VanaCore で設定画面などの ImGui を
 - 戦闘ログの魔法アイコン用 `gameicons.ttf` を、VanaCore が読む場所へコピーする
 
 変える前のファイルは、そのフォルダの `backup` に残ります。終わったら VanaCore を起動し直してください。チャット本文はこれまでどおり GDI です。日本語 Windows では、フォント名 `Meiryo` で文字が作れないとき、同じ書体の `メイリオ` で描きます。この bat が日本語にするのは ImGui（設定・タブ、および XIUI）です。CatsEyeXI ではこの bat は使いません。
+
+ウィンドウ位置を固定し、「FFXIのUIと重ならないようにずらす」をオンにしているとき、左下のNPC選択メニューがチャットに被ると、下にある方の窓を横へずらします。VanaCore は `vanacore.ini` の `menu.rows`（3〜12。ゲーム本来は 3）で、そのメニューの行数を変えられます。設定の「選択メニューの行数」を同じ数にしてください。3 のときはこれまでと同じ判定です。
 
 ---
 
@@ -318,7 +320,7 @@ Lua ソースに日本語を直書きすると、Shift-JIS な環境で壊れま
 ## クレジット
 
 - **Arielfy** — [FancyChat](https://github.com/ariel-logos/Fancychat)（オリジナル `1.0.260721R`）
-- **Hando** — FancyChatJP `1.1.4`
+- **Hando** — FancyChatJP `1.1.5`
 - **[Ashita](https://www.ashitaxi.com/)** — フレームワーク
 - **atom0s** — `targets.lua` とエンティティ解決
 - **Thorny** — gdifonts

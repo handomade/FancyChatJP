@@ -722,11 +722,28 @@ function M.register()
 			
 				if not chat2moved then
 					if not allSettings.GuideMeSecondWindow[1] then fcw1.GuideMeClosedTmp = false; end
-					if fcw1.MoveChat and mvc.Menu6 and positionStartY+fcw1.BG_H > mvc.targetposY then
+					-- NPC selection menu: if the lower window is the one
+					-- sitting in the menu, leave this (upper) window put.
+					-- Window 2's own overlap test then slides that one.
+					local deferDialog = false
+					if fcw1.MoveChat and uiw.DialogShown and not mvc.Menu1 and allSettings.SecondChat[1] then
+						local w2Bottom = (fcw[2].Anchor_Y or 0) + (fcw[2].BG_H or 0) * 0.2
+						local w1Bottom = positionStartY + (fcw1.BG_H or 0)
+						if w2Bottom > mvc.targetposY and w2Bottom > w1Bottom then
+							deferDialog = true
+							fcw1.MoveChat = false
+						end
+					end
+					local overlapY = fcw1.Anchor_Y
+					if uiw.DialogShown and not mvc.Menu1 then
+						overlapY = positionStartY + (fcw1.BG_H or 0)
+					end
+					if deferDialog then
+					elseif fcw1.MoveChat and mvc.Menu6 and positionStartY+fcw1.BG_H > mvc.targetposY then
 						positionStartY = mvc.targetposY-fcw1.BG_H
 					
 					elseif fcw1.MoveChat and positionStartX < mvc.targetposX
-					and fcw1.Anchor_Y > mvc.targetposY
+					and overlapY > mvc.targetposY
 					then
 						positionStartX = mvc.targetposX;
 				
@@ -1532,8 +1549,12 @@ function M.register()
 						fcw1.GuideMeClosedTmp = false
 						if allSettings.GuideMeSecondWindow[1] then fcw1.GuideMeClosedTmp = false; end
 						fcw1.MoveChat = (mvc.Menu1 or mvc.Menu2 or mvc.Menu3 or mvc.Menu4 or mvc.Menu5 or mvc.Menu6 or mvc.Menu7 or uiw.DialogShown) and allSettings.LockWindowPos[1] and allSettings.EnabledChatMove[1];
+						local w2OverlapY = fcw2.Anchor_Y
+						if uiw.DialogShown and not mvc.Menu1 then
+							w2OverlapY = positionStartY + (fcw2.BG_H or 0)
+						end
 						if fcw1.MoveChat and positionStartX < mvc.targetposX
-						and fcw2.Anchor_Y > mvc.targetposY then
+						and w2OverlapY > mvc.targetposY then
 							positionStartX = mvc.targetposX;
 							fcw1.MoveChat = true;
 						elseif fcw1.MoveChat and mvc.Menu6 and positionStartY+fcw1.BG_H > mvc.targetposY then

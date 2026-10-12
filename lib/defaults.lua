@@ -328,6 +328,11 @@ function M.default_settings()
 		GuideMeWinH          = 0,
 		EnableFastScroll     = T{true},
 		EnabledChatMove      = T{false},
+		-- Retail NPC selection menus are 3 rows (height 128 in UI
+		-- space). VanaCore menu.rows is 3-12 and the menu grows
+		-- upward, so the overlap test scales with this. 3 matches
+		-- the old fixed height.
+		MenuAvoidRows        = 3,
 		LockWindowPos        = T{false},
 		-- When true, FancyChat stays visible even while the legacy
 		-- FFXI chat window is open (clicked / typing).  Default off,
