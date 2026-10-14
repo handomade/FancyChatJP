@@ -124,7 +124,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
 
-起動後は `/fchat settings` で設定、`/fchat manual` でゲーム内説明です。インストール先が `C:\Games\CatsEyeXI` でも問題ありません。チャット本文が日本語で、設定のタブも日本語なら完了です。タブだけ `?` なら「設定画面が `?` のとき」へ。
+起動後は `/fchat settings` で設定、`/fchat manual` でゲーム内説明です。チャット本文が日本語で、設定のタブも日本語なら完了です。タブだけ `?` なら「設定画面が `?` のとき」へ。
 
 #### Ignore Updates（必須）
 
