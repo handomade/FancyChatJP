@@ -43,10 +43,10 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 日本語は **チャット本文** と **設定画面・タブ（ImGui）** で経路が違います。片方だけ直しても、もう片方は変わりません。
 
 - **チャット本文** — GDI（既定 Meiryo）。Shift-JIS → UTF-8 と、全角幅を考慮した折り返し（`cjkWidthRatio`）。`boot.ini` は使いません
-- **設定・タブ** — 文言は日本語化済み。文字そのものは Ashita 既定フォントに日本語が無いと `?` になります。**1.1.6 以降**が起動時に Windows の Meiryo / MS Gothic / Yu Gothic を読んで ImGui に足します。メイリオは再配布できないので、アドオンに `resources/fonts` も `meiryo.ttc` も入っていません
+- **設定・タブ** — 文言は日本語化済み。CatsEyeXI では当初から ImGui も日本語です。文字そのものは Ashita 既定フォントに日本語が無いと `?` になります。1.1.6 は boot を使わず、起動時に Windows の Meiryo / MS Gothic / Yu Gothic を読んで ImGui に足します（VanaCore と CatsEye の両方）。メイリオは再配布できないので、アドオンに `resources/fonts` も `meiryo.ttc` も入っていません
 - 日本語ログでも、入手・経験値・戦闘短縮などの**文言ベースの色**が乗るようパターンを追加（本家は英語メッセージ前提だったため、日本語ではドロップ色などが効かないことがありました）
 
-すでに別の日本語化でタブが読めるなら、ImGui 側は何もしません。チャットは出るのにタブが `?` のときは、下の「設定画面が `?` のとき」を見てください。
+タブがすでに日本語なら、ImGui 側は何もしません。チャットは出るのにタブが `?` のときは、下の「設定画面が `?` のとき」を見てください。
 
 ### 第2チャットウィンドウ
 
@@ -108,7 +108,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 ### CatsEyeXI
 
-ImGui の日本語は **1.1.6 以降**です。Releases の古い zip（1.1.4 など）だけでは、CatsEye のタブが `?` のままです。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。
+現在の版は **1.1.6** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。CatsEye の ImGui 日本語は当初からです。VanaCore 向けのフォント登録が入ったあと、一部の CatsEye 環境でタブが `?` になることがあったので、1.1.6 は boot に頼らず Windows のフォントを直接読むようにしています。
 
 1. ゲームを終了する
 2. `Ashita/addons/fancychat` をフォルダごと削除する
@@ -164,7 +164,7 @@ VanaCore で設定画面などの ImGui を日本語にする一式です。ア�
 
 ## 設定画面が `?` のとき
 
-チャット本文が出ていても、設定・タブは別です。1.1.6 以降は boot のフォント設定を使いません。Windows の Meiryo などを直接読んで ImGui に足します。
+チャット本文が出ていても、設定・タブは別です。CatsEye の ImGui は当初から日本語です。タブが `?` なのは「1.1.6 より前は日本語化されていなかった」という意味ではありません。VanaCore 向けの登録が CatsEye で通らなかったときや、Windows のフォントをアドオンから開けないときに起きます。1.1.6 は boot のフォント設定を使わず、Windows の Meiryo などを直接読みます。
 
 **やらないこと**
 
@@ -185,7 +185,7 @@ VanaCore で設定画面などの ImGui を日本語にする一式です。ア�
 | --- | --- |
 | `FancyChat: added ImGui font ...` と `FancyChat: ImGui atlas rebuilt` | 1.1.6 の読み込みは通っている。タブが日本語になる |
 | `FancyChat: Japanese glyphs available on the default ImGui font` | すでに別の日本語化が入っている。そのままでよい |
-| `FancyChat: could not add a CJK ImGui font this session` | **1.1.5 以前**です。フォルダごと 1.1.6 に入れ替える |
+| `FancyChat: could not add a CJK ImGui font this session` | CatsEye が、当時のフォント登録を受け付けていない。フォルダごと **1.1.6** に入れ替える |
 | `FancyChat: no CJK font file found. Ashita=...` | Windows のフォントをアドオンから開けていない。下のコピーだけ行う |
 | `FancyChat: ImGui font file found but not accepted` | ファイルはあるが登録に失敗。その1行を残す |
 
