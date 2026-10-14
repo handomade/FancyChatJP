@@ -543,22 +543,32 @@ _G.SetBufferN = M.SetBufferN
 -- inspecting the active menu's name.
 -- ===================================================================
 function M.SetTargetPosX(x, y, positionStartX)
+	local function scaled_rows()
+		local rows = tonumber(allSettings.MenuAvoidRows) or 3
+		if rows < 3 then rows = 3 elseif rows > 12 then rows = 12 end
+		return rows
+	end
+	-- Two-column job list, or a conversation menu that is not in
+	-- the retail list. Wide, and tall enough to cover the grid.
+	if mvc.MenuJob or mvc.Menu8 then
+		local menuH = math.max(480, 128 * (scaled_rows() / 3))
+		mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * menuH) / uiw.UISizeY)
+		return fcw[1].MoveChatPos1
+	end
 	if mvc.Menu1 or uiw.DialogShown then
-		-- 128 is the retail 3-row NPC menu. Extra rows grow upward.
-		-- Inventory shares this branch and does not follow menu.rows,
-		-- so only a dialog with no inventory menu scales the test.
+		-- 128 is the retail 3-row box. The main/sub job prompt is
+		-- two buttons under that, so it must not use menu.rows or
+		-- the chat slides away from a menu it does not cover.
+		-- Inventory shares this branch and stays at 128 as well.
 		local menuH = 128
-		if uiw.DialogShown and not mvc.Menu1 then
-			local rows = tonumber(allSettings.MenuAvoidRows) or 3
-			if rows < 3 then rows = 3 elseif rows > 12 then rows = 12 end
-			menuH = 128 * (rows / 3)
-		end
 		mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * menuH) / uiw.UISizeY)
 		return fcw[1].MoveChatPos1
 	end
 	if mvc.Menu2 then mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * 250) / uiw.UISizeY); return fcw[1].MoveChatPos2 end
 	if mvc.Menu3 then mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * 250) / uiw.UISizeY); return fcw[1].MoveChatPos3 end
-	if mvc.Menu4 then mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * 250) / uiw.UISizeY); return fcw[1].MoveChatPos4 end
+	-- Main/sub job prompt. Two buttons, so the 250-tall shop box
+	-- reached a chat that sits above them.
+	if mvc.Menu4 then mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * 128) / uiw.UISizeY); return fcw[1].MoveChatPos4 end
 	if mvc.Menu5 then mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * 160) / uiw.UISizeY); return fcw[1].MoveChatPos1 end
 	if mvc.Menu7 then mvc.targetposY = (y / uiw.UISizeY * uiw.UISizeY) - ((y * 250) / uiw.UISizeY); return fcw[1].MoveChatPos5 end
 	if mvc.Menu6 then
@@ -895,6 +905,9 @@ parseThis = function(e, e_message)
 				break
 			end
 		end
+		-- A continue arrow is another page of story text. The
+		-- selection menu is not up yet, so the chat must stay put.
+		par.StoryPage = fwdmsg
 	else
 		if not par.IsInConv then
 			fo.Fwd[1]:set_visible(false)

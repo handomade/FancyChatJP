@@ -9,7 +9,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 | オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) `1.0.260721R` |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
 | 作者 | オリジナル: Arielfy　／　JP: Hando |
-| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.5`（FancyChatJP 独自採番） |
+| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.6`（FancyChatJP 独自採番） |
 
 動作確認は CatsEyeXI（Ashita）上の日本語クライアントを想定しています。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -44,7 +44,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 - 設定ウィンドウ・タブ名・ツールチップ・マニュアルなどの **ImGui 文言の日本語化**
 - 日本語ログでも、入手・経験値・戦闘短縮などの**文言ベースの色**が乗るようパターンを追加（本家は英語メッセージ前提だったため、日本語ではドロップ色などが効かないことがありました）
 
-チャット本文の日本語はアドオンだけで出ます。一方、設定画面などの ImGui は Ashita 既定フォントに日本語が無いと `?` になります。下の「ImGui を日本語にする」を見てください。
+チャット本文の日本語はアドオンだけで出ます。一方、設定画面などの ImGui は Ashita 既定フォントに日本語が無いと `?` になります。下の「ImGui を日本語にする（必須）」を見てください。
 
 ### 第2チャットウィンドウ
 
@@ -111,7 +111,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 /addon load fancychat
 ```
 
-正しく入っていれば、読み込み行は **`fancychat version: 1.1.5 - by: Hando`** です。`0.9.xxxxxx - by: Arielfy` のままなら、まだ本家が残っています。
+正しく入っていれば、読み込み行は **`fancychat version: 1.1.6 - by: Hando`** です。`0.9.xxxxxx - by: Arielfy` のままなら、まだ本家が残っています。
 
 5. ランチャーの **ADDONS** で FancyChat の **Ignore Updates** にチェックを付ける
 6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
@@ -152,13 +152,15 @@ CatsEyeXI 用の導入とは別に、VanaCore で設定画面などの ImGui を
 
 ---
 
-## ImGui を日本語にする（任意）
+## ImGui を日本語にする（必須）
 
-チャット本文の日本語は FancyChatJP だけで出ます。設定画面などの ImGui が `?` になるときだけ、この節を見てください。
+設定画面・タブ名などの ImGui を日本語にする手順です。チャット本文の日本語は FancyChatJP だけで出ますが、ImGui は別で、Ashita 既定のフォントに日本語が無いと `?` になります。
 
-**CatsEyeXI では、まず何もしなくて構いません。** アドオンが起動時に Windows の Meiryo / MS Gothic / Yu Gothic を探して ImGui に足します。設定画面が日本語なら、boot ini はいじらないでください。VanaCore では、上の「VanaCore」の zip を使ってください。
+すでに別の日本語化アドオンで設定画面が日本語になっている場合だけ、この節は飛ばして構いません。それ以外は必須です。
 
-どうしても Ashita 本体の boot フォントにしたい場合だけ、次です。
+**CatsEyeXI** では、アドオンが起動時に Windows の Meiryo / MS Gothic / Yu Gothic を探して ImGui に足します。それでも `?` のままなら、下の手順で `Ashita/resources/fonts/meiryo.ttc` を置き、boot フォントを足してください。このフォルダは配布物には入っていません。VanaCore では、上の「VanaCore」の zip を使ってください。
+
+Ashita 本体の boot フォントにする手順は次です。
 
 1. `meiryo.ttc` を `Ashita/resources/fonts/` に置く（Windows の `C:\Windows\Fonts\meiryo.ttc` をコピー。Meiryo は再配布できないのでリポジトリには入れていません）
 2. 起動に使う boot プロファイル（CatsEyeXI なら `Ashita/config/boot/catseyexi.ini`）の**末尾**に次を足す:
@@ -320,7 +322,7 @@ Lua ソースに日本語を直書きすると、Shift-JIS な環境で壊れま
 ## クレジット
 
 - **Arielfy** — [FancyChat](https://github.com/ariel-logos/Fancychat)（オリジナル `1.0.260721R`）
-- **Hando** — FancyChatJP `1.1.5`
+- **Hando** — FancyChatJP `1.1.6`
 - **[Ashita](https://www.ashitaxi.com/)** — フレームワーク
 - **atom0s** — `targets.lua` とエンティティ解決
 - **Thorny** — gdifonts

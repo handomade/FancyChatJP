@@ -345,20 +345,51 @@ function M.register()
 
 			local MenuName = ''; 
 			local MenuID = ashita.memory.read_uint32(uiw.MenuPtr)
+			mvc.CornerCmd = false
 			if MenuID ~= 0 then
 				MenuName = ashita.memory.read_string(ashita.memory.read_uint32(MenuID + 4) + 0x46, 16);
 				MenuName = string.gsub(MenuName, '\x00', ''):trimex()
 				
 				--uiw.MenuExt = ashita.memory.read_uint32(uiw.MenuPtr-0x40)
+				mvc.MenuJob = false
+				mvc.Menu8 = false
 				if allSettings.EnabledChatMove[1] and allSettings.MoveChatATMenu[1] and (MenuName:match('menu[%s]+fep')) then mvc.Menu6 = true; else mvc.Menu6 = false; end
 				if not MenuName:match('menu[%s]+inline') and not mvc.Menu6 then
 					mvc.Menu1 = false;  mvc.Menu2 = false;  mvc.Menu3 = false;  mvc.Menu4 = false; mvc.Menu5 = false; mvc.Menu6 = false; mvc.Menu7 = false;
 					if (MenuName:match('menu[%s]+inventor')) or (MenuName:match('menu[%s]+loot')) or (MenuName:match('menu[%s]+comyn')) or (MenuName:match('menu[%s]+comment')) then mvc.Menu1 = true;
-					elseif (MenuName:match('menu[%s]+magic')) or (MenuName:match('menu[%s]+ability'))  or (MenuName:match('menu[%s]+mount')) or (MenuName:match('menu[%s]+emote')) then mvc.Menu2 = true;
+					-- ability is the job-ability / weapon-skill / pet-command list.
+					elseif (MenuName:match('menu[%s]+magic')) or (MenuName:match('menu[%s]+ability')) or (MenuName:match('menu[%s]+mount')) or (MenuName:match('menu[%s]+emote')) or (MenuName:match('menu[%s]+ws_ms')) or (MenuName:match('menu[%s]+ws_qs')) then mvc.Menu2 = true;
 					elseif (MenuName:match('menu[%s]+magselec')) then mvc.Menu3 = true;
-					elseif  (MenuName:match('menu[%s]+jobcselu')) then mvc.Menu4 = true;
+					elseif (MenuName:match('menu[%s]+chscjob')) then mvc.Menu4 = true;
+					elseif (MenuName:match('menu[%s]+jobcselu')) then mvc.MenuJob = true;
 					elseif (MenuName:match('menu[%s]+mogdoor')) or (MenuName:match('menu[%s]+chatctrl')) or (MenuName:match('menu[%s]+arealist')) or (MenuName:match('menu[%s]+maplist')) or MenuName:match('menu[%s]+gmtell')  or MenuName:match('menu[%s]+merityn') or (MenuName:match('menu[%s]+roomlist')) then mvc.Menu5 = true;
-					elseif (MenuName:match('menu[%s]+rmlo2')) or (MenuName:match('menu[%s]+shopbuy')) or (MenuName:match('menu[%s]+guildsho')) or (MenuName:match('menu[%s]+shopmain')) or (MenuName:match('menu[%s]+shopsell')) or (MenuName:match('menu[%s]+abiselec')) or (MenuName:match('menu[%s]+mogext')) or (MenuName:match('menu[%s]+myroom')) or (MenuName:match('menu[%s]+storage')) or (MenuName:match('menu[%s]+mogpost')) or (MenuName:match('menu[%s]+jobchang')) or (MenuName:match('menu[%s]+playermo')) then mvc.Menu7 = true;
+					elseif (MenuName:match('menu[%s]+rmlo2')) or (MenuName:match('menu[%s]+shopbuy')) or (MenuName:match('menu[%s]+guildsho')) or (MenuName:match('menu[%s]+shopmain')) or (MenuName:match('menu[%s]+shopsell')) or (MenuName:match('menu[%s]+mogext')) or (MenuName:match('menu[%s]+myroom')) or (MenuName:match('menu[%s]+storage')) or (MenuName:match('menu[%s]+mogpost')) or (MenuName:match('menu[%s]+jobchang')) then mvc.Menu7 = true;
+					end
+					-- Two-column job list. chscjob is the two-button
+					-- main/sub prompt and stays on Menu4.
+					if MenuName:match('jobcselu') or MenuName:match('jobsel') or MenuName:match('joblist') or MenuName:match('jobmas') then
+						mvc.MenuJob = true
+					end
+					-- A conversation menu that is not in the retail list.
+					-- CatsEye NPC menus land here. Story pages do not.
+					-- query is the book panel and is set just below.
+					-- Short menus at the lower left. playermo is chat / magic /
+					-- ability / face / item / trade / check. abiselec is the
+					-- next list (job ability, weapon skill, mount, pet).
+					-- The lists opened from there still move the chat.
+					local cornerCmd = MenuName:match('menu[%s]+playermo') or MenuName:match('menu[%s]+abimenu') or MenuName:match('menu[%s]+abiselec')
+					mvc.CornerCmd = cornerCmd and true or false
+					local knownMenu = mvc.Menu1 or mvc.Menu2 or mvc.Menu3 or mvc.Menu4 or mvc.Menu5 or mvc.Menu7 or mvc.MenuJob or cornerCmd
+					if not knownMenu and par.InEvent and not par.StoryPage and MenuName ~= ''
+						and not MenuName:match('query') and not MenuName:match('menuwind')
+						and not MenuName:match('inline') and not MenuName:match('map') then
+						mvc.Menu8 = true
+					end
+					-- Field manuals, grounds tomes, and the A.M.A.N. book
+					-- use the string menu. Their pages end with the continue
+					-- arrow, but the book panel is still under the chat.
+					if MenuName:match('menu[%s]+query') or MenuName:match('menu[%s]+stringdl') then
+						mvc.Menu8 = true
 					end
 				--elseif mvc.Menu6 then
 					--mvc.Menu6 = false
@@ -366,6 +397,9 @@ function M.register()
 			
 			else
 				mvc.Menu1 = false;  mvc.Menu2 = false;  mvc.Menu3 = false;  mvc.Menu4 = false; mvc.Menu5 =false; mvc.Menu6 =false; mvc.Menu7 = false;
+				mvc.MenuJob = false
+				mvc.Menu8 = false
+				mvc.CornerCmd = false
 				if imguiWrap.GetKeyDown(28) then ResetAutoHideTimer() end
 			end
 			if MenuName:find('auc1') and #uiw.MenuList > 0 and uiw.MenuList[#uiw.MenuList][1]=='menucomyn' then uiw.MenuList = {{'menuauc1',0}} end
@@ -513,6 +547,7 @@ function M.register()
 					uiw.DialogPromptStart = _now
 					par.LastMsgInConv = false;
 					uiw.DialogShown = false;
+					par.StoryPage = false
 				end
 			
 				if uiw.DialogPromptStart > 0 then
@@ -528,9 +563,76 @@ function M.register()
 			end
 		
 		
+			-- Selecting an option clears the menu for a few frames before
+			-- the next one exists. Release the shift on a short timer
+			-- instead of the same frame, and take a new menu immediately.
+			-- A 1-2 frame wait is shorter than the gap when the client
+			-- presents faster than the game menu updates.
+			local function shift_live()
+				if mvc.CornerCmd then return false end
+				return mvc.Menu1 or mvc.Menu2 or mvc.Menu3 or mvc.Menu4 or mvc.Menu5 or mvc.Menu6 or mvc.Menu7 or mvc.MenuJob or mvc.Menu8 or (uiw.DialogShown and not par.StoryPage)
+			end
+			if mvc.CornerCmd then
+				mvc.shiftSaved = nil
+				mvc.ShiftHoldUntil = 0
+			elseif allSettings.LockWindowPos[1] and allSettings.EnabledChatMove[1] then
+				if shift_live() then
+					mvc.shiftSaved = {
+						Menu1 = mvc.Menu1, Menu2 = mvc.Menu2, Menu3 = mvc.Menu3,
+						Menu4 = mvc.Menu4, Menu5 = mvc.Menu5, Menu6 = mvc.Menu6,
+						Menu7 = mvc.Menu7, MenuJob = mvc.MenuJob, Menu8 = mvc.Menu8,
+						Dialog = (uiw.DialogShown and not par.StoryPage) and true or false,
+					}
+					mvc.ShiftHoldUntil = 0
+				elseif mvc.shiftSaved then
+					if mvc.ShiftHoldUntil == 0 then
+						mvc.ShiftHoldUntil = _now + 0.2
+					end
+					if _now < mvc.ShiftHoldUntil then
+						local s = mvc.shiftSaved
+						mvc.Menu1 = s.Menu1; mvc.Menu2 = s.Menu2; mvc.Menu3 = s.Menu3
+						mvc.Menu4 = s.Menu4; mvc.Menu5 = s.Menu5; mvc.Menu6 = s.Menu6
+						mvc.Menu7 = s.Menu7; mvc.MenuJob = s.MenuJob; mvc.Menu8 = s.Menu8
+						if s.Dialog and not par.StoryPage then uiw.DialogShown = true end
+					else
+						mvc.shiftSaved = nil
+						mvc.ShiftHoldUntil = 0
+					end
+				end
+			else
+				mvc.shiftSaved = nil
+				mvc.ShiftHoldUntil = 0
+			end
+
+			-- Keep a shift that just happened. The next menu can miss the
+			-- overlap test for a few frames and would otherwise draw the
+			-- window at its home position, then jump again.
+			local function keep_shift(slot, homeX, homeY, x, y)
+				local h = mvc.posHold[slot]
+				local moved = math_abs(x - homeX) > 0.5 or math_abs(y - homeY) > 0.5
+				if moved then
+					h.dx = x - homeX
+					h.dy = y - homeY
+					h.on = true
+					h.until_ = 0
+					return x, y
+				end
+				if h.on and not mvc.CornerCmd and allSettings.LockWindowPos[1] and allSettings.EnabledChatMove[1] then
+					if h.until_ == 0 then
+						h.until_ = _now + 0.4
+					end
+					if _now < h.until_ then
+						return homeX + h.dx, homeY + h.dy
+					end
+				end
+				h.on = false
+				h.until_ = 0
+				return x, y
+			end
+
 			local chat2moved = false;
 			if not fcw1.MoveChat or not allSettings.SecondChat[1] then
-				fcw1.MoveChat = (mvc.Menu1 or mvc.Menu2 or mvc.Menu3 or mvc.Menu4 or mvc.Menu5 or mvc.Menu6 or mvc.Menu7 or uiw.DialogShown) and allSettings.LockWindowPos[1] and allSettings.EnabledChatMove[1];
+				fcw1.MoveChat = (not mvc.CornerCmd) and (mvc.Menu1 or mvc.Menu2 or mvc.Menu3 or mvc.Menu4 or mvc.Menu5 or mvc.Menu6 or mvc.Menu7 or mvc.MenuJob or mvc.Menu8 or (uiw.DialogShown and not par.StoryPage)) and allSettings.LockWindowPos[1] and allSettings.EnabledChatMove[1];
 			else
 				chat2moved = true;
 			end
@@ -713,6 +815,7 @@ function M.register()
 				local positionStartX, positionStartY = imgui.GetCursorScreenPos();
 				positionStartX = positionStartX + allSettings.WindowPosOffset[1];
 				positionStartY = positionStartY + allSettings.WindowPosOffset[2];
+				local homeX, homeY = positionStartX, positionStartY
 
 				mvc.targetposY = 0;
 				mvc.targetposX = 0;
@@ -725,8 +828,9 @@ function M.register()
 					-- NPC selection menu: if the lower window is the one
 					-- sitting in the menu, leave this (upper) window put.
 					-- Window 2's own overlap test then slides that one.
+					local cornerMenu = ((uiw.DialogShown and not par.StoryPage) or mvc.MenuJob or mvc.Menu8) and not mvc.Menu1
 					local deferDialog = false
-					if fcw1.MoveChat and uiw.DialogShown and not mvc.Menu1 and allSettings.SecondChat[1] then
+					if fcw1.MoveChat and cornerMenu and allSettings.SecondChat[1] then
 						local w2Bottom = (fcw[2].Anchor_Y or 0) + (fcw[2].BG_H or 0) * 0.2
 						local w1Bottom = positionStartY + (fcw1.BG_H or 0)
 						if w2Bottom > mvc.targetposY and w2Bottom > w1Bottom then
@@ -735,7 +839,7 @@ function M.register()
 						end
 					end
 					local overlapY = fcw1.Anchor_Y
-					if uiw.DialogShown and not mvc.Menu1 then
+					if cornerMenu then
 						overlapY = positionStartY + (fcw1.BG_H or 0)
 					end
 					if deferDialog then
@@ -759,6 +863,7 @@ function M.register()
 					end
 					fcw1.MoveChat = false;
 				end
+				positionStartX, positionStartY = keep_shift(1, homeX, homeY, positionStartX, positionStartY)
 			
 				local centerPosX = (fcw1.BG_W/2 + positionStartX-3);
 				local centerPosY = (ro.RectBG[1].settings.height/2 + positionStartY)+3;
@@ -1534,6 +1639,7 @@ function M.register()
 					local positionStartX, positionStartY = imgui.GetCursorScreenPos();
 					positionStartX = positionStartX + allSettings.WindowPosOffset[3];
 					positionStartY = positionStartY + allSettings.WindowPosOffset[4];
+					local homeX, homeY = positionStartX, positionStartY
 					if fcw1.MoveChat and not mvc.Menu6 then
 						if allSettings.CSMode[2] == 2 then
 							positionStartY = dsize.y;
@@ -1548,9 +1654,9 @@ function M.register()
 						fcw1.NotepadClosedTmp = false
 						fcw1.GuideMeClosedTmp = false
 						if allSettings.GuideMeSecondWindow[1] then fcw1.GuideMeClosedTmp = false; end
-						fcw1.MoveChat = (mvc.Menu1 or mvc.Menu2 or mvc.Menu3 or mvc.Menu4 or mvc.Menu5 or mvc.Menu6 or mvc.Menu7 or uiw.DialogShown) and allSettings.LockWindowPos[1] and allSettings.EnabledChatMove[1];
+						fcw1.MoveChat = (not mvc.CornerCmd) and (mvc.Menu1 or mvc.Menu2 or mvc.Menu3 or mvc.Menu4 or mvc.Menu5 or mvc.Menu6 or mvc.Menu7 or mvc.MenuJob or mvc.Menu8 or (uiw.DialogShown and not par.StoryPage)) and allSettings.LockWindowPos[1] and allSettings.EnabledChatMove[1];
 						local w2OverlapY = fcw2.Anchor_Y
-						if uiw.DialogShown and not mvc.Menu1 then
+						if ((uiw.DialogShown and not par.StoryPage) or mvc.MenuJob or mvc.Menu8) and not mvc.Menu1 then
 							w2OverlapY = positionStartY + (fcw2.BG_H or 0)
 						end
 						if fcw1.MoveChat and positionStartX < mvc.targetposX
@@ -1565,6 +1671,7 @@ function M.register()
 						end
 					
 					end
+					positionStartX, positionStartY = keep_shift(2, homeX, homeY, positionStartX, positionStartY)
 				
 					local centerPosX = (fcw2.BG_W/2 + positionStartX-3);
 					local centerPosY = (ro.RectBG[2].settings.height/2 + positionStartY)+3;
@@ -2512,6 +2619,9 @@ function M.register()
 	end);
 
 	ashita.events.register('d3d_endscene', 'd3d_endscene_callback1', function (isRenderingBackBuffer)
+		-- Between frames, so the ImGui atlas can be rebuilt without
+		-- freeing the texture the current Present is drawing.
+		imgui_font.flush()
 
 		if (not isRenderingBackBuffer) then return; end
 

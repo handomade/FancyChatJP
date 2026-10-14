@@ -16,7 +16,25 @@ M.mvc = {
 	Menu1 = false, Menu2 = false, Menu3 = false,
 	Menu4 = false, Menu5 = false, Menu6 = false,
 	Menu7 = false,
+	-- Job-change list (two columns, taller than the shop menus).
+	MenuJob = false,
+	-- NPC menu whose name is not in the retail list. CatsEye
+	-- original NPCs land here while a conversation is open.
+	Menu8 = false,
+	CornerCmd = false,
 	targetposY = 0, targetposX = 0,
+	-- Last menu that actually shifted the chat, kept briefly after
+	-- the menu id goes empty so a selection handoff does not snap
+	-- the window home for a frame.
+	shiftSaved = nil,
+	ShiftHoldUntil = 0,
+	-- Last applied chat offset, per window. A selection handoff can
+	-- fail the overlap test for a frame even while a menu is still
+	-- open; keep the offset so the window does not snap home.
+	posHold = {
+		{dx = 0, dy = 0, until_ = 0, on = false},
+		{dx = 0, dy = 0, until_ = 0, on = false},
+	},
 }
 
 -- Combat-filter snapshot.  Refreshed once per render frame by
@@ -176,6 +194,9 @@ M.par = {
 	-- entries and pruned to a 1-second sliding window every pass.
 	RecentMessages  = {},
 	IsInConv        = false,
+	-- Dialog line ended with the continue arrow: more story text,
+	-- not a selection menu. Chat must not slide aside for this.
+	StoryPage       = false,
 	DamageDone      = false,
 	DamageGot       = false,
 	MessageMode     = nil,
