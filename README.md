@@ -108,7 +108,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 ### CatsEyeXI
 
-現在の版は **1.1.6** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。CatsEye の ImGui 日本語は当初からです。VanaCore 向けのフォント登録が入ったあと、一部の CatsEye 環境でタブが `?` になることがあったので、1.1.6 は boot に頼らず Windows のフォントを直接読むようにしています。
+現在の版は **1.1.6** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。VanaCore 向けのフォント登録が入ったあと、一部の CatsEye 環境でタブが `?` になることがあったので、1.1.6 は boot に頼らず Windows のフォントを直接読むようにしています。
 
 1. ゲームを終了する
 2. `Ashita/addons/fancychat` をフォルダごと削除する
