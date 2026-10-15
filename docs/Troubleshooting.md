@@ -1,12 +1,30 @@
 # Troubleshooting
 
+## Settings tabs show `?` (CatsEyeXI)
+
+Chat lines and ImGui tabs use different fonts. Tabs need Ashita to bake Japanese into the ImGui atlas at boot.
+
+1. Copy `C:\Windows\Fonts\meiryo.ttc` to **`Ashita\resources\fonts\meiryo.ttc`** (the Ashita folder, not the game folder).
+2. Add these three lines to `Ashita\config\boot\catseyexi.ini` (the launcher profile; it is not named `boot.ini`):
+
+   ```
+   [ashita.imgui.fonts]
+   font0.family = meiryo.ttc
+   font0.is_jp = true
+   ```
+
+3. Fully quit FFXI and start again. The log should show `Loaded Font: meiryo.ttc, 18px - is_jp: 1`.
+
+Those three lines must still be in the ini **every** time the client starts. The font file stays on disk; the launcher may rewrite `catseyexi.ini` and drop the section. If the lines vanish on the next play, set `"ResetIniFiles"` to `false` in `cexi_settings.json` (same folder as the launcher exe, e.g. `C:\Games\CatsEyeXI\cexi_settings.json`, not inside `Ashita`), put the three lines back, and start again.
+
+If the launcher will not start after that, set `"ResetIniFiles"` back to `true`. Rename `catseyexi.ini` (keep a backup) so the launcher can write a fresh file, then add the three lines again.
+
+`/addon reload` is not enough. Do not put `meiryo.ttc` in the game client's `resources` folder.
+
 ## CatsEyeXI launcher will not start after changing ResetIniFiles
 
-Do **not** set `"ResetIniFiles"` to false in `cexi_settings.json` (same folder as the CatsEyeXI launcher) for FancyChatJP fonts. That flag tells the launcher to stop rewriting `Ashita/config/boot/catseyexi.ini` (there is no `boot.ini`). The launcher needs that rewrite for resolution, server command, and sandbox paths. A broken or incomplete ini then stays broken across restarts.
-
-1. In `cexi_settings.json`, set `"ResetIniFiles"` back to **true**.
+1. In `cexi_settings.json` (same folder as the launcher exe, e.g. `C:\Games\CatsEyeXI\cexi_settings.json`), set `"ResetIniFiles"` back to **true**.
 2. If the launcher still fails, rename `Ashita/config/boot/catseyexi.ini` (keep a backup) and start the launcher so it can generate a fresh file. You may need to sign in again.
-3. Leave boot fonts alone. FancyChatJP already tries to load Meiryo / MS Gothic / Yu Gothic from Windows for the Settings UI.
 
 ## `ApplyWindowTabBuffer` is a nil value / load says `0.9.xxxxxx` by Arielfy
 

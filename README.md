@@ -42,11 +42,11 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 
 日本語は **チャット本文** と **設定画面・タブ（ImGui）** で経路が違います。片方だけ直しても、もう片方は変わりません。
 
-- **チャット本文** — GDI（既定 Meiryo）。Shift-JIS → UTF-8 と、全角幅を考慮した折り返し（`cjkWidthRatio`）。`boot.ini` は使いません
-- **設定・タブ** — 文言は日本語化済み。CatsEyeXI では当初から ImGui も日本語です。文字そのものは Ashita 既定フォントに日本語が無いと `?` になります。1.1.6 は boot を使わず、起動時に Windows の Meiryo / MS Gothic / Yu Gothic を読んで ImGui に足します（VanaCore と CatsEye の両方）。メイリオは再配布できないので、アドオンに `resources/fonts` も `meiryo.ttc` も入っていません
+- **チャット本文** — GDI（既定 Meiryo）。Shift-JIS → UTF-8 と、全角幅を考慮した折り返し（`cjkWidthRatio`）。起動設定の ImGui フォントは使いません
+- **設定・タブ** — 文言は日本語化済み。文字そのものは Ashita の ImGui 既定フォントに日本語が無いと `?` になります。日本語にするのは、下の「ImGui を日本語にする」です。メイリオは再配布できないので、アドオンには `meiryo.ttc` は入っていません
 - 日本語ログでも、入手・経験値・戦闘短縮などの**文言ベースの色**が乗るようパターンを追加（本家は英語メッセージ前提だったため、日本語ではドロップ色などが効かないことがありました）
 
-タブがすでに日本語なら、ImGui 側は何もしません。チャットは出るのにタブが `?` のときは、下の「設定画面が `?` のとき」を見てください。
+チャットは出るのにタブが `?` のときは、「ImGui を日本語にする」を見てください。XIUI の設定やホットバーも、同じ ImGui 既定フォントを使います。
 
 ### 第2チャットウィンドウ
 
@@ -105,11 +105,11 @@ Say / Tell / PT / LS など、**本文がすべて半角英数**の行を日本�
 
 CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っていることがあります。**フォルダごと消してから** FancyChatJP を置いてください。途中のファイルだけ上書きすると、本家の `fancychat.lua` と JP の `lib/` が混ざって `ApplyWindowTabBuffer` などのエラーになります。
 
-導入はクライアントで分かれます。**CatsEyeXI では下の VanaCore zip は使いません。**
+導入はクライアントで分かれます。**アドオン本体は同じ一式**です。Ashita の interface 版（4.3 未満か 4.3 以上か）は起動時に判定するので、CatsEye 用と VanaCore 用で FancyChatJP の zip は分けません。**CatsEyeXI では下の VanaCore zip は使いません。**
 
 ### CatsEyeXI
 
-現在の版は **1.1.7** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。VanaCore 向けのフォント登録が入ったあと、一部の CatsEye 環境でタブが `?` になることがあったので、1.1.6 は boot に頼らず Windows のフォントを直接読むようにしています。
+現在の版は **1.1.7** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。
 
 1. ゲームを終了する
 2. `Ashita/addons/fancychat` をフォルダごと削除する
@@ -125,7 +125,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
 
-起動後は `/fchat settings` で設定、`/fchat manual` でゲーム内説明です。チャット本文が日本語で、設定のタブも日本語なら完了です。タブだけ `?` なら「設定画面が `?` のとき」へ。
+起動後は `/fchat settings` で設定、`/fchat manual` でゲーム内説明です。チャット本文が日本語で、設定のタブも日本語なら完了です。タブだけ `?` なら、下の「ImGui を日本語にする」へ。
 
 #### Ignore Updates（必須）
 
@@ -133,11 +133,40 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 1. ランチャーの **ADDONS** タブを開く
 2. FancyChat の **Ignore Updates** にチェックを付ける
-3. 保存先はランチャーと同じフォルダの `cexi_settings.json` で、`"IgnoreUpdatesAddons"` に `fancychat` が入ります
+3. 保存先はランチャー exe と同じフォルダの `cexi_settings.json`（例: `C:\Games\CatsEyeXI\cexi_settings.json`）。`Ashita` フォルダの中ではない。`"IgnoreUpdatesAddons"` に `fancychat` が入ります
 
 チェックを付けなくても上書きされないことがあります（フォルダが FancyChatJP の別 git になっている、まだ FancyChat の更新が来ていない、など）。**保証ではない**ので、JP を使うならチェックは付けてください。JP をやめて本家に戻すときだけ外します。
 
-`cexi_settings.json` の `"ResetIniFiles"` は **`true` のまま**です。フォント用に `false` にしないでください。ランチャーは起動のたびに `Ashita/config/boot/catseyexi.ini` を作り直します（ファイル名は `boot.ini` ではありません）。解像度や接続設定のためで、想定どおりです。ここを切ると、壊れた ini のまま起動できなくなることがあります。
+#### ImGui を日本語にする
+
+設定のタブや XIUI は、Ashita が起動時に焼く ImGui のフォントで描きます。チャット本文の Meiryo とは別です。アドオンが後から足す処理ではありません。
+
+1. FFXI を完全に終了する
+2. `C:\Windows\Fonts\meiryo.ttc` をコピーする
+3. 置く場所は **`Ashita\resources\fonts\meiryo.ttc`**（例: `C:\Games\CatsEyeXI\Ashita\resources\fonts\meiryo.ttc`）。ゲーム本体の `resources` ではない。`fonts` フォルダが無ければ作る
+4. `Ashita\config\boot\catseyexi.ini` を開く（ランチャーが使うファイル。名前は `boot.ini` ではない）
+5. 末尾に次の3行を足す
+
+```
+[ashita.imgui.fonts]
+font0.family = meiryo.ttc
+font0.is_jp = true
+```
+
+6. 保存し、FFXI を起動する
+7. ログに **`Loaded Font: meiryo.ttc, 18px - is_jp: 1`** が出れば乗っている
+
+この3行は初回だけでなく、**起動するたびに ini に残っている必要**があります。アトラスは毎回作り直すので、消えているとまた `?` になります。フォントファイルは一度置けば残ります。消えるのは3行のほうです。
+
+CatsEye のランチャーは、既定では起動のたびに `catseyexi.ini` を作り直します。作り直したあとに3行が消えるなら、ランチャー exe と同じフォルダの `cexi_settings.json`（例: `C:\Games\CatsEyeXI\cexi_settings.json`。`Ashita` フォルダの中ではない）で `"ResetIniFiles"` を `false` にし、3行を入れ直してから起動してください。以後、ランチャーはその ini を上書きしません。
+
+`ResetIniFiles` を `false` にしたあとランチャーが起動しなくなったら、`true` に戻してください。必要なら `catseyexi.ini` をリネームして、ランチャーに作り直させてから、もう一度3行を足します。
+
+### 他の Ashita（VanaCore 以外のエミュ）
+
+FancyChatJP の置き方は CatsEye と同じです。`Ignore Updates` と `cexi_settings.json` は CatsEye ランチャー専用なので、他鯖では使いません。
+
+ImGui の日本語は、その環境の boot 設定（多くは `Ashita\config\boot\` の ini）に、上と同じ3行を書き、`Ashita\resources\fonts\meiryo.ttc` を置きます。ランチャーが起動のたびに ini を消さないなら、`ResetIniFiles` は不要です。ログの `Loaded Font: meiryo.ttc, 18px - is_jp: 1` で確認します。
 
 ### VanaCore
 
@@ -165,36 +194,22 @@ VanaCore で設定画面などの ImGui を日本語にする一式です。ア�
 
 ## 設定画面が `?` のとき
 
-VanaCore 向けの登録が CatsEye で通らなかったときや、Windows のフォントをアドオンから開けないときに起きます。1.1.6 は boot のフォント設定を使わず、Windows の Meiryo などを直接読みます。
+ImGui の既定フォントに日本語が無いときです。「ImGui を日本語にする」を先にやってください。`/addon reload` だけでは足りません。FFXI を完全に終了してから起動し直します。
 
-**やらないこと**
+確認すること:
 
-- `boot.ini` / `Ashita/config/boot/catseyexi.ini` に `[ashita.imgui.fonts]` を足さない（CatsEye では次の起動で消えます）
-- `"ResetIniFiles"` を `false` にしない
-- ゲームフォルダ側の `resources` に `fonts` を作らない（見る場所は **Ashita** フォルダ）
-- Windows の言語設定はいじらない
-- `/addon reload` だけで済ませない（ImGui のフォントはクライアントの再起動が必要）
+- `Ashita\resources\fonts\meiryo.ttc` がある（ゲーム本体の `resources` ではない）
+- `Ashita\config\boot\catseyexi.ini` に、起動した時点で次の3行が残っている
 
-`Loaded Font: meiryo.ttc, 18px - is_jp: 1` は Ashita 本体が boot から読んだときの行です。1.1.6 では出なくて構いません。
+```
+[ashita.imgui.fonts]
+font0.family = meiryo.ttc
+font0.is_jp = true
+```
+- ログに `Loaded Font: meiryo.ttc, 18px - is_jp: 1` が出る
+- FancyChat の読み込み行が `1.1.7 - by: Hando` である
 
-1. FFXI を完全に終了する
-2. 読み込み行が **`fancychat version: 1.1.7 - by: Hando`** であることを確認する。違うならインストールからやり直す
-3. ゲームを起動し直し、設定を開く
-4. Ashita のログで次を探す
-
-| ログ | 意味と次の手 |
-| --- | --- |
-| `FancyChat: added ImGui font ...` と `FancyChat: ImGui atlas rebuilt` | 1.1.6 の読み込みは通っている。タブが日本語になる |
-| `FancyChat: Japanese glyphs available on the default ImGui font` | すでに別の日本語化が入っている。そのままでよい |
-| `FancyChat: could not add a CJK ImGui font this session` | CatsEye が、当時のフォント登録を受け付けていない。フォルダごと **1.1.7** に入れ替える |
-| `FancyChat: no CJK font file found. Ashita=...` | Windows のフォントをアドオンから開けていない。下のコピーだけ行う |
-| `FancyChat: ImGui font file found but not accepted` | ファイルはあるが登録に失敗。その1行を残す |
-
-`no CJK font file found` のときだけ、次を一度行います。`fonts` フォルダが最初から無いのは想定どおりです。
-
-1. `C:\Windows\Fonts\meiryo.ttc` をコピーする
-2. 置く場所は **`Ashita\resources\fonts\meiryo.ttc`**（CatsEye の例: `C:\Games\CatsEyeXI\Ashita\resources\fonts\meiryo.ttc`）。ゲーム本体の `resources` ではない
-3. FFXI を完全に終了してから起動し直す
+3行を足しても次の起動で消えるなら、上の `ResetIniFiles` を `false` にする手順です。Windows の言語設定はいじりません。
 
 ---
 
@@ -298,7 +313,7 @@ DirectInput では初期の Xbox 番号と物理ボタンが一致しません�
 - **翻訳辞書** — `Ashita/config/addons/fancychat/translate/dict.txt`
 - **通知音** — `addons/fancychat/notifications/*.wav`
 - **マップ** — `addons/fancychat/maps/<ゾーン>/<分類>/`
-- **ImGui 用フォント（通常は不要）** — Windows のフォントを読めないときだけ `Ashita/resources/fonts/meiryo.ttc`。アドオンには同梱しません
+- **ImGui 用フォント** — `Ashita/resources/fonts/meiryo.ttc`（設定・タブ用。アドオンには同梱しません）
 
 ログはアンロード時に自動保存されません。`/fchat savelogs` か設定のツールから保存してください。
 

@@ -17,7 +17,22 @@
    ```
    The load line must read **`fancychat version: 1.1.7 - by: Hando`**. If it still says `0.9.xxxxxx - by: Arielfy`, the original addon is still the one being loaded.
 
-On **CatsEyeXI**, open the launcher **ADDONS** tab and tick **Ignore Updates** for FancyChat. Otherwise the next addon update restores the bundled Arielfy build over FancyChatJP. That writes `fancychat` into `IgnoreUpdatesAddons` in `cexi_settings.json` (same folder as the launcher). Leaving the box unchecked is not a guarantee the files stay; tick it whenever you run JP.
+On **CatsEyeXI**, open the launcher **ADDONS** tab and tick **Ignore Updates** for FancyChat. Otherwise the next addon update restores the bundled Arielfy build over FancyChatJP. That writes `fancychat` into `IgnoreUpdatesAddons` in `cexi_settings.json` (same folder as the launcher exe, e.g. `C:\Games\CatsEyeXI\cexi_settings.json`, not inside `Ashita`). Leaving the box unchecked is not a guarantee the files stay; tick it whenever you run JP.
+
+ImGui tabs (and XIUI) need Japanese on Ashita's default ImGui font. That is not the GDI chat face.
+
+1. Copy `C:\Windows\Fonts\meiryo.ttc` to `Ashita\resources\fonts\meiryo.ttc`.
+2. Append the following to `Ashita\config\boot\catseyexi.ini`:
+
+   ```
+   [ashita.imgui.fonts]
+   font0.family = meiryo.ttc
+   font0.is_jp = true
+   ```
+
+3. Fully restart FFXI. The log should show `Loaded Font: meiryo.ttc, 18px - is_jp: 1`.
+
+Those three lines must remain in the ini on every launch. If the CatsEyeXI launcher rewrites the file and drops them, set `"ResetIniFiles"` to `false` in `cexi_settings.json` (launcher folder, not `Ashita`), restore the three lines, and start again. See [Troubleshooting](Troubleshooting.md) if the launcher then fails to start.
 
 The Fancychat plate will appear in the top-left of the screen. From there, type `/fchat manual` to open the in-game manual or `/fchat settings` to configure.
 
