@@ -9,7 +9,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 | オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) `1.0.260721R` |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
 | 作者 | オリジナル: Arielfy　／　JP: Hando |
-| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.6`（FancyChatJP 独自採番） |
+| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.7`（FancyChatJP 独自採番） |
 
 動作確認は CatsEyeXI と VanaCore の、日本語クライアントです。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -57,6 +57,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 
 - BigMode 中、**修飾ボタン＋上下**でマウスホイールと同じ履歴スクロールです（押しっぱなし可）
 - 第2ウィンドウが有効なら、**修飾ボタン＋左右**でウィンドウ1 / ウィンドウ2の履歴を切り替えます（タイトルに `W1` / `W2`）
+- BigMode ではないとき、入力欄が閉じていれば、修飾＋左右はターゲットです。設定のゲームパッドタブで、左と右それぞれ `/targetpc` `/targetnpc` `/targetbnpc` `/assist` を選べます
 - チャット入力を開いている間の左右は、本家どおりプリセットコマンドの巡回です
 - **DirectInput**（DualShock など）では、十字キーはデジタルボタンではなく **ボタン32のハット（角度）** です。左 27000 / 右 9000 / 離すと -1。Xbox の D-pad 番号（2 / 3）には割り当て直しても反応しません。ハットは自動で左右として使います
 - L2 などハット以外のボタンは、これまでどおり番号で取れます（例: L2 が 54）。割り当て待ちで十字キーを押すと `ハット 左` のように表示されます
@@ -108,11 +109,11 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 ### CatsEyeXI
 
-現在の版は **1.1.6** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。VanaCore 向けのフォント登録が入ったあと、一部の CatsEye 環境でタブが `?` になることがあったので、1.1.6 は boot に頼らず Windows のフォントを直接読むようにしています。
+現在の版は **1.1.7** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。VanaCore 向けのフォント登録が入ったあと、一部の CatsEye 環境でタブが `?` になることがあったので、1.1.6 は boot に頼らず Windows のフォントを直接読むようにしています。
 
 1. ゲームを終了する
 2. `Ashita/addons/fancychat` をフォルダごと削除する
-3. FancyChatJP **1.1.6 以降**を `Ashita/addons/fancychat` に置く（ZIP なら中の `fancychat.lua` がこのフォルダの直下にあること。`FancyChatJP-main/fancychat.lua` のまま一段深いと読みません）
+3. FancyChatJP **1.1.7 以降**を `Ashita/addons/fancychat` に置く（ZIP なら中の `fancychat.lua` がこのフォルダの直下にあること。`FancyChatJP-main/fancychat.lua` のまま一段深いと読みません）
 4. ランチャーの **ADDONS** で FancyChat の **Ignore Updates** にチェックを付ける（下の節）
 5. ゲームを起動し、必要なら:
 
@@ -120,7 +121,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 /addon load fancychat
 ```
 
-読み込み行は **`fancychat version: 1.1.6 - by: Hando`** です。`1.1.5` や `0.9.xxxxxx - by: Arielfy` のままなら、まだ古いファイルです。
+読み込み行は **`fancychat version: 1.1.7 - by: Hando`** です。`1.1.6` や `0.9.xxxxxx - by: Arielfy` のままなら、まだ古いファイルです。
 
 6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
 
@@ -140,7 +141,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 ### VanaCore
 
-VanaCore で設定画面などの ImGui を日本語にする一式です。アドオン本体ではありません。すでに入っている FancyChatJP（**1.1.6 以降**）と XIUIJP の上へ、必要なファイルだけ重ねます。**CatsEyeXI では使いません。**
+VanaCore で設定画面などの ImGui を日本語にする一式です。アドオン本体ではありません。すでに入っている FancyChatJP（**1.1.7 以降**）と XIUIJP の上へ、必要なファイルだけ重ねます。**CatsEyeXI では使いません。**
 
 ダウンロード: [VanaCore.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.4/VanaCore.zip)（[Releases](https://github.com/handomade/FancyChatJP/releases)）。解凍すると `VanaCore日本語セットアップ` フォルダになります。
 
@@ -177,7 +178,7 @@ VanaCore 向けの登録が CatsEye で通らなかったときや、Windows の
 `Loaded Font: meiryo.ttc, 18px - is_jp: 1` は Ashita 本体が boot から読んだときの行です。1.1.6 では出なくて構いません。
 
 1. FFXI を完全に終了する
-2. 読み込み行が **`fancychat version: 1.1.6 - by: Hando`** であることを確認する。違うならインストールからやり直す
+2. 読み込み行が **`fancychat version: 1.1.7 - by: Hando`** であることを確認する。違うならインストールからやり直す
 3. ゲームを起動し直し、設定を開く
 4. Ashita のログで次を探す
 
@@ -185,7 +186,7 @@ VanaCore 向けの登録が CatsEye で通らなかったときや、Windows の
 | --- | --- |
 | `FancyChat: added ImGui font ...` と `FancyChat: ImGui atlas rebuilt` | 1.1.6 の読み込みは通っている。タブが日本語になる |
 | `FancyChat: Japanese glyphs available on the default ImGui font` | すでに別の日本語化が入っている。そのままでよい |
-| `FancyChat: could not add a CJK ImGui font this session` | CatsEye が、当時のフォント登録を受け付けていない。フォルダごと **1.1.6** に入れ替える |
+| `FancyChat: could not add a CJK ImGui font this session` | CatsEye が、当時のフォント登録を受け付けていない。フォルダごと **1.1.7** に入れ替える |
 | `FancyChat: no CJK font file found. Ashita=...` | Windows のフォントをアドオンから開けていない。下のコピーだけ行う |
 | `FancyChat: ImGui font file found but not accepted` | ファイルはあるが登録に失敗。その1行を残す |
 
@@ -264,6 +265,7 @@ Xbox パッドでの初期割り当て（本家と同じ）:
 | 送信 | A | 入力欄が開いている |
 | 入力履歴 | 十字 上 / 下 | 入力欄が開いている |
 | プリセット（`!mog` など） | 十字 左 / 右 | 入力欄が開いている |
+| ターゲット | 十字 左 / 右 | 入力欄が閉じている、BigMode 以外。設定で `/targetpc` `/targetnpc` `/targetbnpc` `/assist` |
 | BigMode で履歴スクロール | 十字 上 / 下 | BigMode 中、入力欄が閉じている（JP） |
 | BigMode でウィンドウ1 / 2 | 十字 左 / 右 | BigMode 中、第2ウィンドウあり、入力欄が閉じている（JP） |
 
@@ -275,14 +277,15 @@ DirectInput では初期の Xbox 番号と物理ボタンが一致しません�
 
 `/fchat settings` で開きます。
 
-1. **チャットウィンドウ** — 幅、行数、第2ウィンドウ、位置、自動非表示、「FFXIのUIと重ならないようにずらす」、選択メニューの行数、ゲームパッド など
+1. **チャットウィンドウ** — 幅、行数、第2ウィンドウ、位置、自動非表示、「FFXIのUIと重ならないようにずらす」、選択メニューの行数 など
 2. **フォント色** — チャンネル色と、入手・経験値・自分 / 敵名など。日本語ログの文言色はコンパクト戦闘ログと FC color marking がオンのときが本筋です
 3. **ショートカット** — 非表示 / BigMode / タブ送り（初期はオフ）
-4. **その他** — 旧チャット遮断、戦闘フィルタ、コンパクト戦闘、タイムスタンプ、通知音 など
-5. **CL フィルタ** — `combatfilters/*.txt`
-6. **翻訳** — ASCII チャットの日本語化、サイトと API キー、辞書
-7. **ツール** — ログ保存、マニュアル、旧チャット復元
-8. **クレジット** — オリジナル版と JP 版のバージョン・作者
+4. **ゲームパッド** — 修飾＋左右のターゲット（`/targetpc` など）
+5. **その他** — 旧チャット遮断、戦闘フィルタ、コンパクト戦闘、タイムスタンプ、通知音 など
+6. **CL フィルタ** — `combatfilters/*.txt`
+7. **翻訳** — ASCII チャットの日本語化、サイトと API キー、辞書
+8. **ツール** — ログ保存、マニュアル、旧チャット復元
+9. **クレジット** — オリジナル版と JP 版のバージョン・作者
 
 ---
 
@@ -316,7 +319,7 @@ Lua ソースに日本語を直書きすると、Shift-JIS な環境で壊れま
 ## クレジット
 
 - **Arielfy** — [FancyChat](https://github.com/ariel-logos/Fancychat)（オリジナル `1.0.260721R`）
-- **Hando** — FancyChatJP `1.1.6`
+- **Hando** — FancyChatJP `1.1.7`
 - **[Ashita](https://www.ashitaxi.com/)** — フレームワーク
 - **atom0s** — `targets.lua` とエンティティ解決
 - **Thorny** — gdifonts

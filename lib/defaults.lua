@@ -288,6 +288,11 @@ function M.default_settings()
 	return T{
 		ver                  = '0',
 		GamepadNav           = T{false},
+		-- Modifier + left/right while the chat input is closed and
+		-- BigMode is off. Values: none, targetpc, targetnpc,
+		-- targetbnpc, assist.
+		PadTargetLeft        = T{'none'},
+		PadTargetRight       = T{'none'},
 		CompactTabsBL        = T{false},
 		R0warning            = T{true},
 		UseHalfLength        = T{false},

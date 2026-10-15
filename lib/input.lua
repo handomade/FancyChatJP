@@ -375,6 +375,38 @@ function M.register()
 			end
 		end
 
+		-- Modifier + left/right, not BigMode, input closed: a
+		-- configured /targetpc (or npc / bnpc / assist) command.
+		if not fcw[3].BigMode
+			and AshitaCore:GetChatManager():IsInputOpen() == 0x00
+			and gamepadButtons.buttonsCDready then
+			local cmds = {
+				targetpc  = '/targetpc',
+				targetnpc = '/targetnpc',
+				targetbnpc = '/targetbnpc',
+				assist    = '/assist',
+			}
+			local function fire(setting)
+				local key = setting
+				if type(key) == 'table' then key = key[1] end
+				local cmd = cmds[key]
+				if cmd then
+					AshitaCore:GetChatManager():QueueCommand(1, cmd)
+					gamepadButtons.buttonsCD = os.clock()
+					return true
+				end
+				return false
+			end
+			if press_left then
+				fire(allSettings.PadTargetLeft)
+				return
+			end
+			if press_right then
+				fire(allSettings.PadTargetRight)
+				return
+			end
+		end
+
 		-- Cycle through preset (`!mog`, `!chef`, ...) commands.
 		if press_right
 			and AshitaCore:GetChatManager():IsInputOpen() == 0x11
