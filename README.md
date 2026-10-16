@@ -9,7 +9,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 | オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) `1.0.260721R` |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
 | 作者 | オリジナル: Arielfy　／　JP: Hando |
-| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.7`（FancyChatJP 独自採番） |
+| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.8`（FancyChatJP 独自採番） |
 
 動作確認は CatsEyeXI と VanaCore の、日本語クライアントです。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -109,11 +109,11 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 ### CatsEyeXI
 
-現在の版は **1.1.7** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。
+現在の版は **1.1.8** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。
 
 1. ゲームを終了する
 2. `Ashita/addons/fancychat` をフォルダごと削除する
-3. FancyChatJP **1.1.7 以降**を `Ashita/addons/fancychat` に置く（ZIP なら中の `fancychat.lua` がこのフォルダの直下にあること。`FancyChatJP-main/fancychat.lua` のまま一段深いと読みません）
+3. FancyChatJP **1.1.8 以降**を `Ashita/addons/fancychat` に置く（ZIP なら中の `fancychat.lua` がこのフォルダの直下にあること。`FancyChatJP-main/fancychat.lua` のまま一段深いと読みません）
 4. ランチャーの **ADDONS** で FancyChat の **Ignore Updates** にチェックを付ける（下の節）
 5. ゲームを起動し、必要なら:
 
@@ -121,7 +121,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 /addon load fancychat
 ```
 
-読み込み行は **`fancychat version: 1.1.7 - by: Hando`** です。`1.1.6` や `0.9.xxxxxx - by: Arielfy` のままなら、まだ古いファイルです。
+読み込み行は **`fancychat version: 1.1.8 - by: Hando`** です。`1.1.7` や `0.9.xxxxxx - by: Arielfy` のままなら、まだ古いファイルです。
 
 6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
 
@@ -170,7 +170,7 @@ ImGui の日本語は、その環境の boot 設定（多くは `Ashita\config\b
 
 ### VanaCore
 
-VanaCore で設定画面などの ImGui を日本語にする一式です。アドオン本体ではありません。すでに入っている FancyChatJP（**1.1.7 以降**）と XIUIJP の上へ、必要なファイルだけ重ねます。**CatsEyeXI では使いません。**
+VanaCore で設定画面などの ImGui を日本語にする一式です。アドオン本体ではありません。すでに入っている FancyChatJP（**1.1.8 以降**）と XIUIJP の上へ、必要なファイルだけ重ねます。**CatsEyeXI では使いません。**
 
 ダウンロード: [VanaCore.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.4/VanaCore.zip)（[Releases](https://github.com/handomade/FancyChatJP/releases)）。解凍すると `VanaCore日本語セットアップ` フォルダになります。
 
@@ -207,7 +207,7 @@ font0.family = meiryo.ttc
 font0.is_jp = true
 ```
 - ログに `Loaded Font: meiryo.ttc, 18px - is_jp: 1` が出る
-- FancyChat の読み込み行が `1.1.7 - by: Hando` である
+- FancyChat の読み込み行が `1.1.8 - by: Hando` である
 
 3行を足しても次の起動で消えるなら、上の `ResetIniFiles` を `false` にする手順です。Windows の言語設定はいじりません。
 
@@ -334,7 +334,7 @@ Lua ソースに日本語を直書きすると、Shift-JIS な環境で壊れま
 ## クレジット
 
 - **Arielfy** — [FancyChat](https://github.com/ariel-logos/Fancychat)（オリジナル `1.0.260721R`）
-- **Hando** — FancyChatJP `1.1.7`
+- **Hando** — FancyChatJP `1.1.8`
 - **[Ashita](https://www.ashitaxi.com/)** — フレームワーク
 - **atom0s** — `targets.lua` とエンティティ解決
 - **Thorny** — gdifonts

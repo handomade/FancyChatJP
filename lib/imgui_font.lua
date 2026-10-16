@@ -342,41 +342,51 @@ local function try_add(path, size)
 	local fonts = io_fonts()
 	if not fonts then return nil end
 	local cfg = { MergeMode = true, PixelSnapH = true, FontNo = 0 }
-	local attempts = {}
-	-- VanaCore (ImGui 1.92) takes the range argument and rasterises
-	-- on use.  This is the registration that already shows Japanese.
-	if imguiWrap.isNewVer then
-		local ranges = jp_ranges(fonts)
-		attempts[#attempts + 1] = function()
+	local ranges = jp_ranges(fonts)
+	-- Always try the range argument first.  VanaCore (ImGui 1.92)
+	-- accepts it and rasterises on use.  Some VanaCore launches still
+	-- report an interface below 4.3, so gating this on isNewVer skipped
+	-- the only registration that shows Japanese, then the 1.81 atlas
+	-- rebuild failed and the face was thrown away.
+	-- CatsEye (ImGui 1.81) rejects the extra argument; pcall continues.
+	local ranged = {
+		function()
 			return fonts:AddFontFromFileTTF(path, size, cfg, ranges)
-		end
-		attempts[#attempts + 1] = function()
+		end,
+		function()
 			return fonts:AddFontFromFileTTF(path, size, nil, ranges)
-		end
-		attempts[#attempts + 1] = function()
+		end,
+		function()
 			return fonts:AddFontFromFileTTF(path, size, cfg, RANGE_TABLE)
-		end
-	end
-	-- CatsEye (ImGui 1.81) rejects that argument.  Register the face
-	-- without it, then point the atlas config at RANGES and upload
-	-- a new texture.  That upload must not run on 1.92.
-	attempts[#attempts + 1] = function()
-		return fonts:AddFontFromFileTTF(path, size, cfg)
-	end
-	attempts[#attempts + 1] = function()
-		return fonts:AddFontFromFileTTF(path, size)
-	end
-	local ranged_attempts = imguiWrap.isNewVer and 3 or 0
-	for i, fn in ipairs(attempts) do
+		end,
+	}
+	for _, fn in ipairs(ranged) do
 		local ok, font = pcall(fn)
 		if ok and font then
-			local ranged = i <= ranged_attempts
-			if not ranged and not imguiWrap.isNewVer then
+			M.added_with_ranges = true
+			return font
+		end
+	end
+	-- No range argument.  Point the 1.81 atlas config at RANGES and
+	-- upload a new texture.  Do not do that after a ranged add, and
+	-- do not do it when the binding already said this is 1.92.
+	local plain = {
+		function()
+			return fonts:AddFontFromFileTTF(path, size, cfg)
+		end,
+		function()
+			return fonts:AddFontFromFileTTF(path, size)
+		end,
+	}
+	for _, fn in ipairs(plain) do
+		local ok, font = pcall(fn)
+		if ok and font then
+			if not imguiWrap.isNewVer then
 				local atlas = atlas_from(fonts)
 				if atlas then patch_glyph_ranges(atlas) end
 				if not rebuild_old_atlas(fonts) then return nil end
 			end
-			M.added_with_ranges = ranged
+			M.added_with_ranges = false
 			return font
 		end
 	end
@@ -493,10 +503,11 @@ function M.flush()
 		M.font = nil
 		return
 	end
-	-- 1.92 rasterises on first use.  The face is ready next Present.
-	-- 1.92 rasterises on first use, but only after the range argument
-	-- was accepted.  A face added without ranges stays Latin.
-	if M.font and imguiWrap.isNewVer and M.added_with_ranges then
+	-- 1.92 rasterises on first use.  A same-frame width probe still
+	-- sees '?' and would throw the face away.  Trust a ranged add
+	-- even when the interface version was reported below 4.3.
+	-- A face added without ranges stays Latin until the 1.81 rebuild.
+	if M.font and M.added_with_ranges then
 		M.verified = true
 		M.usable   = true
 	end

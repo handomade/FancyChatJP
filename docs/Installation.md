@@ -15,7 +15,7 @@
    ```
    /addon load fancychat
    ```
-   The load line must read **`fancychat version: 1.1.7 - by: Hando`**. If it still says `0.9.xxxxxx - by: Arielfy`, the original addon is still the one being loaded.
+   The load line must read **`fancychat version: 1.1.8 - by: Hando`**. If it still says `0.9.xxxxxx - by: Arielfy`, the original addon is still the one being loaded.
 
 On **CatsEyeXI**, open the launcher **ADDONS** tab and tick **Ignore Updates** for FancyChat. Otherwise the next addon update restores the bundled Arielfy build over FancyChatJP. That writes `fancychat` into `IgnoreUpdatesAddons` in `cexi_settings.json` (same folder as the launcher exe, e.g. `C:\Games\CatsEyeXI\cexi_settings.json`, not inside `Ashita`). Leaving the box unchecked is not a guarantee the files stay; tick it whenever you run JP.
 

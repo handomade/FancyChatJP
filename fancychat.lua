@@ -9,7 +9,7 @@ addon.orig_author  = 'Arielfy'
 addon.orig_version = '1.0.260721R'
 addon.orig_link    = 'https://github.com/ariel-logos/Fancychat'
 
-local ver = '1.1.7'
+local ver = '1.1.8'
 addon.version = ver
 
 --[[
