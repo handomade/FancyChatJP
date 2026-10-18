@@ -9,7 +9,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 | オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) `1.0.260721R` |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
 | 作者 | オリジナル: Arielfy　／　JP: Hando |
-| バージョン | オリジナル `1.0.260721R`　／　JP `1.1.8`（FancyChatJP 独自採番） |
+| バージョン | オリジナル `1.0.260721R`　／　JP `1.2.0`（FancyChatJP 独自採番） |
 
 動作確認は CatsEyeXI と VanaCore の、日本語クライアントです。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -84,6 +84,16 @@ Say / Tell / PT / LS など、**本文がすべて半角英数**の行を日本�
 - パーティ名・自分の名前・英語ゾーン名は訳さないようにできます。知らない人名までは自動では判別できません
 - `/fchat translate` でオン／オフ
 
+### カスタムメニュー翻訳（1.2.0）ベータ
+
+CatsEye などの **英語カスタム NPC メニュー**（ウィンドウの見出しと選択肢）を日本語にします。設定の **翻訳** タブで「英語メニューを日本語にする」をオンにします。既定はオフで、チャット翻訳のオン／オフとは別に動きます。
+
+**ベータです。** 次のメニューが出ない、文字が欠ける、選択が通らないなど、正常に動かないことがあります。そのときは同じ設定でオフにしてください。
+
+- ゲーム内の **アイテム名や魔法名まで正しく訳すことはできません**
+- **地名・魔法名**は誤訳を避けるため、なるべく翻訳しません
+- 辞書は `Ashita/config/addons/fancychat/translate/menu_dict.txt`（UTF-8、英語と日本語の間はタブ）。無い行は翻訳サイトへ送り、返ってきたらこのファイルに足します。チャット用の `dict.txt` はメニューでは使いません
+
 ### 日本語ログとクリップボード（1.0.2）
 
 - チャット行のコピーは Unicode と CP932 の両方をクリップボードへ入れる。貼り付けと `/echo` の確認メッセージが UTF-8 のまま CP932 扱いされて文字化けしないようにした
@@ -109,11 +119,11 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 
 ### CatsEyeXI
 
-現在の版は **1.1.8** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。
+現在の版は **1.2.0** です。[リポジトリの `main`](https://github.com/handomade/FancyChatJP) から入れてください。
 
 1. ゲームを終了する
 2. `Ashita/addons/fancychat` をフォルダごと削除する
-3. FancyChatJP **1.1.8 以降**を `Ashita/addons/fancychat` に置く（ZIP なら中の `fancychat.lua` がこのフォルダの直下にあること。`FancyChatJP-main/fancychat.lua` のまま一段深いと読みません）
+3. FancyChatJP **1.2.0 以降**を `Ashita/addons/fancychat` に置く（ZIP なら中の `fancychat.lua` がこのフォルダの直下にあること。`FancyChatJP-main/fancychat.lua` のまま一段深いと読みません）
 4. ランチャーの **ADDONS** で FancyChat の **Ignore Updates** にチェックを付ける（下の節）
 5. ゲームを起動し、必要なら:
 
@@ -121,7 +131,7 @@ CatsEyeXI には本家 FancyChat（`0.9.xxxxxx` / Arielfy）が入っている�
 /addon load fancychat
 ```
 
-読み込み行は **`fancychat version: 1.1.8 - by: Hando`** です。`1.1.7` や `0.9.xxxxxx - by: Arielfy` のままなら、まだ古いファイルです。
+読み込み行は **`fancychat version: 1.2.0 - by: Hando`** です。`1.1.8` や `0.9.xxxxxx - by: Arielfy` のままなら、まだ古いファイルです。
 
 6. 自動起動するなら、Ashita の default スクリプトの**末尾付近**に `/addon load fancychat` を追加する。ほかのチャット系アドオンより後が安全です
 
@@ -170,7 +180,7 @@ ImGui の日本語は、その環境の boot 設定（多くは `Ashita\config\b
 
 ### VanaCore
 
-VanaCore で設定画面などの ImGui を日本語にする一式です。アドオン本体ではありません。すでに入っている FancyChatJP（**1.1.8 以降**）と XIUIJP の上へ、必要なファイルだけ重ねます。**CatsEyeXI では使いません。**
+VanaCore で設定画面などの ImGui を日本語にする一式です。アドオン本体ではありません。すでに入っている FancyChatJP（**1.2.0 以降**）と XIUIJP の上へ、必要なファイルだけ重ねます。**CatsEyeXI では使いません。**
 
 ダウンロード: [VanaCore.zip](https://github.com/handomade/FancyChatJP/releases/download/1.1.4/VanaCore.zip)（[Releases](https://github.com/handomade/FancyChatJP/releases)）。解凍すると `VanaCore日本語セットアップ` フォルダになります。
 
@@ -207,7 +217,7 @@ font0.family = meiryo.ttc
 font0.is_jp = true
 ```
 - ログに `Loaded Font: meiryo.ttc, 18px - is_jp: 1` が出る
-- FancyChat の読み込み行が `1.1.8 - by: Hando` である
+- FancyChat の読み込み行が `1.2.0 - by: Hando` である
 
 3行を足しても次の起動で消えるなら、上の `ResetIniFiles` を `false` にする手順です。Windows の言語設定はいじりません。
 
@@ -298,7 +308,7 @@ DirectInput では初期の Xbox 番号と物理ボタンが一致しません�
 4. **ゲームパッド** — 修飾＋左右のターゲット（`/targetpc` など）
 5. **その他** — 旧チャット遮断、戦闘フィルタ、コンパクト戦闘、タイムスタンプ、通知音 など
 6. **CL フィルタ** — `combatfilters/*.txt`
-7. **翻訳** — ASCII チャットの日本語化、サイトと API キー、辞書
+7. **翻訳** — ASCII チャットの日本語化、英語カスタムメニュー（ベータ・既定オフ）、サイトと API キー、辞書
 8. **ツール** — ログ保存、マニュアル、旧チャット復元
 9. **クレジット** — オリジナル版と JP 版のバージョン・作者
 
@@ -310,7 +320,7 @@ DirectInput では初期の Xbox 番号と物理ボタンが一致しません�
 - **色セット** — `addons/fancychat/chatcolors/`
 - **戦闘フィルタ** — `addons/fancychat/combatfilters/*.txt`
 - **保存ログ** — `Ashita/config/addons/fancychat/logs/<キャラ名>/ChatLogs_<日時>/`
-- **翻訳辞書** — `Ashita/config/addons/fancychat/translate/dict.txt`
+- **翻訳辞書** — `Ashita/config/addons/fancychat/translate/dict.txt`（チャット）、`menu_dict.txt`（カスタムメニュー）
 - **通知音** — `addons/fancychat/notifications/*.wav`
 - **マップ** — `addons/fancychat/maps/<ゾーン>/<分類>/`
 - **ImGui 用フォント** — `Ashita/resources/fonts/meiryo.ttc`（設定・タブ用。アドオンには同梱しません）
@@ -334,7 +344,7 @@ Lua ソースに日本語を直書きすると、Shift-JIS な環境で壊れま
 ## クレジット
 
 - **Arielfy** — [FancyChat](https://github.com/ariel-logos/Fancychat)（オリジナル `1.0.260721R`）
-- **Hando** — FancyChatJP `1.1.8`
+- **Hando** — FancyChatJP `1.2.0`
 - **[Ashita](https://www.ashitaxi.com/)** — フレームワーク
 - **atom0s** — `targets.lua` とエンティティ解決
 - **Thorny** — gdifonts

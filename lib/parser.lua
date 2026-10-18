@@ -1260,9 +1260,11 @@ parseThis = function(e, e_message)
 	--   127 system8       - system messages (cream tier)
 	--   131 combat_y      - "You" gain exp / limit / gil / chain
 	--   142 system7NPC    - NPC system messages
+	--   144 / 150 / 151   - NPC talk (same line often repeats when you talk again)
 	--   204 searchcomment - player search-comment lines
 	local mm = par.MessageMode
-	local dedupBypass = (mm == 121 or mm == 127 or mm == 131 or mm == 142 or mm == 204)
+	local dedupBypass = (mm == 121 or mm == 127 or mm == 131 or mm == 142
+		or mm == 144 or mm == 150 or mm == 151 or mm == 204)
 
 	-- Search the remaining window for an ASCII-equal predecessor.
 	local checkMsgOrDate = true
@@ -1950,9 +1952,11 @@ function M.register()
 	-- splits multi-line messages on LF, and dispatches each segment
 	-- through parseThis.
 	-- =====================================================================
+	local menu_translate = require('lib.menu_translate')
 	ashita.events.register('text_in', 'text_in_cb', function(e)
 		if par.dumping then return end
 		if #e.message > 2048 then return end
+		pcall(menu_translate.on_text, e)
 
 		-- Cache (#7): bit_band(e.mode, 0xFF) was called twice; once
 		-- here as `mode_pre`, again in the OriginalBuffer prefix.
@@ -2002,7 +2006,9 @@ function M.register()
 		end
 
 		local e_message
-		if mode_pre < 20 or mode_pre > 212 then
+		if mode_pre < 20 or mode_pre > 212
+			or mode_pre == 142 or mode_pre == 144
+			or mode_pre == 150 or mode_pre == 151 then
 			e_message = AshitaCore:GetChatManager():ParseAutoTranslate(e.message, true)
 		else
 			e_message = e.message

@@ -9,7 +9,7 @@ addon.orig_author  = 'Arielfy'
 addon.orig_version = '1.0.260721R'
 addon.orig_link    = 'https://github.com/ariel-logos/Fancychat'
 
-local ver = '1.1.8'
+local ver = '1.2.0'
 addon.version = ver
 
 --[[
@@ -48,7 +48,7 @@ require('common')
 do
 	local drop = {
 		'lib.buffer', 'lib.render', 'lib.state', 'lib.defaults',
-		'lib.translate', 'lib.parser', 'lib.lifecycle', 'lib.input',
+		'lib.translate', 'lib.menu_translate', 'lib.parser', 'lib.lifecycle', 'lib.input',
 		'lib.bigmode', 'lib.commands', 'lib.ui_settings', 'lib.ui_panels',
 		'lib.ui_helpers', 'lib.combat', 'lib.combat_packets', 'lib.i18n',
 		'lib.imgui_font', 'utils', 'help', 'targets', 'emojis', 'imguiWrap',

@@ -17,6 +17,7 @@ local ui_panels      = require('lib.ui_panels')
 local ui_settings    = require('lib.ui_settings')
 local combat_packets = require('lib.combat_packets')
 local translate      = require('lib.translate')
+local menu_translate = require('lib.menu_translate')
 local buffer         = require('lib.buffer')
 local ffi            = require('ffi')
 
@@ -186,6 +187,7 @@ function M.register()
 			pcall(combat_packets.refresh_snapshot)
 		end
 		pcall(translate.poll)
+		pcall(menu_translate.poll_held)
 		-- Per-frame caches (avoids repeated lookups).
 		local fcw1, fcw2, fcw3 = fcw[1], fcw[2], fcw[3]
 		local _fh  = allSettings.fontSettings.font_height
@@ -349,6 +351,7 @@ function M.register()
 			if MenuID ~= 0 then
 				MenuName = ashita.memory.read_string(ashita.memory.read_uint32(MenuID + 4) + 0x46, 16);
 				MenuName = string.gsub(MenuName, '\x00', ''):trimex()
+				menu_translate.tick(MenuName, par.InEvent)
 				
 				--uiw.MenuExt = ashita.memory.read_uint32(uiw.MenuPtr-0x40)
 				mvc.MenuJob = false

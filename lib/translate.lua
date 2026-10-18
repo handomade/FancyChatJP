@@ -14,6 +14,10 @@ local M = {}
 local FW_OPEN  = '\239\189\155' -- fullwidth {
 local FW_CLOSE = '\239\189\157' -- fullwidth }
 local FW_COLON = '\239\188\154' -- fullwidth :
+local AT_OPEN  = '\239\39'      -- FFXI auto-translate open (looks like i/❮)
+local AT_CLOSE = '\239\40'      -- FFXI auto-translate close
+local AT_OPEN_U  = '\226\157\174' -- U+276E
+local AT_CLOSE_U = '\226\157\175' -- U+276F
 
 M.PROVIDERS = { 'MyMemory', 'DeepL', 'ChatGPT', 'Gemini' }
 
@@ -21,6 +25,8 @@ local dict = {}
 local dict_count = 0
 local dict_loaded = false
 local zone_names = nil
+local proper = nil
+local proper_list = nil
 local pending = {}
 local inflight = {}
 local next_id = 1
@@ -132,9 +138,11 @@ function M.load_dict()
 	dict = {}
 	dict_count = 0
 	dict_loaded = true
+	M._dict_loaded_at = os.clock()
 	local f = io.open(dict_path(), 'rb')
 	if not f then return end
 	for line in f:lines() do
+		line = line:gsub('^\239\187\191', ''):gsub('\r', '')
 		if line:sub(1, 1) ~= '#' and line:find('\t', 1, true) then
 			local src, dst = line:match('^(.-)\t(.*)$')
 			if src and dst and src ~= '' and dst ~= '' then
@@ -194,6 +202,16 @@ function M.open_dict_folder()
 	os.execute('start "" "'..cfg_dir()..'"')
 end
 
+function M.reload_dict_if_stale()
+	if os.clock() - (M._dict_loaded_at or 0) < 1 then return end
+	M.load_dict()
+end
+
+local silent_sink = nil
+function M.set_silent_sink(fn)
+	silent_sink = fn
+end
+
 local function load_zones()
 	if zone_names then return zone_names end
 	zone_names = {}
@@ -208,6 +226,116 @@ local function load_zones()
 	end
 	table.sort(zone_names, function(a, b) return #a > #b end)
 	return zone_names
+end
+
+local function res_str(rm, table_name, id, lang)
+	local ok, s
+	if lang then
+		ok, s = pcall(function()
+			return rm:GetString(table_name, id, lang)
+		end)
+	else
+		ok, s = pcall(function()
+			return rm:GetString(table_name, id)
+		end)
+	end
+	if ok and type(s) == 'string' and s ~= '' then
+		return s:gsub('%z', ''):gsub('^%s+', ''):gsub('%s+$', '')
+	end
+	return nil
+end
+
+local function load_proper()
+	if proper then return proper, proper_list end
+	proper = {}
+	proper_list = {}
+	local function add(n)
+		if type(n) ~= 'string' then return end
+		n = n:gsub('%z', ''):gsub('^%s+', ''):gsub('%s+$', '')
+		if #n < 3 or not is_ascii(n) then return end
+		local k = n:lower()
+		if k == 'none' or k == 'unknown' or k == 'n/a' then return end
+		if not proper[k] then
+			proper[k] = n
+			proper_list[#proper_list + 1] = n
+		end
+	end
+	local rm = AshitaCore:GetResourceManager()
+	if rm then
+		for id = 0, 350 do
+			add(res_str(rm, 'zones.names', id, 2))
+			add(res_str(rm, 'zones.names', id))
+		end
+		for id = 0, 2048 do
+			add(res_str(rm, 'spells.names', id, 2))
+			add(res_str(rm, 'spells.names', id))
+			add(res_str(rm, 'spells', id, 2))
+			local ok, sp = pcall(function() return rm:GetSpellById(id) end)
+			if ok and sp then
+				local nm = sp.Name
+				if type(nm) == 'string' then
+					add(nm)
+				elseif type(nm) == 'table' then
+					add(nm[1])
+					add(nm[2])
+				end
+			end
+		end
+	end
+	local extras = {
+		'White Magic', 'Black Magic', 'Blue Magic', 'Summoning Magic',
+		'Dark Magic', 'Divine Magic', 'Healing Magic', 'Enhancing Magic',
+		'Enfeebling Magic', 'Elemental Magic', 'Ninjutsu', 'Geomancy',
+		'Singing', 'Songs', 'String Instrument', 'Wind Instrument',
+		'Trust', 'Weapon Skill', 'Weapon Skills',
+	}
+	for i = 1, #extras do add(extras[i]) end
+	if rm then
+		for id = 0, 127 do
+			add(res_str(rm, 'skills.names', id, 2))
+			add(res_str(rm, 'skills.names', id))
+			add(res_str(rm, 'skills', id, 2))
+		end
+	end
+	local zones = load_zones()
+	for i = 1, #zones do add(zones[i]) end
+	table.sort(proper_list, function(a, b) return #a > #b end)
+	return proper, proper_list
+end
+
+function M.is_proper_noun(s)
+	if type(s) ~= 'string' or s == '' then return false end
+	load_proper()
+	local k = norm_key(s)
+	if proper[k] then return true end
+	local rm = AshitaCore:GetResourceManager()
+	if not rm then return false end
+	local ok, sp = pcall(function() return rm:GetSpellByName(s, 0) end)
+	if ok and sp then return true end
+	ok, sp = pcall(function() return rm:GetSpellByName(s, 2) end)
+	if ok and sp then return true end
+	return false
+end
+
+local function protect_proper(s)
+	load_proper()
+	local map = {}
+	local idx = 0
+	for i = 1, #proper_list do
+		local n = proper_list[i]
+		if #n >= 3 and s:lower():find(n:lower(), 1, true) then
+			idx = idx + 1
+			local tok = 'NNN'..idx..'NNN'
+			local nexts = replace_ci(s, n, tok)
+			if nexts ~= s then
+				map[idx] = n
+				s = nexts
+			else
+				idx = idx - 1
+			end
+		end
+	end
+	return s, map
 end
 
 local function replace_ci(s, needle, repl)
@@ -329,6 +457,12 @@ local function restore_names(s, map)
 			return (i and map.K[i]) or ''
 		end)
 	end
+	if map.N then
+		s = s:gsub('[Nn][Nn][Nn]%s*(%d+)%s*[Nn][Nn][Nn]', function(n)
+			local i = tonumber(n)
+			return (i and map.N[i]) or ''
+		end)
+	end
 	-- Leftover markup the engine invented (no matching name).
 	s = s:gsub('%[%[%s*[PZpz]%s*%d+%s*%]%]', '')
 	s = s:gsub('%s+', ' '):gsub('^%s+', ''):gsub('%s+$', '')
@@ -339,18 +473,21 @@ end
 -- Length/word count is a heuristic, not a parser.
 local function looks_like_speaker(left)
 	if not left or left == '' then return false end
+	left = left:gsub(AT_OPEN, ''):gsub(AT_CLOSE, ''):gsub(AT_OPEN_U, ''):gsub(AT_CLOSE_U, '')
+	left = left:gsub('[\128-\255]', ''):gsub('^%s+', ''):gsub('%s+$', '')
+	if not left or left == '' then return false end
 	if #left < 2 or #left > 28 then return false end
 	local low = left:lower()
 	if low == 'http' or low == 'https' or low == 'ftp' then return false end
 	if low:find('addon', 1, true) then return false end
 	if low == 'active bonus' or low == 'universal bonus' then return false end
-	if left:find('[/%?!:,%.%d]') then return false end
-	if not left:find('^[%a][%a%d%s%-\']*$') then return false end
+	if left:find('[/%?!:,%d]') then return false end
+	if not left:find("^[%a][%a%d%s%-.']*$") then return false end
 	local words = 0
 	for w in left:gmatch('%S+') do
 		words = words + 1
 		if #w < 2 or #w > 16 then return false end
-		if not w:find('^[%a][%a%d%-\']*$') then return false end
+		if not w:find("^[%a][%a%d%-.']*$") then return false end
 	end
 	if words < 1 or words > 4 then return false end
 	return true
@@ -365,20 +502,49 @@ function M.extract(raw)
 	if s == '' then return nil end
 
 	local keep = ''
-	while true do
-		if s:sub(1, #FW_OPEN) == FW_OPEN then
-			local c = s:find(FW_CLOSE, 1, true)
-			if not c then break end
-			keep = keep .. s:sub(1, c + #FW_CLOSE - 1) .. ' '
-			s = s:sub(c + #FW_CLOSE):gsub('^%s+', '')
-		elseif s:sub(1, 1) == '{' then
-			local c = s:find('}', 1, true)
-			if not c then break end
-			keep = keep .. s:sub(1, c) .. ' '
-			s = s:sub(c + 1):gsub('^%s+', '')
+	local function peel_pair(open, close, keep_markers)
+		if s:sub(1, #open) ~= open then return false end
+		local c = s:find(close, #open + 1, true)
+		if not c then return false end
+		if keep_markers then
+			keep = keep .. s:sub(1, c + #close - 1)
 		else
-			break
+			keep = keep .. s:sub(#open + 1, c - 1)
 		end
+		s = s:sub(c + #close)
+		return true
+	end
+	while true do
+		s = s:gsub('^%s+', '')
+		if peel_pair(FW_OPEN, FW_CLOSE, true) then
+			keep = keep .. ' '
+		elseif peel_pair('{', '}', true) then
+			keep = keep .. ' '
+		elseif peel_pair('<', '>', false) then
+			keep = keep .. ' '
+		elseif peel_pair(AT_OPEN, AT_CLOSE, false) then
+			keep = keep .. ' '
+		elseif peel_pair(AT_OPEN_U, AT_CLOSE_U, false) then
+			keep = keep .. ' '
+		elseif s:sub(1, #AT_CLOSE) == AT_CLOSE then
+			s = s:sub(#AT_CLOSE + 1)
+		elseif s:sub(1, #AT_CLOSE_U) == AT_CLOSE_U then
+			s = s:sub(#AT_CLOSE_U + 1)
+		else
+			local b = s:byte(1)
+			if b and ((b >= 0x81 and b <= 0x9F) or (b >= 0xE0 and b <= 0xFC)) then
+				s = s:sub(3)
+			elseif b and b >= 0x80 then
+				s = s:sub(2)
+			else
+				break
+			end
+		end
+	end
+	local head = s:match('^(%s*:?%s*)')
+	if head and head:find(':', 1, true) then
+		keep = keep .. head
+		s = s:sub(#head + 1)
 	end
 
 	local fw = s:find(FW_COLON, 1, true)
@@ -411,8 +577,19 @@ function M.extract(raw)
 		kmap[kidx] = '{' .. inner .. '}'
 		return 'KKK'..kidx..'KKK'
 	end)
+	s = s:gsub(AT_OPEN..'(.-)'..AT_CLOSE, function(inner)
+		kidx = kidx + 1
+		kmap[kidx] = inner
+		return 'KKK'..kidx..'KKK'
+	end)
+	s = s:gsub(AT_OPEN_U..'(.-)'..AT_CLOSE_U, function(inner)
+		kidx = kidx + 1
+		kmap[kidx] = inner
+		return 'KKK'..kidx..'KKK'
+	end)
 
 	s = s:gsub('%s+', ' '):gsub('^%s+', ''):gsub('%s+$', '')
+	keep = keep:gsub(AT_OPEN, ''):gsub(AT_CLOSE, ''):gsub('%s+', ' ')
 	if s == '' or not is_ascii(s) then return nil end
 	if not s:find('%a') then return nil end
 	if #s < 2 then return nil end
@@ -440,7 +617,6 @@ local function chat_mode_ok(lastmode, mode)
 	if SKIP_MODES[tonumber(mode) or -1] then return false end
 	if not lastmode or lastmode == 'filtered' or lastmode == 'unknown' then return false end
 	if lastmode:find('combat', 1, true) then return false end
-	if lastmode:find('NPC', 1, true) then return false end
 	if lastmode == 'echo' or lastmode == 'zone' then return false end
 	if lastmode:find('^item') or lastmode == 'craft' or lastmode == 'fishing' then return false end
 	if lastmode == 'trade' then return false end
@@ -455,6 +631,8 @@ local function chat_mode_ok(lastmode, mode)
 		or lastmode:find('^unity')
 		or lastmode:find('^assist')
 		or lastmode:find('^system')
+		or lastmode == 'NPC'
+		or lastmode:find('NPC', 1, true)
 		or lastmode == 'mog'
 		or lastmode == 'servermsg'
 		or lastmode == 'cfh'
@@ -646,6 +824,7 @@ local function queue_emit(mode, text, map, keep)
 	if not text or text == '' then return end
 	if is_ascii(text) then return end
 	keep = keep or ''
+	keep = keep:gsub(AT_OPEN, ''):gsub(AT_CLOSE, '')
 	if keep ~= '' then
 		text = keep .. text
 	end
@@ -679,8 +858,20 @@ local function finish_ok(job, jp)
 	jp = jp:gsub('&quot;', '"'):gsub('&amp;', '&'):gsub('&#(%d+);', function(n)
 		return utf8_cp(tonumber(n) or 0)
 	end)
-	save_entry(job.key, jp)
-	emit_job(job, jp)
+	jp = restore_names(jp, job.map)
+	if is_ascii(jp) then
+		last_err = 'translation was still English'
+		return
+	end
+	if not job.skip_dict then
+		save_entry(job.key, jp)
+	end
+	if job.silent and silent_sink then
+		pcall(silent_sink, job.key, jp)
+	end
+	if not job.silent then
+		emit_job(job, jp)
+	end
 end
 
 local function find_job_by_key(key)
@@ -726,6 +917,74 @@ local function requeue_or_drop(job, err)
 		last_err = err or last_err
 		PENDING_KEY[job.key] = nil
 	end
+end
+
+-- Dictionary hit, or nil while a silent request is in flight.
+-- Does not print a chat line. Used by the NPC menu rewriter.
+-- skip_dict: menu path; do not read or write dict.txt.
+function M.prepare(src, skip_dict)
+	if type(src) ~= 'string' or src == '' then return nil end
+	if not is_ascii(src) then return nil end
+	if M.is_proper_noun(src) then return nil end
+	local key = norm_key(src)
+	if key == '' then return nil end
+	local protected, nmap = protect_proper(src)
+	if not skip_dict then
+		if not dict_loaded then M.load_dict() end
+		local hit = dict[key]
+		if hit and hit ~= '' then
+			local keep = true
+			if nmap then
+				for _, n in pairs(nmap) do
+					if type(n) == 'string' and n ~= '' and not hit:find(n, 1, true) then
+						keep = false
+						break
+					end
+				end
+			end
+			if keep then return hit end
+		end
+	end
+	if PENDING_KEY[key] then return nil end
+	local leftover = protected:gsub('[Nn][Nn][Nn]%d+[Nn][Nn][Nn]', ''):gsub('%s+', '')
+	if leftover == '' or not leftover:find('%a') then return nil end
+
+	local p = provider()
+	if (p == 'ChatGPT' or p == 'Gemini' or p == 'DeepL') and api_key() == '' then
+		last_err = p..' needs an API key'
+		return nil
+	end
+	local req, err = build_request(protected)
+	if not req then
+		last_err = err or 'no request'
+		return nil
+	end
+	while #pending >= MAX_PENDING do
+		local drop = table.remove(pending, 1)
+		if drop then PENDING_KEY[drop.key] = nil end
+		last_err = 'translation queue full'
+	end
+	local job = {
+		key = key,
+		src = protected,
+		map = { N = nmap },
+		keep = '',
+		mode = 1,
+		waiters = {},
+		tries = 0,
+		silent = true,
+		skip_dict = skip_dict and true or false,
+		req = req,
+	}
+	pending[#pending + 1] = job
+	PENDING_KEY[key] = job
+	start_next()
+	return nil
+end
+
+function M.waiting(src)
+	if type(src) ~= 'string' or src == '' then return false end
+	return PENDING_KEY[norm_key(src)] ~= nil
 end
 
 function M.consider(e, raw, mode, lastmode)

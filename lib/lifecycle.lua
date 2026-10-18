@@ -401,6 +401,9 @@ function M.register()
 		if not allSettings.TranslateEnabled then
 			allSettings.TranslateEnabled = T{false}
 		end
+		if not allSettings.TranslateMenu then
+			allSettings.TranslateMenu = T{false}
+		end
 		if not allSettings.TranslateProvider then
 			allSettings.TranslateProvider = 'MyMemory'
 		end
@@ -601,6 +604,7 @@ function M.register()
 	-- Packet 0x000A: zone-in complete.  Resume.
 	-- =====================================================================
 	local combat_packets = require('lib.combat_packets')
+	local menu_translate = require('lib.menu_translate')
 	ashita.events.register('packet_in', 'zonename_packet_in', function(e)
 		-- Packet-based combat filter: if enabled in settings, the
 		-- 0x0028 action packet is inspected and may have its chat
@@ -608,6 +612,7 @@ function M.register()
 		-- 0x0029 action-message packet may be blocked entirely.
 		-- dispatch() routes both packet IDs.
 		combat_packets.dispatch(e)
+		pcall(menu_translate.on_packet, e)
 
 		-- "Is the server actually talking to us?" signal for the
 		-- /servmes injection in render.lua.  We count non-injected
@@ -642,9 +647,14 @@ function M.register()
 	-- =====================================================================
 	ashita.events.register('packet_out', 'packet_out_callback1', function (e)
 		--print('out: '..bit.tohex(e.id))
+		pcall(menu_translate.on_packet_out, e)
 		if e.id == 0x0026 then
 			uiw.MenuList = {}
 		end
+	end)
+
+	ashita.events.register('text_out', 'menu_translate_text_out', function (e)
+		pcall(menu_translate.on_text_out, e)
 	end)
 end
 
