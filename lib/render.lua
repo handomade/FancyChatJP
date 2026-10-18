@@ -188,6 +188,7 @@ function M.register()
 		end
 		pcall(translate.poll)
 		pcall(menu_translate.poll_held)
+		pcall(menu_translate.draw_status)
 		-- Per-frame caches (avoids repeated lookups).
 		local fcw1, fcw2, fcw3 = fcw[1], fcw[2], fcw[3]
 		local _fh  = allSettings.fontSettings.font_height

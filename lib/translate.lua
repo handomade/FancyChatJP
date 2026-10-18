@@ -3,7 +3,8 @@
 -- stalls.  Japanese UI strings are decimal-escaped by _escape_lua_utf8.py.
 
 require('common')
-local state = require('lib.state')
+local state    = require('lib.state')
+local encoding = require('gdifonts.encoding')
 
 local allSettings = state.allSettings
 local par         = state.par
@@ -27,6 +28,7 @@ local dict_loaded = false
 local zone_names = nil
 local proper = nil
 local proper_list = nil
+local proper_jp = nil -- lowercased English -> official Japanese
 local pending = {}
 local inflight = {}
 local next_id = 1
@@ -35,6 +37,7 @@ local MAX_INFLIGHT = 3
 local MAX_PENDING = 40
 local MAX_TRIES = 2
 local PENDING_KEY = {} -- key -> job still waiting on the network
+local no_jp = {} -- site returned English; do not retry this session
 local PREFIX = '['..'\231\191\187\232\168\179'..'] ' -- [翻訳]  (defined early for waiters)
 
 local function cfg_dir()
@@ -228,6 +231,66 @@ local function load_zones()
 	return zone_names
 end
 
+-- Ashita may give a Lua string, an IString userdata, or Shift-JIS.
+local function as_str(v)
+	if v == nil then return nil end
+	if type(v) == 'string' then return v end
+	local ok, s = pcall(function()
+		if type(v) == 'table' or type(v) == 'userdata' then
+			if v[1] ~= nil and type(v[1]) == 'string' then return v[1] end
+			if v.s ~= nil and type(v.s) == 'string' then return v.s end
+		end
+		return tostring(v)
+	end)
+	if not ok or type(s) ~= 'string' or s == '' then return nil end
+	if s == 'nil' or s:sub(1, 8) == 'userdata' or s == 'table' then return nil end
+	return s
+end
+
+local function is_utf8_text(s)
+	if type(s) ~= 'string' then return false end
+	local i, n = 1, #s
+	while i <= n do
+		local c = s:byte(i)
+		if c < 0x80 then
+			i = i + 1
+		elseif c >= 0xC2 and c <= 0xDF and i + 1 <= n then
+			local c2 = s:byte(i + 1)
+			if c2 < 0x80 or c2 > 0xBF then return false end
+			i = i + 2
+		elseif c >= 0xE0 and c <= 0xEF and i + 2 <= n then
+			local c2, c3 = s:byte(i + 1), s:byte(i + 2)
+			if c2 < 0x80 or c2 > 0xBF or c3 < 0x80 or c3 > 0xBF then return false end
+			i = i + 3
+		elseif c >= 0xF0 and c <= 0xF4 and i + 3 <= n then
+			local c2, c3, c4 = s:byte(i + 1), s:byte(i + 2), s:byte(i + 3)
+			if c2 < 0x80 or c2 > 0xBF or c3 < 0x80 or c3 > 0xBF or c4 < 0x80 or c4 > 0xBF then
+				return false
+			end
+			i = i + 4
+		else
+			return false
+		end
+	end
+	return true
+end
+
+local function to_utf8_name(s)
+	s = as_str(s)
+	if type(s) ~= 'string' or s == '' then return nil end
+	s = s:gsub('%z', ''):gsub('^%s+', ''):gsub('%s+$', '')
+	if s == '' then return nil end
+	if is_ascii(s) then return s end
+	if is_utf8_text(s) then return s end
+	local ok, u = pcall(function()
+		return encoding:ShiftJIS_To_UTF8(s)
+	end)
+	if ok and type(u) == 'string' and u ~= '' and not is_ascii(u) then
+		return u:gsub('%z', ''):gsub('^%s+', ''):gsub('%s+$', '')
+	end
+	return s
+end
+
 local function res_str(rm, table_name, id, lang)
 	local ok, s
 	if lang then
@@ -239,20 +302,56 @@ local function res_str(rm, table_name, id, lang)
 			return rm:GetString(table_name, id)
 		end)
 	end
-	if ok and type(s) == 'string' and s ~= '' then
-		return s:gsub('%z', ''):gsub('^%s+', ''):gsub('%s+$', '')
+	if not ok then return nil end
+	return to_utf8_name(s)
+end
+
+-- Walk every language slot.  Do not assume 1=JP / 2=EN; a JP client
+-- often returns Japanese for Default and still has English in another.
+local function pair_from_resource(rm, tables, id, obj)
+	local en, jp
+	local function consider(s)
+		s = to_utf8_name(s)
+		if not s or s == '' then return end
+		if is_ascii(s) then
+			if not en and #s >= 3 then en = s end
+		elseif not jp then
+			jp = s
+		end
 	end
-	return nil
+	for ti = 1, #tables do
+		consider(res_str(rm, tables[ti], id))
+		for lang = 0, 4 do
+			consider(res_str(rm, tables[ti], id, lang))
+		end
+	end
+	if obj then
+		consider(obj.Name)
+		local n = obj.Name
+		if n ~= nil then
+			for i = 0, 4 do
+				local ok, v = pcall(function() return n[i] end)
+				if ok then consider(v) end
+			end
+		end
+	end
+	return en, jp
 end
 
 local function load_proper()
 	if proper then return proper, proper_list end
 	proper = {}
 	proper_list = {}
-	local function add(n)
-		if type(n) ~= 'string' then return end
+	proper_jp = {}
+	local function clean_name(n)
+		if type(n) ~= 'string' then return nil end
 		n = n:gsub('%z', ''):gsub('^%s+', ''):gsub('%s+$', '')
-		if #n < 3 or not is_ascii(n) then return end
+		if n == '' then return nil end
+		return n
+	end
+	local function add(n)
+		n = clean_name(n)
+		if not n or #n < 3 or not is_ascii(n) then return end
 		local k = n:lower()
 		if k == 'none' or k == 'unknown' or k == 'n/a' then return end
 		if not proper[k] then
@@ -260,26 +359,26 @@ local function load_proper()
 			proper_list[#proper_list + 1] = n
 		end
 	end
+	local function add_pair(en, jp)
+		en = clean_name(en)
+		jp = clean_name(jp)
+		if en then add(en) end
+		if en and jp and #en >= 3 and not is_ascii(jp) then
+			local k = norm_key(en)
+			if k ~= '' and k ~= 'none' and k ~= 'unknown' and not proper_jp[k] then
+				proper_jp[k] = jp
+			end
+		end
+	end
 	local rm = AshitaCore:GetResourceManager()
 	if rm then
 		for id = 0, 350 do
-			add(res_str(rm, 'zones.names', id, 2))
-			add(res_str(rm, 'zones.names', id))
+			add_pair(pair_from_resource(rm, { 'zones.names', 'zones' }, id))
 		end
 		for id = 0, 2048 do
-			add(res_str(rm, 'spells.names', id, 2))
-			add(res_str(rm, 'spells.names', id))
-			add(res_str(rm, 'spells', id, 2))
 			local ok, sp = pcall(function() return rm:GetSpellById(id) end)
-			if ok and sp then
-				local nm = sp.Name
-				if type(nm) == 'string' then
-					add(nm)
-				elseif type(nm) == 'table' then
-					add(nm[1])
-					add(nm[2])
-				end
-			end
+			if not ok then sp = nil end
+			add_pair(pair_from_resource(rm, { 'spells.names', 'spells' }, id, sp))
 		end
 	end
 	local extras = {
@@ -292,29 +391,151 @@ local function load_proper()
 	for i = 1, #extras do add(extras[i]) end
 	if rm then
 		for id = 0, 127 do
-			add(res_str(rm, 'skills.names', id, 2))
-			add(res_str(rm, 'skills.names', id))
-			add(res_str(rm, 'skills', id, 2))
+			add_pair(pair_from_resource(rm, { 'skills.names', 'skills' }, id))
 		end
 	end
 	local zones = load_zones()
 	for i = 1, #zones do add(zones[i]) end
+	-- Fill gaps Ashita did not pair (still keyed by English).
+	local bundled = nil
+	if addon and addon.path then
+		bundled = addon.path .. '\\data\\ffxi_en_ja.tsv'
+	end
+	if bundled then
+		local bf = io.open(bundled, 'rb')
+		if bf then
+			for line in bf:lines() do
+				line = line:gsub('^\239\187\191', ''):gsub('\r', '')
+				if line ~= '' and line:sub(1, 1) ~= '#' and line:find('\t', 1, true) then
+					local en, ja = line:match('^(.-)\t(.*)$')
+					if en and ja then
+						add_pair(en, ja)
+					end
+				end
+			end
+			bf:close()
+		end
+	end
 	table.sort(proper_list, function(a, b) return #a > #b end)
 	return proper, proper_list
 end
 
-function M.is_proper_noun(s)
+local function title_case_en(s)
+	return (s or ''):gsub("(%a)([%a']*)", function(a, rest)
+		return a:upper() .. rest:lower()
+	end)
+end
+
+local function name_variants(s)
+	local k = norm_key(s)
+	local out = { s }
+	if k ~= '' and k ~= s then out[#out + 1] = k end
+	local titled = title_case_en(k)
+	if titled ~= '' and titled ~= s and titled ~= k then
+		out[#out + 1] = titled
+	end
+	return out
+end
+
+local function resource_jp_name(obj)
+	if not obj then return nil end
+	local _, jp = pair_from_resource(AshitaCore:GetResourceManager(), {}, 0, obj)
+	return jp
+end
+
+local job_jp = nil
+
+local function load_jobs()
+	if job_jp then return job_jp end
+	job_jp = {}
+	local rm = AshitaCore:GetResourceManager()
+	if not rm then return job_jp end
+	for id = 0, 32 do
+		local en, jp = pair_from_resource(rm, { 'jobs.names', 'jobs' }, id)
+		if type(en) == 'string' and type(jp) == 'string' and #en >= 3 and not is_ascii(jp) then
+			job_jp[norm_key(en)] = jp
+		end
+	end
+	local alias = {
+		knight = 'paladin',
+		pld = 'paladin',
+		drk = 'dark knight',
+		drg = 'dragoon',
+		smn = 'summoner',
+		blu = 'blue mage',
+		rdm = 'red mage',
+		thf = 'thief',
+		nin = 'ninja',
+		whm = 'white mage',
+		blm = 'black mage',
+		war = 'warrior',
+		mnk = 'monk',
+	}
+	for a, canon in pairs(alias) do
+		if job_jp[canon] and not job_jp[a] then
+			job_jp[a] = job_jp[canon]
+		end
+	end
+	return job_jp
+end
+
+local function lookup_resource_jp(s)
+	local rm = AshitaCore:GetResourceManager()
+	if not rm then return nil end
+	local variants = name_variants(s)
+	local langs = { 2, 1, 0, 3, 4 }
+	local getters = {
+		function(n, lang) return rm:GetItemByName(n, lang) end,
+		function(n, lang) return rm:GetAbilityByName(n, lang) end,
+		function(n, lang) return rm:GetSpellByName(n, lang) end,
+	}
+	for i = 1, #variants do
+		for gi = 1, #getters do
+			for li = 1, #langs do
+				local ok, obj = pcall(getters[gi], variants[i], langs[li])
+				local jp = ok and resource_jp_name(obj) or nil
+				if jp then return jp end
+			end
+		end
+	end
+	return nil
+end
+
+-- Official Japanese from DAT when the English matches exactly.
+function M.official_jp(s)
+	if type(s) ~= 'string' or s == '' or not is_ascii(s) then return nil end
+	local k = norm_key(s)
+	if #k < 3 then return nil end
+	load_jobs()
+	if job_jp[k] then return job_jp[k] end
+	load_proper()
+	if proper_jp and proper_jp[k] then return proper_jp[k] end
+	return lookup_resource_jp(s)
+end
+
+function M.is_zone_or_spell(s)
 	if type(s) ~= 'string' or s == '' then return false end
 	load_proper()
 	local k = norm_key(s)
 	if proper[k] then return true end
 	local rm = AshitaCore:GetResourceManager()
 	if not rm then return false end
-	local ok, sp = pcall(function() return rm:GetSpellByName(s, 0) end)
-	if ok and sp then return true end
-	ok, sp = pcall(function() return rm:GetSpellByName(s, 2) end)
-	if ok and sp then return true end
+	local variants = name_variants(s)
+	for i = 1, #variants do
+		local ok, sp = pcall(function()
+			return rm:GetSpellByName(variants[i], 0)
+		end)
+		if ok and sp then return true end
+		ok, sp = pcall(function()
+			return rm:GetSpellByName(variants[i], 2)
+		end)
+		if ok and sp then return true end
+	end
 	return false
+end
+
+function M.is_proper_noun(s)
+	return M.is_zone_or_spell(s)
 end
 
 local function protect_proper(s)
@@ -328,7 +549,7 @@ local function protect_proper(s)
 			local tok = 'NNN'..idx..'NNN'
 			local nexts = replace_ci(s, n, tok)
 			if nexts ~= s then
-				map[idx] = n
+				map[idx] = (proper_jp and proper_jp[n:lower()]) or n
 				s = nexts
 			else
 				idx = idx - 1
@@ -403,6 +624,7 @@ local function protect_names(s)
 			end
 		end
 	end
+	load_proper()
 	local zones = load_zones()
 	local zidx = 0
 	for i = 1, #zones do
@@ -412,7 +634,7 @@ local function protect_names(s)
 			local tok = 'ZZZ'..zidx..'ZZZ'
 			local nexts = replace_ci(s, z, tok)
 			if nexts ~= s then
-				map.Z[zidx] = z
+				map.Z[zidx] = (proper_jp and proper_jp[z:lower()]) or z
 				s = nexts
 			else
 				zidx = zidx - 1
@@ -861,6 +1083,7 @@ local function finish_ok(job, jp)
 	jp = restore_names(jp, job.map)
 	if is_ascii(jp) then
 		last_err = 'translation was still English'
+		no_jp[job.key] = true
 		return
 	end
 	if not job.skip_dict then
@@ -916,6 +1139,7 @@ local function requeue_or_drop(job, err)
 	else
 		last_err = err or last_err
 		PENDING_KEY[job.key] = nil
+		no_jp[job.key] = true
 	end
 end
 
@@ -928,6 +1152,7 @@ function M.prepare(src, skip_dict)
 	if M.is_proper_noun(src) then return nil end
 	local key = norm_key(src)
 	if key == '' then return nil end
+	if no_jp[key] then return nil end
 	local protected, nmap = protect_proper(src)
 	if not skip_dict then
 		if not dict_loaded then M.load_dict() end

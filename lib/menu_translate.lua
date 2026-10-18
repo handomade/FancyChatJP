@@ -6,6 +6,7 @@
 
 require('common')
 local ffi       = require('ffi')
+local imgui     = require('imgui')
 local state     = require('lib.state')
 local translate = require('lib.translate')
 local encoding  = require('gdifonts.encoding')
@@ -469,6 +470,21 @@ local function append_user_dict(en, jp)
 	af:close()
 end
 
+-- "AFF +1" / "HQ" — site leaves these English and the menu would wait.
+local function looks_like_code(s)
+	if type(s) ~= 'string' or s == '' then return false end
+	local body = s:gsub('%s+', ' '):gsub('^%s+', ''):gsub('%s+$', '')
+	local letters = body:gsub('[^%a]', '')
+	if letters == '' then return true end
+	if body:find('%+', 1, true) and #letters <= 4 and letters == letters:upper() then
+		return true
+	end
+	if #letters <= 6 and body:match('^[%u%d][%u%d%s%+%-%./]*$') then
+		return true
+	end
+	return false
+end
+
 local function lookup_option(src)
 	if type(src) ~= 'string' or src == '' then return nil end
 	if has_high(src) then return nil end
@@ -478,7 +494,16 @@ local function lookup_option(src)
 	local key = norm_option(left)
 	if key == '' then return nil, keep end
 	local hit = user_dict[key] or BUILTIN[key]
-	if (not hit or hit == '') and translate.is_proper_noun(left) then
+	if (not hit or hit == '') then
+		hit = translate.official_jp(left)
+		if hit and has_high(hit) then
+			append_user_dict(left, hit)
+		end
+	end
+	if (not hit or hit == '') and translate.is_zone_or_spell(left) then
+		return nil, keep
+	end
+	if (not hit or hit == '') and looks_like_code(left) then
 		return nil, keep
 	end
 	if not hit or hit == '' then
@@ -913,6 +938,8 @@ function M.poll_held()
 	end
 	local new, names, wrote, pending, waiting = rewrite_custom_menu(held.data)
 	waiting = waiting or 0
+	held.waiting = waiting
+	held.wrote = wrote or 0
 	if waiting == 0 then
 		flush_held('ready')
 		return
@@ -927,6 +954,43 @@ function M.poll_held()
 		elapsed, waiting, wrote or 0,
 		names and table.concat(names, ' | ') or '')
 	dump_status(last_packet .. '\n')
+end
+
+-- メニュー翻訳中  あと  秒  件
+local TXT_MENU = '\227\131\161\227\131\139\227\131\165\227\131\188\231\191\187\232\168\179\228\184\173'
+local TXT_LEFT = '\227\129\130\227\129\168'
+local TXT_SEC  = '\231\167\146'
+local TXT_CNT  = '\228\187\182'
+
+function M.draw_status()
+	if not held then return end
+	local elapsed = os.clock() - held.t0
+	local left = HOLD_SEC - elapsed
+	if left < 0 then left = 0 end
+	local waiting = held.waiting or 0
+	local ok, dsize = pcall(function()
+		return imgui.GetIO().DisplaySize
+	end)
+	if not ok or not dsize then return end
+	local x = (dsize.x or 0) * 0.5 - 110
+	local y = (dsize.y or 0) * 0.34
+	imgui.SetNextWindowPos({x, y}, ImGuiCond_Always)
+	pcall(function() imgui.SetNextWindowBgAlpha(0.78) end)
+	local flags = bit.bor(
+		ImGuiWindowFlags_NoDecoration or 0,
+		ImGuiWindowFlags_NoSavedSettings or 0,
+		ImGuiWindowFlags_NoFocusOnAppearing or 0,
+		ImGuiWindowFlags_NoNav or 0,
+		ImGuiWindowFlags_NoMove or 0)
+	if ImGuiWindowFlags_AlwaysAutoResize then
+		flags = bit.bor(flags, ImGuiWindowFlags_AlwaysAutoResize)
+	end
+	if imgui.Begin('##fc_menu_tr_status', true, flags) then
+		imgui.Text(string.format(
+			'%s  %s %.1f%s  (%d%s)',
+			TXT_MENU, TXT_LEFT, left, TXT_SEC, waiting, TXT_CNT))
+	end
+	imgui.End()
 end
 
 function M.on_packet(e)
@@ -948,7 +1012,10 @@ function M.on_packet(e)
 			end
 			if waiting > 0 then
 				if held then flush_held('next') end
-				held = { id = e.id, data = data, t0 = os.clock() }
+				held = {
+					id = e.id, data = data, t0 = os.clock(),
+					waiting = waiting, wrote = wrote or 0,
+				}
 				e.blocked = true
 				dump_status('holding waiting=' .. waiting .. '\n' .. last_packet .. '\n')
 				dump_append('hold', last_packet)
@@ -1006,7 +1073,23 @@ function M.on_packet_out(e)
 			local hex1, vis1 = hex_dump(rebuilt, 400)
 			dump_append('out_b6', string.format(
 				'after n=%d size=%d\nvis=%s\nhex=%s', n, #rebuilt, vis1, hex1))
+			-- English GMTELL is often longer than Japanese.  If it
+			-- still fits, rewrite in place.  If it grew, inject and
+			-- turn the original into a harmless 0x015 so a missed
+			-- block cannot deliver a real tell to _CUSTOM_MENU
+			-- ("recipient is zoning / not logged in").
+			if #rebuilt <= #data then
+				if #rebuilt < #data then
+					rebuilt = rebuilt .. string.rep('\0', #data - #rebuilt)
+				end
+				e.data_modified = rebuilt
+				last_packet = string.format('out b6 modify n=%d size=%d', n, #rebuilt)
+				dump_status(last_packet .. '\n')
+				dump_append('out_b6', last_packet)
+				return
+			end
 			e.blocked = true
+			e.data_modified = string.char(0x15, data:byte(2) or 0) .. data:sub(3)
 			out_injecting = true
 			local ok, err = pcall(inject_outgoing, 0x00B6, rebuilt)
 			out_injecting = false

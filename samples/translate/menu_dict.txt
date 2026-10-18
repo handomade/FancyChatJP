@@ -1,0 +1,168 @@
+# FancyChatJP menu dictionary	
+# UTF-8 tab-separated. Open in Excel/LibreOffice as UTF-8, separator=Tab.	
+# english<TAB>japanese   (one pair per row)	
+# Save as Unicode Text / UTF-8 TSV, then talk to the NPC again.	
+black magic	黒魔法
+blue magic	青魔法
+browse all available spells	すべての魔法を見る
+browse learnable spells	習得できる魔法を見る
+buy hq crystals	HQ結晶を買う
+cancel	キャンセル
+choose a spell category	呪文の種類
+choose a spell category:	呪文の種類:
+eminence armor	エミネンスアーマー
+excavation points	発掘ポイント
+fishing points	釣りポイント
+geomancy	風水魔法
+harvesting points	収穫ポイント
+join the goblin venture guild?	ゴブリンベンチャーギルドに加入しますか?
+logging points	伐採ポイント
+mining points	採掘ポイント
+ninjutsu	忍術
+no	いいえ
+not interested	やめておく
+nothing	なし
+ok	決定
+open daily chest	毎日の箱を開く
+right away!	今すぐ!
+select type	種類を選択
+select type:	種類を選択:
+singing	歌唱
+songs	歌
+spend obsidian fragments	黒曜石の欠片を使う
+summoning magic	召喚魔法
+what'll it be?	どうしますか?
+white magic	白魔法
+wizardoll's spell shop	ウィザードールの魔法店
+yes	はい
+mariner's gloves (3000)	マリナーズグローブ（ 3000 ）
+mariner's tunica (3000)	マリナーズ・チュニカ（ 3000 ）
+mariner's boots (3000)	マリナーズブーツ（ 3000 ）
+mariner's hose (3000)	マリナーズホース（ 3000 ）
+fishing venture points	フィッシングベンチャーポイント
+angl. commendation	角度表彰
+tlahtlamah glasses	Tlahtlamah眼鏡
+sand charm	砂のお守り
+mariner's tunica	マリナーズ・チュニカ
+mariner's gloves	マリナーズグローブ
+mariner's hose	マリナーズホース
+mariner's boots	マリナーズブーツ
+harvesting venture points	ハーベスティングベンチャーポイント
+hay bale	ヘイ・ベール
+special brew	スペシャルエール
+hoe	鍬
+plain gloves	無地の手袋
+harv. sun hat	Harv.サンハット
+no way	やだねっ。
+spend 3000 points?	3000ポイント使いますか？
+purchase: mariner's tunica	購入：マリナーズ・チュニカ
+slime arbiter menu	スライム仲裁人メニュー
+cast your magic on me!	私に魔法をかけてください！
+show me the rewards.	報酬を見せてくれ。
+got any tips?	何かヒントはありますか？
+tell me about the slimes again.	スライムについてもう一度教えてください。
+nothing right now.	今は特に何もありません
+choose a reward	特典を選択してください
+metal slime earring	メタルスライムイヤリング
+slime rocket	スライムロケット
+slime cap	スライムキャップ
+she-slime hat	シースライムハット
+she-slime shield	シースライムシールド
+slime shield	スライムシールド
+ark shield	アークシールド
+pitchfork +1	ピッチフォーク+1
+spend 100 slime coins?	スライムコインを100枚使いますか？
+yes, i'm sure!	はい、間違いありません!
+no, i change my mind.	いいえ、気が変わります。
+treat staff ii	トリートスタッフII
+malice masher +1	悪意のマッシャー+1
+coven hat	コーブンハット
+pumpkin head ii	カボチャの頭II
+kakai cap +1	カカイキャップ+1
+flan masque +1	フランマスク+1
+otokoeshi yukata	男郎花浴衣
+otokogimi yukata	男君浴衣
+metal slime candy	メタルスライムキャンディー
+volant serum	ヴォラントセラム
+spectral serum	スペクトルセラム
+pungent powder iii	刺激性パウダーIII
+cascade candy	カスケードキャンディー
+candy ring	キャンディリング
+little lugworm	リトル・ラグワーム
+cotton candy	綿菓子
+jack-o'-pricket	ジャック・オ・プリケット
+mandragora pricket	マンドラゴラ・プリケット
+how may i assist you?	どういうご用件ですか
+please explain	説明してください
+claim rewards	報酬を受け取る
+referral points: 0	紹介ポイント
+(1): crystal board	（ 1 ） ：クリスタルボード
+(5): fighter board	（ 5 ） ：戦闘機ボード
+(10): dancer board	（ 10 ） ：ダンサーボード
+(15): byakko masque	（ 15 ） ：白子の仮面
+choose a destination:	行き先を選択してください。
+repatriation	帰国
+kolshushu	コルシュシュ
+select a type:	種類を選択する
+relic +1	レリック+1
+novice trial	初心者トライアル
+grand trial	グランドトライアル
+select a set:	セットを選択する
+monk	モンク
+warrior	戦士
+white mage	白魔道士
+black mage	黒魔道士
+campaign	カンパニエ
+domain invasion	ドメインベージョン
+endgame	エンドゲーム
+weapons	武器
+oboro	オボロ
+cobra melee	コブラ近接
+cobra mage	コブラの魔術師
+iron ram	鉄の槌
+fourth div.	fourth div.
+thief	シーフ
+red mage	赤魔道士
+paladin	ナイト
+ranger	狩人
+bard	吟遊詩人
+beastmaster	獣使い
+samurai	侍
+ninja	忍者
+summoner	召喚士
+blue mage	青魔道士
+corsair	コルセア
+dancer	踊り子
+puppermaster	からくり士
+scholar	学者
+puppetmaster	からくり士
+geomancer	風水師
+rune fencer	魔導剣士
+dark night	暗黒騎士
+accessories	アクセサリ
+armor ii	アーマーII
+armor i	アーマーI
+weapons ii	武器II
+protect ii	プロテスII
+aquaveil	アクアベール
+blink	ブリンク
+enthunder	エンサンダー
+enstone	エンストーン
+enblizzard	エンブリザド
+enfire	エンファイア
+enwater	エンウォータ
+katon: ichi	火遁の術:壱
+suiton: ichi	水遁の術:壱
+raiton: ichi	雷遁の術:壱
+doton: ichi	土遁の術:壱
+huton: ichi	風遁の術:壱
+hyoton: ichi	氷遁の術:壱
+monomi: ichi	物見の術:壱
+knight's minne	重装騎兵のミンネ
+knight's minne ii	重装騎兵のミンネII
+knight's minne iii	重装騎兵のミンネIII
+valor minuet	猛者のメヌエット
+valor minuet ii	猛者のメヌエットII
+valor minuet iii	猛者のメヌエットIII
+army's paeon	戦士達のピーアン
+army's paeon ii	戦士達のピーアンII
