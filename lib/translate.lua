@@ -16,9 +16,48 @@ local FW_OPEN  = '\239\189\155' -- fullwidth {
 local FW_CLOSE = '\239\189\157' -- fullwidth }
 local FW_COLON = '\239\188\154' -- fullwidth :
 local AT_OPEN  = '\239\39'      -- FFXI auto-translate open (looks like i/❮)
-local AT_CLOSE = '\239\40'      -- FFXI auto-translate close
+local AT_CLOSE = '\239\40'      -- FFXI auto-translate close (byte 40 = '(')
 local AT_OPEN_U  = '\226\157\174' -- U+276E
 local AT_CLOSE_U = '\226\157\175' -- U+276F
+
+-- AT_CLOSE is 0xEF 0x28.  0x28 is '(' so these must never be Lua patterns.
+local function plain_replace(s, old, new)
+	if type(s) ~= 'string' or type(old) ~= 'string' or old == '' then return s end
+	new = new or ''
+	local out, i, n = {}, 1, #old
+	while true do
+		local a = s:find(old, i, true)
+		if not a then
+			out[#out + 1] = s:sub(i)
+			break
+		end
+		out[#out + 1] = s:sub(i, a - 1)
+		out[#out + 1] = new
+		i = a + n
+	end
+	return table.concat(out)
+end
+
+local function plain_span(s, open, close, fn)
+	if type(s) ~= 'string' or open == '' or close == '' then return s end
+	local out, i = {}, 1
+	while true do
+		local a = s:find(open, i, true)
+		if not a then
+			out[#out + 1] = s:sub(i)
+			break
+		end
+		local b = s:find(close, a + #open, true)
+		if not b then
+			out[#out + 1] = s:sub(i)
+			break
+		end
+		out[#out + 1] = s:sub(i, a - 1)
+		out[#out + 1] = fn(s:sub(a + #open, b - 1))
+		i = b + #close
+	end
+	return table.concat(out)
+end
 
 M.PROVIDERS = { 'MyMemory', 'DeepL', 'ChatGPT', 'Gemini' }
 
@@ -39,6 +78,11 @@ local MAX_TRIES = 2
 local PENDING_KEY = {} -- key -> job still waiting on the network
 local no_jp = {} -- site returned English; do not retry this session
 local PREFIX = '['..'\231\191\187\232\168\179'..'] ' -- [翻訳]  (defined early for waiters)
+
+local function hide_src()
+	return allSettings.TranslateHideOriginal
+		and allSettings.TranslateHideOriginal[1] == true
+end
 
 local function cfg_dir()
 	return AshitaCore:GetInstallPath()..'\\config\\addons\\'..addon.name..'\\translate'
@@ -695,7 +739,10 @@ end
 -- Length/word count is a heuristic, not a parser.
 local function looks_like_speaker(left)
 	if not left or left == '' then return false end
-	left = left:gsub(AT_OPEN, ''):gsub(AT_CLOSE, ''):gsub(AT_OPEN_U, ''):gsub(AT_CLOSE_U, '')
+	left = plain_replace(left, AT_OPEN, '')
+	left = plain_replace(left, AT_CLOSE, '')
+	left = plain_replace(left, AT_OPEN_U, '')
+	left = plain_replace(left, AT_CLOSE_U, '')
 	left = left:gsub('[\128-\255]', ''):gsub('^%s+', ''):gsub('%s+$', '')
 	if not left or left == '' then return false end
 	if #left < 2 or #left > 28 then return false end
@@ -789,29 +836,31 @@ function M.extract(raw)
 
 	local kmap = {}
 	local kidx = 0
-	s = s:gsub(FW_OPEN..'(.-)'..FW_CLOSE, function(inner)
+	s = plain_span(s, FW_OPEN, FW_CLOSE, function(inner)
 		kidx = kidx + 1
 		kmap[kidx] = FW_OPEN .. inner .. FW_CLOSE
 		return 'KKK'..kidx..'KKK'
 	end)
-	s = s:gsub('{(.-)}', function(inner)
+	s = plain_span(s, '{', '}', function(inner)
 		kidx = kidx + 1
 		kmap[kidx] = '{' .. inner .. '}'
 		return 'KKK'..kidx..'KKK'
 	end)
-	s = s:gsub(AT_OPEN..'(.-)'..AT_CLOSE, function(inner)
+	s = plain_span(s, AT_OPEN, AT_CLOSE, function(inner)
 		kidx = kidx + 1
 		kmap[kidx] = inner
 		return 'KKK'..kidx..'KKK'
 	end)
-	s = s:gsub(AT_OPEN_U..'(.-)'..AT_CLOSE_U, function(inner)
+	s = plain_span(s, AT_OPEN_U, AT_CLOSE_U, function(inner)
 		kidx = kidx + 1
 		kmap[kidx] = inner
 		return 'KKK'..kidx..'KKK'
 	end)
 
 	s = s:gsub('%s+', ' '):gsub('^%s+', ''):gsub('%s+$', '')
-	keep = keep:gsub(AT_OPEN, ''):gsub(AT_CLOSE, ''):gsub('%s+', ' ')
+	keep = plain_replace(keep, AT_OPEN, '')
+	keep = plain_replace(keep, AT_CLOSE, '')
+	keep = keep:gsub('%s+', ' ')
 	if s == '' or not is_ascii(s) then return nil end
 	if not s:find('%a') then return nil end
 	if #s < 2 then return nil end
@@ -1046,11 +1095,26 @@ local function queue_emit(mode, text, map, keep)
 	if not text or text == '' then return end
 	if is_ascii(text) then return end
 	keep = keep or ''
-	keep = keep:gsub(AT_OPEN, ''):gsub(AT_CLOSE, '')
+	keep = plain_replace(keep, AT_OPEN, '')
+	keep = plain_replace(keep, AT_CLOSE, '')
 	if keep ~= '' then
 		text = keep .. text
 	end
-	emit_q[#emit_q + 1] = { mode = mode or 1, text = PREFIX..text }
+	local pfx = hide_src() and '' or PREFIX
+	emit_q[#emit_q + 1] = { mode = mode or 1, text = pfx .. text }
+end
+
+local function emit_fallbacks(job)
+	if not hide_src() then return end
+	local list = job.waiters or {}
+	for i = 1, #list do
+		local raw = list[i].fallback
+		if type(raw) == 'string' and raw ~= '' then
+			par.skipTranslate = true
+			parseThis({ mode = list[i].mode or 1, message = raw, blocked = false }, raw)
+			par.skipTranslate = false
+		end
+	end
 end
 
 local function flush_emits()
@@ -1075,6 +1139,7 @@ end
 local function finish_ok(job, jp)
 	if not jp then
 		last_err = 'empty translation'
+		emit_fallbacks(job)
 		return
 	end
 	jp = jp:gsub('&quot;', '"'):gsub('&amp;', '&'):gsub('&#(%d+);', function(n)
@@ -1084,6 +1149,7 @@ local function finish_ok(job, jp)
 	if is_ascii(jp) then
 		last_err = 'translation was still English'
 		no_jp[job.key] = true
+		emit_fallbacks(job)
 		return
 	end
 	if not job.skip_dict then
@@ -1140,6 +1206,7 @@ local function requeue_or_drop(job, err)
 		last_err = err or last_err
 		PENDING_KEY[job.key] = nil
 		no_jp[job.key] = true
+		emit_fallbacks(job)
 	end
 end
 
@@ -1219,7 +1286,8 @@ function M.consider(e, raw, mode, lastmode)
 	if skip_system_text(raw) then return end
 	if not dict_loaded then M.load_dict() end
 
-	local body, keep, kmap = M.extract(raw)
+	local okx, body, keep, kmap = pcall(M.extract, raw)
+	if not okx then return end
 	if not body then return end
 	if skip_system_text(body) then return end
 
@@ -1233,7 +1301,7 @@ function M.consider(e, raw, mode, lastmode)
 	if hit then
 		queue_emit(mode, hit, map, keep)
 		flush_emits()
-		return
+		return true
 	end
 
 	local existing = find_job_by_key(key)
@@ -1241,8 +1309,11 @@ function M.consider(e, raw, mode, lastmode)
 		existing.waiters = existing.waiters or {
 			{ mode = existing.mode, map = existing.map, keep = existing.keep },
 		}
-		existing.waiters[#existing.waiters + 1] = { mode = mode, map = map, keep = keep }
-		return
+		existing.waiters[#existing.waiters + 1] = {
+			mode = mode, map = map, keep = keep,
+			fallback = hide_src() and raw or nil,
+		}
+		return true
 	end
 
 	local p = provider()
@@ -1263,12 +1334,16 @@ function M.consider(e, raw, mode, lastmode)
 		map = map,
 		keep = keep,
 		mode = mode or 1,
-		waiters = { { mode = mode or 1, map = map, keep = keep } },
+		waiters = { {
+			mode = mode or 1, map = map, keep = keep,
+			fallback = hide_src() and raw or nil,
+		} },
 		tries = 0,
 	}
 	pending[#pending + 1] = job
 	PENDING_KEY[key] = job
 	start_next()
+	return true
 end
 
 local function file_exists(path)

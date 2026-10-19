@@ -401,6 +401,9 @@ function M.register()
 		if not allSettings.TranslateEnabled then
 			allSettings.TranslateEnabled = T{false}
 		end
+		if not allSettings.TranslateHideOriginal then
+			allSettings.TranslateHideOriginal = T{false}
+		end
 		if not allSettings.TranslateMenu then
 			allSettings.TranslateMenu = T{false}
 		end

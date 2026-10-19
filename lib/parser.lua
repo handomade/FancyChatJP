@@ -1338,9 +1338,20 @@ parseThis = function(e, e_message)
 			end
 		end
 		
+		-- Hide-original mode: translate first so a dictionary hit can
+		-- emit Japanese only.  Network jobs drop the English line and
+		-- restore it if the site fails.
+		local drop_original = false
+		if allSettings.TranslateHideOriginal
+			and allSettings.TranslateHideOriginal[1]
+			and not par.skipTranslate then
+			drop_original = translate.consider(e, original_msg, par.MessageMode, par.LastMode) and true or false
+		end
+
 		-- Line-wrap and per-line emit loop.
 		local n_lines = math_floor(string_len(newText) / allSettings.chatLineMaxL)
 		if math_fmod(string_len(newText), allSettings.chatLineMaxL) ~= 0 then n_lines = n_lines + 1 end
+		if drop_original then n_lines = 0 end
 
 		par.checkAgain = {0, ''}
 
@@ -1910,7 +1921,7 @@ parseThis = function(e, e_message)
 			b.ChatBufferN_Custom = b.ChatBufferN_Custom + n_lines
 			if allSettings.SelectedTab == 'Custom' or allSettings.SelectedTab2 == 'Custom' then ResetAutoHideTimer() end
 		end
-		if not par.skipTranslate then
+		if not par.skipTranslate and not drop_original then
 			translate.consider(e, original_msg, par.MessageMode, par.LastMode)
 		end
 		par.skipTranslate = false

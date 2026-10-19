@@ -451,6 +451,7 @@ function M.default_settings()
 		alertOptions         = {false, true, true, true, true},
 		-- ASCII chat -> Japanese.  Provider names are English keys.
 		TranslateEnabled     = T{false},
+		TranslateHideOriginal = T{false},
 		TranslateMenu        = T{false},
 		TranslateProvider    = 'MyMemory',
 		TranslateApiKey      = T{''},
