@@ -541,9 +541,15 @@ end
 
 -- One menu option. FFXI string slots are per-line, not English-length.
 local LINE_MAX = 50
--- 0x017 chat body the client copies. Japanese that grows past this
--- is cut from the tail, so "(Next)" dies first.
-local MSG_MAX = 150
+-- 0x017 chat body the client copies. Growing past the original quoted
+-- list (or this cap) clips the tail, so "(Next)" becomes "(".
+local MSG_MAX = 140
+
+local function is_nav_option(text)
+	local t = (text or ''):gsub('%s+', ''):lower()
+	return t == '(next)' or t == '(prev)' or t == '(previous)'
+		or t == '(cancel)' or t == '(exit)' or t == '(back)'
+end
 
 local function fit_option(sjis, keep)
 	keep = keep or ''
@@ -574,14 +580,36 @@ local function name_of(s)
 	return text, keep
 end
 
--- Shorten translated names so the whole quoted list fits MSG_MAX.
--- Never eat (Prev)/(Next) or the trailing "(3000)".
-local function fit_message(slots, out)
-	while quoted_len(out) + 1 > MSG_MAX do
+local function squeeze_keep(keep)
+	if type(keep) ~= 'string' or keep == '' then return keep end
+	keep = keep:gsub('%s+', ' ')
+	keep = keep:gsub('^%s+%(', '(')
+	keep = keep:gsub('%(%s+', '(')
+	keep = keep:gsub('%s+%)', ')')
+	return keep
+end
+
+-- Shorten translated names so the quoted list fits the original English
+-- body.  (Prev)/(Next) are restored last and never clipped.
+local function fit_message(slots, out, budget)
+	budget = budget or MSG_MAX
+	if budget > MSG_MAX then budget = MSG_MAX end
+	if budget < 8 then budget = MSG_MAX end
+	for k = 1, #slots do
+		if is_nav_option(slots[k].src or slots[k].text) then
+			local src = slots[k].src or slots[k].text
+			slots[k].text = src
+			slots[k].full = nil
+			out[k] = src
+		end
+	end
+	local guard = 0
+	while quoted_len(out) + 1 > budget and guard < 80 do
+		guard = guard + 1
 		local idx, longest = 0, 0
 		for k = 1, #slots do
 			local s = slots[k]
-			if s.full then
+			if s.full and not is_nav_option(s.src or '') then
 				local name = name_of(s)
 				if #name > longest then
 					longest = #name
@@ -589,13 +617,30 @@ local function fit_message(slots, out)
 				end
 			end
 		end
-		if idx == 0 or longest <= 2 then break end
+		if idx == 0 then break end
 		local s = slots[idx]
 		local name, keep = name_of(s)
-		local clipped = sjis_clip(name, longest - 2)
-		if not clipped or #clipped >= longest then break end
-		s.text = clipped .. keep
-		out[idx] = s.text
+		if longest <= 2 then
+			local tight = squeeze_keep(keep)
+			if tight ~= keep and #tight < #keep then
+				s.keep = tight
+				s.text = name .. tight
+				out[idx] = s.text
+			else
+				break
+			end
+		else
+			local clipped = sjis_clip(name, longest - 2)
+			if not clipped or #clipped >= longest then break end
+			s.text = clipped .. keep
+			out[idx] = s.text
+		end
+	end
+	for k = 1, #slots do
+		if is_nav_option(slots[k].src or slots[k].text) then
+			out[k] = slots[k].src or slots[k].text
+			slots[k].text = out[k]
+		end
 	end
 end
 
@@ -634,7 +679,9 @@ local function rewrite_custom_menu(blob)
 	local waiting = 0
 	for k = 1, #parts do
 		local src = parts[k]
-		if has_high(src) then
+		if is_nav_option(src) then
+			slots[k] = { text = src, src = src }
+		elseif has_high(src) then
 			slots[k] = { text = src }
 		else
 			local jp, keep = lookup_option(src)
@@ -665,7 +712,7 @@ local function rewrite_custom_menu(blob)
 	for k = 1, #slots do
 		out[k] = slots[k].text
 	end
-	fit_message(slots, out)
+	fit_message(slots, out, quoted_len(parts))
 
 	for k = 1, #slots do
 		local s = slots[k]

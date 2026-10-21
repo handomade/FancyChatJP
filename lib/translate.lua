@@ -800,14 +800,9 @@ function M.extract(raw)
 		elseif s:sub(1, #AT_CLOSE_U) == AT_CLOSE_U then
 			s = s:sub(#AT_CLOSE_U + 1)
 		else
-			local b = s:byte(1)
-			if b and ((b >= 0x81 and b <= 0x9F) or (b >= 0xE0 and b <= 0xFC)) then
-				s = s:sub(3)
-			elseif b and b >= 0x80 then
-				s = s:sub(2)
-			else
-				break
-			end
+			-- Leftover Japanese / SJIS means this is not English chat.
+			-- Do not strip it; is_ascii below returns nil so we skip.
+			break
 		end
 	end
 	local head = s:match('^(%s*:?%s*)')
@@ -869,7 +864,7 @@ end
 
 local SKIP_MODES = {
 	[0] = true, [8] = true, [128] = true,
-	[190] = true, [191] = true, [206] = true,
+	[190] = true, [191] = true, [204] = true, [206] = true,
 }
 
 local function skip_system_text(s)
@@ -884,6 +879,67 @@ local function skip_system_text(s)
 	return false
 end
 
+-- Commands and linkshell stay out of dict.txt. Existing entries are left for hand edits.
+local function skip_cmd_or_ls(s)
+	if type(s) ~= 'string' or s == '' then return false end
+	s = strip_ffxi(s):gsub('^%s+', '')
+	local c = s:sub(1, 1)
+	if c == '/' or c == '!' then return true end
+	if s:sub(1, 3) == '[1]' or s:sub(1, 3) == '[2]' then return true end
+	return false
+end
+
+-- Party-finder / search-comment leftovers: "Qzm[RuLudeGard]: Mana Burn 5/6 - BLM/RED/SCH we have PL"
+-- Auto-translate is replaced with KKK tokens, so the rest looks like English and was sent to the site.
+local function count_job_abbr(s)
+	local n, i, last = 0, 1, #s
+	while i <= last - 2 do
+		local a, b, c = s:byte(i, i + 2)
+		if a and a >= 65 and a <= 90 and b >= 65 and b <= 90 and c >= 65 and c <= 90 then
+			local before = (i == 1) or not s:sub(i - 1, i - 1):match('%a')
+			local after = (i + 2 >= last) or not s:sub(i + 3, i + 3):match('%a')
+			if before and after then
+				n = n + 1
+				i = i + 3
+			else
+				i = i + 1
+			end
+		else
+			i = i + 1
+		end
+	end
+	return n
+end
+
+local function count_lower_words(s)
+	local n = 0
+	for w in s:gmatch('%a+') do
+		if #w >= 3 and w:find('%l') then n = n + 1 end
+	end
+	return n
+end
+
+local function skip_chat_body(s)
+	if type(s) ~= 'string' or s == '' then return true end
+	local t = s:gsub('[KQZNkqzn][KQZNkqzn][KQZNkqzn]%s*%d+%s*[KQZNkqzn][KQZNkqzn][KQZNkqzn]', ' ')
+	t = t:gsub('%s+', ' '):gsub('^%s+', ''):gsub('%s+$', '')
+	if t:find('%[[%a][%a%d%s%-]+%]') and t:find('%a%[') then return true end
+	local jobs = count_job_abbr(t)
+	local lower = count_lower_words(t)
+	if jobs >= 2 and lower < 4 then return true end
+	if t:find('%d+%s*/%s*%d+') and jobs >= 1 and lower < 4 then return true end
+	return false
+end
+
+-- UTF-8 misread as CP932: 縺 繧 繝
+local function looks_like_mojibake(s)
+	if type(s) ~= 'string' then return false end
+	if s:find('\231\155\190', 1, true) then return true end
+	if s:find('\231\184\150', 1, true) then return true end
+	if s:find('\231\186\138', 1, true) then return true end
+	return false
+end
+
 local function chat_mode_ok(lastmode, mode)
 	if SKIP_MODES[tonumber(mode) or -1] then return false end
 	if not lastmode or lastmode == 'filtered' or lastmode == 'unknown' then return false end
@@ -892,12 +948,12 @@ local function chat_mode_ok(lastmode, mode)
 	if lastmode:find('^item') or lastmode == 'craft' or lastmode == 'fishing' then return false end
 	if lastmode == 'trade' then return false end
 	if lastmode:find('^error') or lastmode == 'clock' or lastmode == 'equipset' then return false end
+	if lastmode == 'searchcomment' or lastmode == 'examined' then return false end
 	if lastmode:find('_?', 1, true) then return false end
 	return lastmode:find('^local')
 		or lastmode:find('^shout')
 		or lastmode:find('^tell')
 		or lastmode:find('^party')
-		or lastmode:find('^linkshell')
 		or lastmode:find('^emote')
 		or lastmode:find('^unity')
 		or lastmode:find('^assist')
@@ -907,7 +963,6 @@ local function chat_mode_ok(lastmode, mode)
 		or lastmode == 'mog'
 		or lastmode == 'servermsg'
 		or lastmode == 'cfh'
-		or lastmode == 'searchcomment'
 end
 
 local function provider()
@@ -1152,6 +1207,12 @@ local function finish_ok(job, jp)
 		emit_fallbacks(job)
 		return
 	end
+	if looks_like_mojibake(jp) then
+		last_err = 'translation looked like mojibake'
+		no_jp[job.key] = true
+		emit_fallbacks(job)
+		return
+	end
 	if not job.skip_dict then
 		save_entry(job.key, jp)
 	end
@@ -1284,21 +1345,37 @@ function M.consider(e, raw, mode, lastmode)
 	if par.skipTranslate or par.dumping then return end
 	if not chat_mode_ok(lastmode, mode) then return end
 	if skip_system_text(raw) then return end
+	if skip_cmd_or_ls(raw) then return end
 	if not dict_loaded then M.load_dict() end
 
 	local okx, body, keep, kmap = pcall(M.extract, raw)
 	if not okx then return end
 	if not body then return end
 	if skip_system_text(body) then return end
+	if skip_cmd_or_ls(body) or skip_cmd_or_ls(keep) then return end
+	if skip_chat_body(body) then return end
 
 	local protected, map = protect_names(body)
 	map.K = kmap or {}
 	protected = protected:gsub('%s+', ' '):gsub('^%s+', ''):gsub('%s+$', '')
 	if protected == '' or not protected:find('%a') then return end
+	if skip_chat_body(protected) then return end
+	local jp_at = false
+	for _, v in pairs(map.K) do
+		if type(v) == 'string' and v:find('[\128-\255]') then
+			jp_at = true
+			break
+		end
+	end
+	if jp_at then
+		local leftover = protected:gsub('[KQZNkqzn][KQZNkqzn][KQZNkqzn]%s*%d+%s*[KQZNkqzn][KQZNkqzn][KQZNkqzn]', ' ')
+		if count_lower_words(leftover) < 5 then return end
+	end
 
 	local key = norm_key(protected)
 	local hit = dict[key]
 	if hit then
+		if looks_like_mojibake(hit) then return end
 		queue_emit(mode, hit, map, keep)
 		flush_emits()
 		return true
