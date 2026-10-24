@@ -13,6 +13,28 @@ local set            = state.set
 
 local M = {}
 
+-- auctionhouse-vanacore writes this stamp every second while its window has the pad
+local function auction_has_pad()
+	local roots = {}
+	local ok, inst = pcall(function () return AshitaCore:GetInstallPath() end)
+	if ok and type(inst) == 'string' then
+		roots[#roots + 1] = inst:gsub('[\\/]+$', '')
+		local parent = roots[1]:gsub('[\\/][^\\/]+$', '')
+		roots[#roots + 1] = parent .. '\\Vanacore'
+		roots[#roots + 1] = parent
+	end
+	local now = os.time()
+	for _, root in ipairs(roots) do
+		local f = io.open(root .. '\\config\\addons\\auctionhouse-vanacore\\pad_hold', 'r')
+		if f then
+			local stamp = tonumber(f:read('*l'))
+			f:close()
+			if stamp and stamp > 0 and now - stamp <= 2 then return true end
+		end
+	end
+	return false
+end
+
 function M.register()
 
 	-- XInput digital press is 1; DirectInput (DualShock etc.) is 128
@@ -168,6 +190,15 @@ function M.register()
 		local press_right = (hat == 'right') or binding_down(GB.presetNext,  api, e, hat)
 		local press_up    = (hat == 'up')    or binding_down(GB.historyPrev, api, e, hat)
 		local press_down  = (hat == 'down')  or binding_down(GB.historyNext, api, e, hat)
+
+		-- The auction house has the pad: its buttons, including this modifier, are its own.
+		if auction_has_pad() then
+			if gamepadButtons.enabled then
+				gamepadButtons.enabled = false
+				gamepadButtons.bigScroll = 0
+			end
+			return
+		end
 
 		-- Modifier button (default LB) hold enables gamepad navigation
 		-- mode.  All other bindings only fire while the modifier is held.

@@ -9,7 +9,7 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 | オリジナル | [Arielfy / FancyChat](https://github.com/ariel-logos/Fancychat) `1.0.260721R` |
 | このフォーク | [handomade / FancyChatJP](https://github.com/handomade/FancyChatJP) |
 | 作者 | オリジナル: Arielfy　／　JP: Hando |
-| バージョン | オリジナル `1.0.260721R`　／　JP `1.2.3`（FancyChatJP 独自採番） |
+| バージョン | オリジナル `1.0.260721R`　／　JP `1.2.4`（FancyChatJP 独自採番） |
 
 動作確認は CatsEyeXI と VanaCore の、日本語クライアントです。本家の機能はそのまま使えるようにしつつ、JP 向けの差分だけを足しています。バージョンは本家の日付付き番号（例: `1.0.260721R`）に合わせず、このフォークだけで上げます。
 
@@ -63,6 +63,12 @@ Ashita 用のチャット置換アドオンです。FFXI 標準チャットの�
 - L2 などハット以外のボタンは、これまでどおり番号で取れます（例: L2 が 54）。割り当て待ちで十字キーを押すと `ハット 左` のように表示されます
 
 GamepadNav をオンにし、修飾ボタン（初期値は LB。DirectInput では自分のパッドに取り直してください）を押しながら操作します。
+
+### 競売アドオンとパッド（1.2.4）
+
+`auctionhouse-vanacore` が画面を開いてパッドを持っているあいだ、FancyChatJP は修飾ボタンを取りません。十字キーや決定も、このあいだはチャット側では使いません。競売を閉じると、また修飾ボタンが使えます。
+
+競売側は `Vanacore\config\addons\auctionhouse-vanacore\pad_hold` に時刻を書いています。FancyChatJP はその時刻が2秒以内なら、パッドを競売に譲ります。Ashita と VanaCore が別フォルダでも、インストール先・その親・親の `Vanacore` を見ます。
 
 ### 用語辞典と Wiki（1.0.1）
 
